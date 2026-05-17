@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useTasks } from '../composables/useTasks.js'
+import { useCelebration } from '../composables/useCelebration.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
 
 const props = defineProps({
@@ -10,6 +11,12 @@ const props = defineProps({
 })
 
 const { deleteTask, completeTask, updateTask, moveTask, isOverCapacity, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
+const { showCelebration } = useCelebration()
+
+function handleComplete(id) {
+  completeTask(id)
+  showCelebration()
+}
 
 // ── display ──────────────────────────────────────────────────────────────────
 
@@ -117,7 +124,7 @@ function addSubtaskAction() {
         </div>
       </div>
       <div class="task-actions">
-        <button class="action-btn complete-btn" title="Mark complete" :aria-label="`Mark complete: ${task.title}`" @click="completeTask(task.id)">✓</button>
+        <button class="action-btn complete-btn" title="Mark complete" :aria-label="`Mark complete: ${task.title}`" @click="handleComplete(task.id)">✓</button>
         <button class="action-btn edit-btn" title="Edit task" aria-label="Edit task" @click="startEdit">✎</button>
         <button class="action-btn move-prev-btn" :disabled="isFirst" title="Move to earlier column" aria-label="Move to earlier column" @click="moveTask(task.id, -1)">←</button>
         <button class="action-btn move-next-btn" :disabled="isLast"  title="Move to later column"   aria-label="Move to later column"   @click="moveTask(task.id, 1)">→</button>

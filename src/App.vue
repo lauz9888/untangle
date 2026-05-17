@@ -4,6 +4,7 @@ import AppLogo from './components/AppLogo.vue'
 import EnergySelector from './components/EnergySelector.vue'
 import TaskBoard from './components/TaskBoard.vue'
 import HistoryPanel from './components/HistoryPanel.vue'
+import CelebrationPopup from './components/CelebrationPopup.vue'
 
 const showHistory = ref(false)
 </script>
@@ -29,6 +30,7 @@ const showHistory = ref(false)
     </main>
 
     <HistoryPanel v-if="showHistory" @close="showHistory = false" />
+    <CelebrationPopup />
   </div>
 </template>
 

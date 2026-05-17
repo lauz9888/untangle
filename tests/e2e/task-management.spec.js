@@ -119,4 +119,44 @@ test.describe('task management', () => {
       await expect(page.locator('[data-column="now"]')).not.toContainText('Done now')
     })
   })
+
+  test.describe('celebration popup', () => {
+    test('shows a celebration popup after completing a task', async ({ page }) => {
+      await addTask(page, 'now', 'Send email')
+      const card = taskCard(page, 'now', 'Send email')
+      await card.hover()
+      await card.locator('.complete-btn').click()
+      await expect(page.locator('.celebration-overlay')).toBeVisible()
+    })
+
+    test('popup contains a non-empty celebratory message', async ({ page }) => {
+      await addTask(page, 'now', 'File taxes')
+      const card = taskCard(page, 'now', 'File taxes')
+      await card.hover()
+      await card.locator('.complete-btn').click()
+      await expect(page.locator('.celebration-overlay')).toBeVisible()
+      const text = await page.locator('.celebration-text').textContent()
+      expect(text.trim().length).toBeGreaterThan(0)
+    })
+
+    test('popup disappears after clicking it', async ({ page }) => {
+      await addTask(page, 'now', 'Call dentist')
+      const card = taskCard(page, 'now', 'Call dentist')
+      await card.hover()
+      await card.locator('.complete-btn').click()
+      await expect(page.locator('.celebration-overlay')).toBeVisible()
+      await page.locator('.celebration-overlay').click()
+      await expect(page.locator('.celebration-overlay')).not.toBeVisible()
+    })
+
+    test('popup auto-dismisses after 3.5 seconds', async ({ page }) => {
+      await addTask(page, 'now', 'Water plants')
+      const card = taskCard(page, 'now', 'Water plants')
+      await card.hover()
+      await card.locator('.complete-btn').click()
+      await expect(page.locator('.celebration-overlay')).toBeVisible()
+      await page.waitForTimeout(3600)
+      await expect(page.locator('.celebration-overlay')).not.toBeVisible()
+    })
+  })
 })
