@@ -13,6 +13,7 @@ const { tasksForColumn, addTask, moveTaskToColumn } = useTasks()
 const columnIndex = computed(() => COLUMNS.findIndex(c => c.id === props.column.id))
 const isFirstColumn = computed(() => columnIndex.value === 0)
 const isLastColumn = computed(() => columnIndex.value === COLUMNS.length - 1)
+const columnTasks = computed(() => tasksForColumn(props.column.id))
 
 const showForm = ref(false)
 const newTitle = ref('')
@@ -25,7 +26,7 @@ const pendingSubtask = ref('')
 function addPendingSubtask() {
   const trimmed = pendingSubtask.value.trim()
   if (!trimmed) return
-  pendingSubtasks.value.push(trimmed)
+  pendingSubtasks.value.push({ id: crypto.randomUUID(), text: trimmed })
   pendingSubtask.value = ''
 }
 
@@ -42,7 +43,7 @@ function submit() {
     energy: newEnergy.value,
     dueDate: newDueDate.value || null,
     availableFrom: newAvailableFrom.value || null,
-    subtasks: pendingSubtasks.value,
+    subtasks: pendingSubtasks.value.map(s => s.text),
   })
   resetForm()
 }
@@ -105,13 +106,13 @@ function onDrop(e) {
     <h2 class="column-header">{{ column.label }}</h2>
     <div class="task-list">
       <TaskCard
-        v-for="task in tasksForColumn(column.id)"
+        v-for="task in columnTasks"
         :key="task.id"
         :task="task"
         :is-first="isFirstColumn"
         :is-last="isLastColumn"
       />
-      <p v-if="tasksForColumn(column.id).length === 0" class="empty-hint">No tasks yet</p>
+      <p v-if="columnTasks.length === 0" class="empty-hint">No tasks yet</p>
     </div>
     <div class="add-task-area">
       <button v-if="!showForm" class="add-task-btn" @click="showForm = true">
@@ -160,8 +161,8 @@ function onDrop(e) {
         <fieldset class="form-section">
           <legend class="form-section-label">Subtasks <span class="optional">optional</span></legend>
           <ul v-if="pendingSubtasks.length > 0" class="pending-subtasks">
-            <li v-for="(s, i) in pendingSubtasks" :key="i" class="pending-subtask-item">
-              <span>{{ s }}</span>
+            <li v-for="(s, i) in pendingSubtasks" :key="s.id" class="pending-subtask-item">
+              <span>{{ s.text }}</span>
               <button type="button" class="subtask-remove-btn" @click="removePendingSubtask(i)" aria-label="Remove subtask">✕</button>
             </li>
           </ul>
@@ -416,61 +417,9 @@ function onDrop(e) {
   border-color: var(--accent);
 }
 
-.btn-subtle {
-  padding: 5px 10px;
-  border-radius: 6px;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: background 0.12s;
-}
-
-.btn-subtle:hover {
-  background: var(--border);
-}
-
 .form-footer {
   display: flex;
   gap: 6px;
   align-items: center;
-}
-
-.btn-primary {
-  padding: 7px 14px;
-  border-radius: 7px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: opacity 0.12s;
-}
-
-.btn-primary:hover {
-  opacity: 0.85;
-}
-
-.btn-secondary {
-  padding: 7px 10px;
-  border-radius: 7px;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: background 0.12s;
-}
-
-.btn-secondary:hover {
-  background: var(--border);
 }
 </style>

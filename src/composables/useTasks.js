@@ -4,10 +4,11 @@ import { ENERGY_LEVELS, COLUMNS } from '../constants/energy.js'
 const STORAGE_KEY = 'untangle-tasks'
 const ENERGY_KEY = 'untangle-energy'
 
-function loadFromStorage(key, fallback) {
+function loadFromStorage(key, fallback, { raw = false } = {}) {
   try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
+    const val = localStorage.getItem(key)
+    if (val === null) return fallback
+    return raw ? val : JSON.parse(val)
   } catch {
     return fallback
   }
@@ -25,8 +26,7 @@ function migrateTask(task) {
 }
 
 const tasks = ref(loadFromStorage(STORAGE_KEY, []).map(migrateTask))
-const savedEnergy = localStorage.getItem(ENERGY_KEY)
-const currentEnergy = ref(savedEnergy || null)
+const currentEnergy = ref(loadFromStorage(ENERGY_KEY, null, { raw: true }) || null)
 
 watch(tasks, (val) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(val))

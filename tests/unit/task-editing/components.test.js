@@ -115,9 +115,17 @@ describe('task editing — components', () => {
     it('calls updateTask with the due date', async () => {
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
       await wrapper.find('.edit-btn').trigger('click')
-      await wrapper.findAll('input[type="date"]')[1].setValue('2025-12-01')
+      await wrapper.find('[data-testid="due-date-input"]').setValue('2025-12-01')
       await wrapper.find('.edit-form').trigger('submit')
       expect(mockUpdateTask).toHaveBeenCalledWith('task-1', expect.objectContaining({ dueDate: '2025-12-01' }))
+    })
+
+    it('calls updateTask with the available-from date', async () => {
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      await wrapper.find('.edit-btn').trigger('click')
+      await wrapper.find('[data-testid="available-from-input"]').setValue('2025-11-01')
+      await wrapper.find('.edit-form').trigger('submit')
+      expect(mockUpdateTask).toHaveBeenCalledWith('task-1', expect.objectContaining({ availableFrom: '2025-11-01' }))
     })
 
     it('does not call updateTask for a blank title', async () => {

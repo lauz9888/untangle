@@ -18,11 +18,14 @@ const subtaskProgress = computed(() =>
   props.task.subtasks.length ? (doneSubtasks.value / props.task.subtasks.length) * 100 : 0
 )
 
-const today = new Date().toISOString().slice(0, 10)
-const isOverdue = computed(() => !!props.task.dueDate && props.task.dueDate < today)
+// Computed so it stays correct if the app is left open past midnight
+const today = computed(() => new Date().toISOString().slice(0, 10))
+const isOverdue = computed(() => !!props.task.dueDate && props.task.dueDate < today.value)
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
+  // Parse as local date components to avoid UTC-midnight timezone offset issues
+  // (new Date('2025-06-15') is UTC midnight, which shifts to the previous day in negative-offset timezones)
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
@@ -152,11 +155,11 @@ function addSubtaskAction() {
         <div class="edit-dates">
           <div class="edit-date-field">
             <label class="edit-label">Available from</label>
-            <input type="date" v-model="editAvailableFrom" class="date-input" />
+            <input type="date" v-model="editAvailableFrom" class="date-input" data-testid="available-from-input" />
           </div>
           <div class="edit-date-field">
             <label class="edit-label">Due date</label>
-            <input type="date" v-model="editDueDate" class="date-input" />
+            <input type="date" v-model="editDueDate" class="date-input" data-testid="due-date-input" />
           </div>
         </div>
 
@@ -547,59 +550,9 @@ function addSubtaskAction() {
   border-color: var(--accent);
 }
 
-.btn-subtle {
-  padding: 5px 10px;
-  border-radius: 6px;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: nowrap;
-  transition: background 0.12s;
-}
-
-.btn-subtle:hover {
-  background: var(--border);
-}
-
 .edit-footer {
   display: flex;
   gap: 6px;
   align-items: center;
-}
-
-.btn-primary {
-  padding: 7px 14px;
-  border-radius: 7px;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition: opacity 0.12s;
-}
-
-.btn-primary:hover {
-  opacity: 0.85;
-}
-
-.btn-secondary {
-  padding: 7px 10px;
-  border-radius: 7px;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.12s;
-}
-
-.btn-secondary:hover {
-  background: var(--border);
 }
 </style>
