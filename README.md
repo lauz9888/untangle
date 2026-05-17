@@ -62,7 +62,7 @@ The app is built with **Vue 3** and **Vite**, using no UI libraries, no router, 
 
 All task logic lives in a single composable (`useTasks.js`). This acts as a shared store — every component that calls it gets the same reactive state. It handles creating, editing, moving, completing, and deleting tasks, as well as tracking the current energy level.
 
-Notification state lives in a separate composable (`useToast.js`), also a singleton. When a task is completed, `showCelebration()` picks one of 50 encouraging messages at random and displays it as a full-screen centred popup for 3.5 seconds. Clicking anywhere dismisses it early. Any previously running timer is cancelled so rapid completions don't stack.
+Notification state lives in a separate composable (`useCelebration.js`), also a singleton. When a task is completed, `showCelebration()` picks one of 50 encouraging messages at random and displays it as a full-screen centred popup for 3.5 seconds. Clicking anywhere dismisses it early. Any previously running timer is cancelled so rapid completions don't stack.
 
 Everything is saved to `localStorage` automatically whenever state changes, so nothing is lost on a page refresh. Completed tasks stay in storage (they're just hidden from the board columns) so the history panel can use them.
 
@@ -101,7 +101,7 @@ Unit tests use **Vitest** and **Vue Test Utils** and live in `tests/unit/`, orga
 | `subtasks/` | Adding, removing, and toggling subtasks |
 | `energy/` | The energy selector component and over-capacity logic |
 | `persistence/` | localStorage round-tripping and migration of older data |
-| `celebration-toast/` | The useToast composable (messages, auto-dismiss, dismiss) and ToastNotification component |
+| `celebration/` | The useCelebration composable (messages, auto-dismiss, dismiss) and CelebrationPopup component |
 
 Each feature folder has two files: one that tests the composable logic directly, and one that tests the components that render it. This split exists because the two test styles are technically incompatible — composable tests reset the module between each test to get fresh state, while component tests mock the composable entirely to isolate the component's rendering and event handling.
 
@@ -114,7 +114,7 @@ End-to-end tests use **Playwright** and run against a real dev server. They live
 | File | What it covers |
 |---|---|
 | `layout.spec.js` | Page structure, column headers, energy buttons, defaults |
-| `task-management.spec.js` | Adding, deleting, completing tasks, and celebration toast |
+| `task-management.spec.js` | Adding, deleting, completing tasks, and the celebration popup |
 | `task-editing.spec.js` | Editing task title, energy, dates, and subtasks |
 | `task-movement.spec.js` | Arrow buttons and drag-and-drop between columns |
 | `energy.spec.js` | Over-capacity filtering applied and removed reactively |

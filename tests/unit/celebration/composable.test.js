@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-describe('useToast — composable', () => {
-  let useToast, CELEBRATION_MESSAGES
+describe('useCelebration — composable', () => {
+  let useCelebration, CELEBRATION_MESSAGES
 
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.resetModules()
-    ;({ useToast, CELEBRATION_MESSAGES } = await import('../../../src/composables/useToast.js'))
+    ;({ useCelebration, CELEBRATION_MESSAGES } = await import('../../../src/composables/useCelebration.js'))
   })
 
   afterEach(() => {
@@ -14,66 +14,66 @@ describe('useToast — composable', () => {
   })
 
   describe('initial state', () => {
-    it('toast starts as null', () => {
-      const { toast } = useToast()
-      expect(toast.value).toBeNull()
+    it('popup starts as null', () => {
+      const { popup } = useCelebration()
+      expect(popup.value).toBeNull()
     })
   })
 
   describe('showCelebration', () => {
-    it('sets toast to a non-empty string', () => {
-      const { toast, showCelebration } = useToast()
+    it('sets popup to a non-empty string', () => {
+      const { popup, showCelebration } = useCelebration()
       showCelebration()
-      expect(typeof toast.value).toBe('string')
-      expect(toast.value.length).toBeGreaterThan(0)
+      expect(typeof popup.value).toBe('string')
+      expect(popup.value.length).toBeGreaterThan(0)
     })
 
     it('picks a message from the CELEBRATION_MESSAGES list', () => {
-      const { toast, showCelebration } = useToast()
+      const { popup, showCelebration } = useCelebration()
       showCelebration()
-      expect(CELEBRATION_MESSAGES).toContain(toast.value)
+      expect(CELEBRATION_MESSAGES).toContain(popup.value)
     })
 
     it('auto-dismisses after 3500ms', () => {
-      const { toast, showCelebration } = useToast()
+      const { popup, showCelebration } = useCelebration()
       showCelebration()
       vi.advanceTimersByTime(3500)
-      expect(toast.value).toBeNull()
+      expect(popup.value).toBeNull()
     })
 
     it('is still visible just before 3500ms', () => {
-      const { toast, showCelebration } = useToast()
+      const { popup, showCelebration } = useCelebration()
       showCelebration()
       vi.advanceTimersByTime(3499)
-      expect(toast.value).not.toBeNull()
+      expect(popup.value).not.toBeNull()
     })
 
     it('resets the auto-dismiss timer when called again', () => {
-      const { toast, showCelebration } = useToast()
+      const { popup, showCelebration } = useCelebration()
       showCelebration()
       vi.advanceTimersByTime(3000)
       showCelebration()
       vi.advanceTimersByTime(3000)
-      expect(toast.value).not.toBeNull()
+      expect(popup.value).not.toBeNull()
       vi.advanceTimersByTime(500)
-      expect(toast.value).toBeNull()
+      expect(popup.value).toBeNull()
     })
   })
 
-  describe('dismissToast', () => {
-    it('clears the toast immediately', () => {
-      const { toast, showCelebration, dismissToast } = useToast()
+  describe('dismiss', () => {
+    it('clears the popup immediately', () => {
+      const { popup, showCelebration, dismiss } = useCelebration()
       showCelebration()
-      dismissToast()
-      expect(toast.value).toBeNull()
+      dismiss()
+      expect(popup.value).toBeNull()
     })
 
     it('cancels the auto-dismiss timer', () => {
-      const { toast, showCelebration, dismissToast } = useToast()
+      const { popup, showCelebration, dismiss } = useCelebration()
       showCelebration()
-      dismissToast()
+      dismiss()
       vi.advanceTimersByTime(3500)
-      expect(toast.value).toBeNull()
+      expect(popup.value).toBeNull()
     })
   })
 

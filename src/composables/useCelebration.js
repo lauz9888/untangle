@@ -53,21 +53,21 @@ export const CELEBRATION_MESSAGES = [
   "Task finished! You're exactly where you need to be! 🌟",
 ]
 
-const toast = ref(null)
+const popup = ref(null)
 let timer = null
 
-export function useToast() {
+export function useCelebration() {
   function showCelebration() {
     const message = CELEBRATION_MESSAGES[Math.floor(Math.random() * CELEBRATION_MESSAGES.length)]
     clearTimeout(timer)
-    toast.value = message
-    timer = setTimeout(() => { toast.value = null }, 3500)
+    popup.value = message
+    timer = setTimeout(() => { popup.value = null }, 3500)
   }
 
-  function dismissToast() {
+  function dismiss() {
     clearTimeout(timer)
-    toast.value = null
+    popup.value = null
   }
 
-  return { toast, showCelebration, dismissToast }
+  return { popup, showCelebration, dismiss }
 }

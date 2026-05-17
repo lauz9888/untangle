@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useTasks } from '../composables/useTasks.js'
-import { useToast } from '../composables/useToast.js'
+import { useCelebration } from '../composables/useCelebration.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
 
 const props = defineProps({
@@ -11,7 +11,7 @@ const props = defineProps({
 })
 
 const { deleteTask, completeTask, updateTask, moveTask, isOverCapacity, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
-const { showCelebration } = useToast()
+const { showCelebration } = useCelebration()
 
 function handleComplete(id) {
   completeTask(id)

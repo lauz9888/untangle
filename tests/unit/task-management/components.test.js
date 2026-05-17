@@ -39,11 +39,11 @@ vi.mock('../../../src/composables/useTasks.js', () => ({
   }),
 }))
 
-vi.mock('../../../src/composables/useToast.js', () => ({
-  useToast: () => ({
+vi.mock('../../../src/composables/useCelebration.js', () => ({
+  useCelebration: () => ({
     showCelebration: mockShowCelebration,
-    dismissToast: vi.fn(),
-    toast: ref(null),
+    dismiss: vi.fn(),
+    popup: ref(null),
   }),
 }))
 

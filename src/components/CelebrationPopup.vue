@@ -1,14 +1,14 @@
 <script setup>
-import { useToast } from '../composables/useToast.js'
+import { useCelebration } from '../composables/useCelebration.js'
 
-const { toast, dismissToast } = useToast()
+const { popup, dismiss } = useCelebration()
 </script>
 
 <template>
   <Transition name="celebration">
-    <div v-if="toast" class="celebration-overlay" @click="dismissToast">
+    <div v-if="popup" class="celebration-overlay" @click="dismiss">
       <div class="celebration-popup">
-        <p class="celebration-text">{{ toast }}</p>
+        <p class="celebration-text">{{ popup }}</p>
         <span class="celebration-hint">click anywhere to dismiss</span>
       </div>
     </div>
