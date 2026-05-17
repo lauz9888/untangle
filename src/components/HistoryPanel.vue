@@ -39,6 +39,13 @@ const chartWeeks = computed(() => {
 
 const chartMax = computed(() => Math.max(...chartWeeks.value.map(w => w.count), 1))
 
+const chartAriaLabel = computed(() => {
+  const summary = chartWeeks.value
+    .map(w => `${w.label}: ${w.count} ${w.count === 1 ? 'task' : 'tasks'}`)
+    .join(', ')
+  return `Bar chart of tasks completed over the past 4 weeks. ${summary}`
+})
+
 function barHeight(count) {
   return Math.round((count / chartMax.value) * 100)
 }
@@ -87,7 +94,7 @@ const bestWeekLabel = computed(() => {
           <p class="empty-hint">Mark tasks done with the ✓ button to track your progress here.</p>
         </div>
 
-        <div v-else class="bar-chart" role="img" :aria-label="`Bar chart showing completed tasks for the past 4 weeks`">
+        <div v-else class="bar-chart" role="img" :aria-label="chartAriaLabel">
           <div v-for="week in chartWeeks" :key="week.label" class="bar-col">
             <span class="bar-count" :class="{ zero: week.count === 0 }">
               {{ week.count }}

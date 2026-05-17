@@ -46,4 +46,27 @@ describe('persistence — composable', () => {
     await Promise.resolve()
     expect(localStorage.getItem('untangle-energy')).toBe('large')
   })
+
+  it('persists completedAt when a task is completed', async () => {
+    const { addTask, completeTask, tasks } = useTasks()
+    addTask('Task', 'now')
+    completeTask(tasks.value[0].id)
+    await Promise.resolve()
+    const stored = JSON.parse(localStorage.getItem('untangle-tasks'))
+    expect(stored[0].completedAt).toBeGreaterThan(0)
+  })
+
+  it('completed tasks are restored on reload and excluded from columns', async () => {
+    const { addTask, completeTask, tasks } = useTasks()
+    addTask('Done task', 'now')
+    completeTask(tasks.value[0].id)
+    await Promise.resolve()
+
+    vi.resetModules()
+    const { useTasks: fresh } = await import('../../../src/composables/useTasks.js')
+    const { tasks: reloaded, tasksForColumn } = fresh()
+    expect(reloaded.value).toHaveLength(1)
+    expect(reloaded.value[0].completedAt).toBeGreaterThan(0)
+    expect(tasksForColumn('now')).toHaveLength(0)
+  })
 })
