@@ -5,8 +5,10 @@ import EnergySelector from './components/EnergySelector.vue'
 import TaskBoard from './components/TaskBoard.vue'
 import HistoryPanel from './components/HistoryPanel.vue'
 import CelebrationPopup from './components/CelebrationPopup.vue'
+import SettingsPanel from './components/SettingsPanel.vue'
 
 const showHistory = ref(false)
+const showSettings = ref(false)
 </script>
 
 <template>
@@ -22,6 +24,12 @@ const showHistory = ref(false)
       <div class="app-controls">
         <button class="history-btn" @click="showHistory = true">History</button>
         <EnergySelector />
+        <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -30,6 +38,7 @@ const showHistory = ref(false)
     </main>
 
     <HistoryPanel v-if="showHistory" @close="showHistory = false" />
+    <SettingsPanel v-if="showSettings" @close="showSettings = false" />
     <CelebrationPopup />
   </div>
 </template>
@@ -103,6 +112,26 @@ const showHistory = ref(false)
 }
 
 .history-btn:hover {
+  background: var(--border);
+  color: var(--text-h);
+}
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.settings-btn:hover {
   background: var(--border);
   color: var(--text-h);
 }

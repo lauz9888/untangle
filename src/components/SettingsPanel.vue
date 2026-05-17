@@ -1,0 +1,240 @@
+<script setup>
+import { ref } from 'vue'
+
+defineEmits(['close'])
+
+const activeSection = ref(null)
+
+function toggleSection(section) {
+  activeSection.value = activeSection.value === section ? null : section
+}
+</script>
+
+<template>
+  <div class="settings-overlay" @click.self="$emit('close')">
+    <aside class="settings-panel">
+      <div class="settings-header">
+        <span class="settings-title">Settings</span>
+        <button class="settings-close" @click="$emit('close')" aria-label="Close settings">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="settings-nav">
+        <button
+          class="settings-nav-item"
+          :class="{ active: activeSection === 'about' }"
+          @click="toggleSection('about')"
+        >
+          <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          About
+          <svg class="nav-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" :style="{ transform: activeSection === 'about' ? 'rotate(180deg)' : 'rotate(0deg)' }">
+            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div v-if="activeSection === 'about'" class="settings-section-content">
+          <div class="about-content">
+            <p class="about-lead">
+              Untangle is a calm, energy-aware task manager designed to help you decide what to work on right now — without the overwhelm.
+            </p>
+            <div class="about-features">
+              <div class="about-feature">
+                <span class="feature-label">Three columns</span>
+                <span class="feature-desc">Organise tasks across <strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> to keep your focus clear.</span>
+              </div>
+              <div class="about-feature">
+                <span class="feature-label">Energy levels</span>
+                <span class="feature-desc">Tag each task by how much effort it takes — Tiny, Small, Medium, or Large — so you can match tasks to how you feel.</span>
+              </div>
+              <div class="about-feature">
+                <span class="feature-label">Filter by energy</span>
+                <span class="feature-desc">Use the energy selector in the header to surface only the tasks that fit your current capacity.</span>
+              </div>
+              <div class="about-feature">
+                <span class="feature-label">History</span>
+                <span class="feature-desc">Completed tasks are saved so you can look back and see everything you've accomplished.</span>
+              </div>
+            </div>
+            <p class="about-footer">Your tasks are saved locally in your browser — nothing leaves your device.</p>
+          </div>
+        </div>
+      </nav>
+    </aside>
+  </div>
+</template>
+
+<style scoped>
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-panel {
+  width: 320px;
+  max-width: 100vw;
+  height: 100%;
+  background: var(--bg);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  animation: slide-in 0.18s ease-out;
+}
+
+@keyframes slide-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.settings-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.2px;
+}
+
+.settings-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.settings-close:hover {
+  background: var(--border);
+  color: var(--text-h);
+}
+
+.settings-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 13.5px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s;
+}
+
+.settings-nav-item:hover {
+  background: var(--column-bg);
+  color: var(--text-h);
+}
+
+.settings-nav-item.active {
+  background: var(--column-bg);
+  color: var(--text-h);
+}
+
+.nav-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.nav-chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: transform 0.15s ease;
+}
+
+.settings-section-content {
+  margin: 4px 0 8px;
+  padding: 0 4px;
+}
+
+.about-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px;
+  background: var(--column-bg);
+  border-radius: 8px;
+}
+
+.about-lead {
+  font-size: 13px;
+  color: var(--text-h);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.about-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.about-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.feature-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.1px;
+}
+
+.feature-desc {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.feature-desc strong {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.about-footer {
+  font-size: 11.5px;
+  color: var(--text);
+  opacity: 0.7;
+  margin: 0;
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+</style>
