@@ -3,11 +3,7 @@ import { ref } from 'vue'
 
 defineEmits(['close'])
 
-const activeSection = ref(null)
-
-function toggleSection(section) {
-  activeSection.value = activeSection.value === section ? null : section
-}
+const showAbout = ref(false)
 </script>
 
 <template>
@@ -23,49 +19,52 @@ function toggleSection(section) {
       </div>
 
       <nav class="settings-nav">
-        <button
-          class="settings-nav-item"
-          :class="{ active: activeSection === 'about' }"
-          @click="toggleSection('about')"
-        >
+        <button class="settings-nav-item" @click="showAbout = true">
           <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
             <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
             <path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           About
-          <svg class="nav-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" :style="{ transform: activeSection === 'about' ? 'rotate(180deg)' : 'rotate(0deg)' }">
-            <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
         </button>
-
-        <div v-if="activeSection === 'about'" class="settings-section-content">
-          <div class="about-content">
-            <p class="about-lead">
-              Untangle is a calm, energy-aware task manager designed to help you decide what to work on right now — without the overwhelm.
-            </p>
-            <div class="about-features">
-              <div class="about-feature">
-                <span class="feature-label">Three columns</span>
-                <span class="feature-desc">Organise tasks across <strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> to keep your focus clear.</span>
-              </div>
-              <div class="about-feature">
-                <span class="feature-label">Energy levels</span>
-                <span class="feature-desc">Tag each task by how much effort it takes — Tiny, Small, Medium, or Large — so you can match tasks to how you feel.</span>
-              </div>
-              <div class="about-feature">
-                <span class="feature-label">Filter by energy</span>
-                <span class="feature-desc">Use the energy selector in the header to surface only the tasks that fit your current capacity.</span>
-              </div>
-              <div class="about-feature">
-                <span class="feature-label">History</span>
-                <span class="feature-desc">Completed tasks are saved so you can look back and see everything you've accomplished.</span>
-              </div>
-            </div>
-            <p class="about-footer">Your tasks are saved locally in your browser — nothing leaves your device.</p>
-          </div>
-        </div>
       </nav>
     </aside>
+  </div>
+
+  <div v-if="showAbout" class="about-overlay" @click.self="showAbout = false">
+    <div class="about-modal">
+      <div class="about-modal-header">
+        <span class="about-modal-title">About Untangle</span>
+        <button class="about-modal-close" @click="showAbout = false" aria-label="Close about">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="about-content">
+        <p class="about-lead">
+          Untangle is a calm, energy-aware task manager designed to help you decide what to work on right now — without the overwhelm.
+        </p>
+        <div class="about-features">
+          <div class="about-feature">
+            <span class="feature-label">Three columns</span>
+            <span class="feature-desc">Organise tasks across <strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> to keep your focus clear.</span>
+          </div>
+          <div class="about-feature">
+            <span class="feature-label">Energy levels</span>
+            <span class="feature-desc">Tag each task by how much effort it takes — Tiny, Small, Medium, or Large — so you can match tasks to how you feel.</span>
+          </div>
+          <div class="about-feature">
+            <span class="feature-label">Filter by energy</span>
+            <span class="feature-desc">Use the energy selector in the header to surface only the tasks that fit your current capacity.</span>
+          </div>
+          <div class="about-feature">
+            <span class="feature-label">History</span>
+            <span class="feature-desc">Completed tasks are saved so you can look back and see everything you've accomplished.</span>
+          </div>
+        </div>
+        <p class="about-footer">Your tasks are saved locally in your browser — nothing leaves your device.</p>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -160,35 +159,78 @@ function toggleSection(section) {
   color: var(--text-h);
 }
 
-.settings-nav-item.active {
-  background: var(--column-bg);
-  color: var(--text-h);
-}
-
 .nav-icon {
   flex-shrink: 0;
   opacity: 0.7;
 }
 
-.nav-chevron {
-  margin-left: auto;
-  flex-shrink: 0;
-  opacity: 0.5;
-  transition: transform 0.15s ease;
+/* About modal */
+
+.about-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
 
-.settings-section-content {
-  margin: 4px 0 8px;
-  padding: 0 4px;
+.about-modal {
+  background: var(--bg);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  animation: modal-in 0.15s ease-out;
+}
+
+@keyframes modal-in {
+  from { transform: scale(0.96); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.about-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.about-modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.2px;
+}
+
+.about-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.about-modal-close:hover {
+  background: var(--border);
+  color: var(--text-h);
 }
 
 .about-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 12px;
-  background: var(--column-bg);
-  border-radius: 8px;
+  padding: 20px;
 }
 
 .about-lead {

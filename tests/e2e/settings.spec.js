@@ -21,17 +21,24 @@ test.describe('settings', () => {
     await expect(page.locator('.settings-nav-item')).toContainText('About')
   })
 
-  test('clicking About shows the about content', async ({ page }) => {
+  test('clicking About opens the About modal', async ({ page }) => {
     await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-nav-item').click()
-    await expect(page.locator('.about-content')).toBeVisible()
+    await expect(page.locator('.about-modal')).toBeVisible()
   })
 
-  test('clicking About again hides the about content', async ({ page }) => {
+  test('the About modal close button closes the modal', async ({ page }) => {
     await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-nav-item').click()
+    await page.locator('.about-modal-close').click()
+    await expect(page.locator('.about-modal')).not.toBeVisible()
+  })
+
+  test('clicking the About modal backdrop closes the modal', async ({ page }) => {
+    await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-nav-item').click()
-    await expect(page.locator('.about-content')).not.toBeVisible()
+    await page.locator('.about-overlay').click({ position: { x: 10, y: 10 } })
+    await expect(page.locator('.about-modal')).not.toBeVisible()
   })
 
   test('the close button closes the panel', async ({ page }) => {
