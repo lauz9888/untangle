@@ -28,6 +28,9 @@ const { currentEnergy } = useTasks()
   display: flex;
   align-items: center;
   gap: 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  padding: 4px 10px 4px 12px;
 }
 
 .energy-label {

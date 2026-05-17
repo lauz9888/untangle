@@ -20,10 +20,10 @@ const showSettings = ref(false)
           <span class="app-title">untangle</span>
           <span class="app-tagline">A space to think</span>
         </div>
+        <EnergySelector />
       </div>
       <div class="app-controls">
         <button class="history-btn" @click="showHistory = true">History</button>
-        <EnergySelector />
         <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
