@@ -20,29 +20,36 @@ describe('settings panel — components', () => {
     })
   })
 
-  describe('SettingsPanel — About section', () => {
-    it('hides the About content by default', () => {
+  describe('SettingsPanel — About modal', () => {
+    it('does not show the About modal by default', () => {
       const wrapper = mount(SettingsPanel)
-      expect(wrapper.find('.settings-section-content').exists()).toBe(false)
+      expect(wrapper.find('.about-overlay').exists()).toBe(false)
     })
 
-    it('shows the About content when About is clicked', async () => {
+    it('shows the About modal when About is clicked', async () => {
       const wrapper = mount(SettingsPanel)
       await wrapper.find('.settings-nav-item').trigger('click')
-      expect(wrapper.find('.settings-section-content').exists()).toBe(true)
+      expect(wrapper.find('.about-overlay').exists()).toBe(true)
     })
 
-    it('hides the About content when About is clicked a second time', async () => {
-      const wrapper = mount(SettingsPanel)
-      await wrapper.find('.settings-nav-item').trigger('click')
-      await wrapper.find('.settings-nav-item').trigger('click')
-      expect(wrapper.find('.settings-section-content').exists()).toBe(false)
-    })
-
-    it('shows descriptive text in the About section', async () => {
+    it('shows descriptive text in the About modal', async () => {
       const wrapper = mount(SettingsPanel)
       await wrapper.find('.settings-nav-item').trigger('click')
       expect(wrapper.find('.about-lead').text()).toBeTruthy()
+    })
+
+    it('closes the About modal when its close button is clicked', async () => {
+      const wrapper = mount(SettingsPanel)
+      await wrapper.find('.settings-nav-item').trigger('click')
+      await wrapper.find('.about-modal-close').trigger('click')
+      expect(wrapper.find('.about-overlay').exists()).toBe(false)
+    })
+
+    it('closes the About modal when its overlay is clicked', async () => {
+      const wrapper = mount(SettingsPanel)
+      await wrapper.find('.settings-nav-item').trigger('click')
+      await wrapper.find('.about-overlay').trigger('click')
+      expect(wrapper.find('.about-overlay').exists()).toBe(false)
     })
   })
 

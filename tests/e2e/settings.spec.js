@@ -21,26 +21,39 @@ test.describe('settings', () => {
     await expect(page.locator('.settings-nav-item')).toContainText('About')
   })
 
-  test('clicking About shows the about content', async ({ page }) => {
+  test('clicking About opens the About modal', async ({ page }) => {
     await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-nav-item').click()
-    await expect(page.locator('.about-content')).toBeVisible()
+    await expect(page.locator('.about-modal')).toBeVisible()
   })
 
-  test('clicking About again hides the about content', async ({ page }) => {
+  test('the About modal shows descriptive content', async ({ page }) => {
     await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-nav-item').click()
-    await page.locator('.settings-nav-item').click()
-    await expect(page.locator('.about-content')).not.toBeVisible()
+    await expect(page.locator('.about-lead')).toBeVisible()
   })
 
-  test('the close button closes the panel', async ({ page }) => {
+  test('the About modal close button dismisses the modal', async ({ page }) => {
+    await page.getByRole('button', { name: /open settings/i }).click()
+    await page.locator('.settings-nav-item').click()
+    await page.locator('.about-modal-close').click()
+    await expect(page.locator('.about-modal')).not.toBeVisible()
+  })
+
+  test('clicking the About overlay dismisses the modal', async ({ page }) => {
+    await page.getByRole('button', { name: /open settings/i }).click()
+    await page.locator('.settings-nav-item').click()
+    await page.locator('.about-overlay').click({ position: { x: 10, y: 10 } })
+    await expect(page.locator('.about-modal')).not.toBeVisible()
+  })
+
+  test('the close button closes the settings panel', async ({ page }) => {
     await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-close').click()
     await expect(page.locator('.settings-panel')).not.toBeVisible()
   })
 
-  test('clicking the overlay closes the panel', async ({ page }) => {
+  test('clicking the settings overlay closes the panel', async ({ page }) => {
     await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-overlay').click({ position: { x: 10, y: 300 } })
     await expect(page.locator('.settings-panel')).not.toBeVisible()

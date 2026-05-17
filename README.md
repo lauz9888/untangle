@@ -108,7 +108,7 @@ Unit tests use **Vitest** and **Vue Test Utils** and live in `tests/unit/`, orga
 
 Each feature folder has two files: one that tests the composable logic directly, and one that tests the components that render it. This split exists because the two test styles are technically incompatible — composable tests reset the module between each test to get fresh state, while component tests mock the composable entirely to isolate the component's rendering and event handling.
 
-There are 147 unit tests in total.
+There are 148 unit tests in total.
 
 ### End-to-end tests
 
@@ -123,9 +123,9 @@ End-to-end tests use **Playwright** and run against a real dev server. They live
 | `energy.spec.js` | Over-capacity filtering applied and removed reactively |
 | `persistence.spec.js` | Tasks, moves, edits, and energy level surviving a page reload |
 | `history.spec.js` | History panel opens, shows chart, shows best-week message |
-| `settings.spec.js` | Settings cog opens the panel; About toggles its content; close button and overlay dismiss the panel |
+| `settings.spec.js` | Settings cog opens the panel; About opens a modal; modal and panel can each be dismissed |
 
-Each test clears localStorage and reloads before it runs, so tests are fully independent. There are 69 end-to-end tests in total.
+Each test clears localStorage and reloads before it runs, so tests are fully independent. There are 71 end-to-end tests in total.
 
 ### CI
 
