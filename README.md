@@ -22,6 +22,8 @@ The **settings cog** (top-right corner) opens a side panel. Clicking the **About
 
 The **Encourage Me** button (next to the energy selector) displays a gentle, encouraging message in a toast notification at the bottom of the screen. Messages are written to be neurodivergent-friendly, with a low-pressure tone designed for people who may struggle with demand avoidance or executive dysfunction. There are 100 messages picked at random. The toast dismisses itself after five seconds, or can be clicked to dismiss it early.
 
+The **Tough Love** button (between Encourage Me and History) shows a firmer, more direct message in the same toast style. The messages are written to push back against procrastination without being harsh or demanding — an extra nudge rather than a critique. Clicking either button dismisses the other, so only one toast is ever shown at a time.
+
 ### Task details
 
 Each task supports:
@@ -66,7 +68,7 @@ The app is built with **Vue 3** and **Vite**, using no UI libraries, no router, 
 
 All task logic lives in a single composable (`useTasks.js`). This acts as a shared store — every component that calls it gets the same reactive state. It handles creating, editing, moving, completing, and deleting tasks, as well as tracking the current energy level.
 
-Notification state is split across two composables, both singletons. `useCelebration.js` handles task-completion messages: `showCelebration()` picks one of 50 messages at random and displays it as a full-screen centred popup for 3.5 seconds. `useEncouragement.js` handles the Encourage Me feature: `showEncouragement()` picks one of 100 neurodivergent-friendly messages at random and displays it as a bottom-centre toast for 5 seconds. Both dismiss early on click, and both cancel any running timer before starting a new one.
+Notification state is split across three composables, all singletons. `useCelebration.js` handles task-completion messages: `showCelebration()` picks one of 50 messages at random and displays it as a full-screen centred popup for 3.5 seconds. `useEncouragement.js` and `useToughLove.js` handle the header buttons: each picks one of 100 messages at random and displays it as a bottom-centre toast for 5 seconds. All three dismiss early on click and cancel any running timer before starting a new one. The two toast composables are coordinated in `App.vue` so that triggering one dismisses the other.
 
 Everything is saved to `localStorage` automatically whenever state changes, so nothing is lost on a page refresh. Completed tasks stay in storage (they're just hidden from the board columns) so the history panel can use them.
 
@@ -107,11 +109,12 @@ Unit tests use **Vitest** and **Vue Test Utils** and live in `tests/unit/`, orga
 | `persistence/` | localStorage round-tripping and migration of older data |
 | `celebration/` | The useCelebration composable (messages, auto-dismiss, dismiss) and CelebrationPopup component |
 | `encouragement/` | The useEncouragement composable (messages, auto-dismiss, dismiss) and EncouragementToast component |
+| `tough-love/` | The useToughLove composable (messages, auto-dismiss, dismiss) and ToughLoveToast component |
 | `settings/` | The SettingsPanel component — structure, About modal, and close behaviour |
 
 Each feature folder has two files: one that tests the composable logic directly, and one that tests the components that render it. This split exists because the two test styles are technically incompatible — composable tests reset the module between each test to get fresh state, while component tests mock the composable entirely to isolate the component's rendering and event handling.
 
-There are 165 unit tests in total.
+There are 180 unit tests in total.
 
 ### End-to-end tests
 
@@ -127,9 +130,10 @@ End-to-end tests use **Playwright** and run against a real dev server. They live
 | `persistence.spec.js` | Tasks, moves, edits, and energy level surviving a page reload |
 | `history.spec.js` | History panel opens, shows chart, shows best-week message |
 | `settings.spec.js` | Settings cog opens the panel; About opens a modal; modal and panel close buttons work |
-| `encouragement.spec.js` | Encourage Me button visibility, toast appearance, auto-dismiss, early dismiss |
+| `encouragement.spec.js` | Encourage Me button visibility, toast appearance, auto-dismiss, early dismiss, mutual dismiss with Tough Love |
+| `tough-love.spec.js` | Tough Love button visibility, toast appearance, auto-dismiss, early dismiss, mutual dismiss with Encourage Me |
 
-Each test clears localStorage and reloads before it runs, so tests are fully independent. There are 76 end-to-end tests in total.
+Each test clears localStorage and reloads before it runs, so tests are fully independent. There are 84 end-to-end tests in total.
 
 ### CI
 
