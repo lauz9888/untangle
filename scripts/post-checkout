@@ -6,8 +6,13 @@
 # .git file rather than a .git directory
 [ -f .git ] && exit 0
 
-. "$(git rev-parse --show-toplevel)/scripts/kill-port.sh"
+ROOT=$(git rev-parse --show-toplevel)
+. "$ROOT/scripts/kill-port.sh"
 kill_port 5173
+
+cd "$ROOT"
+echo "Installing dependencies for $(git branch --show-current)..."
+npm install --silent
 
 nohup npm run dev > /tmp/vite-dev.log 2>&1 &
 echo "Dev server starting on http://localhost:5173 (log: /tmp/vite-dev.log)"
