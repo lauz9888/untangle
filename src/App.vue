@@ -5,10 +5,13 @@ import EnergySelector from './components/EnergySelector.vue'
 import TaskBoard from './components/TaskBoard.vue'
 import HistoryPanel from './components/HistoryPanel.vue'
 import CelebrationPopup from './components/CelebrationPopup.vue'
+import EncouragementToast from './components/EncouragementToast.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
+import { useEncouragement } from './composables/useEncouragement.js'
 
 const showHistory = ref(false)
 const showSettings = ref(false)
+const { showEncouragement } = useEncouragement()
 </script>
 
 <template>
@@ -23,6 +26,7 @@ const showSettings = ref(false)
         <EnergySelector />
       </div>
       <div class="app-controls">
+        <button class="encourage-btn" @click="showEncouragement">Encourage Me</button>
         <button class="history-btn" @click="showHistory = true">History</button>
         <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -40,6 +44,7 @@ const showSettings = ref(false)
     <HistoryPanel v-if="showHistory" @close="showHistory = false" />
     <SettingsPanel v-if="showSettings" @close="showSettings = false" />
     <CelebrationPopup />
+    <EncouragementToast />
   </div>
 </template>
 
@@ -90,6 +95,25 @@ const showSettings = ref(false)
   opacity: 0.7;
   letter-spacing: 0.1px;
   line-height: 1.2;
+}
+
+.encourage-btn {
+  padding: 5px 13px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  flex-shrink: 0;
+}
+
+.encourage-btn:hover {
+  background: var(--border);
+  color: var(--text-h);
 }
 
 .app-controls {
