@@ -4,7 +4,8 @@ import { ref } from 'vue'
 
 const { mockAddTask, mockTasksForColumn, mockIsOverCapacity, mockDeleteTask,
         mockUpdateTask, mockMoveTask, mockMoveTaskToColumn,
-        mockAddSubtask, mockDeleteSubtask, mockToggleSubtask, mockCompleteTask } =
+        mockAddSubtask, mockDeleteSubtask, mockToggleSubtask, mockCompleteTask,
+        mockShowCelebration } =
   vi.hoisted(() => ({
     mockAddTask: vi.fn(),
     mockTasksForColumn: vi.fn(() => []),
@@ -17,6 +18,7 @@ const { mockAddTask, mockTasksForColumn, mockIsOverCapacity, mockDeleteTask,
     mockDeleteSubtask: vi.fn(),
     mockToggleSubtask: vi.fn(),
     mockCompleteTask: vi.fn(),
+    mockShowCelebration: vi.fn(),
   }))
 
 vi.mock('../../../src/composables/useTasks.js', () => ({
@@ -34,6 +36,14 @@ vi.mock('../../../src/composables/useTasks.js', () => ({
     completeTask: mockCompleteTask,
     tasks: ref([]),
     currentEnergy: ref('medium'),
+  }),
+}))
+
+vi.mock('../../../src/composables/useToast.js', () => ({
+  useToast: () => ({
+    showCelebration: mockShowCelebration,
+    dismissToast: vi.fn(),
+    toast: ref(null),
   }),
 }))
 
@@ -200,6 +210,21 @@ describe('task management — components', () => {
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
       await wrapper.find('.complete-btn').trigger('click')
       expect(mockCompleteTask).toHaveBeenCalledWith('task-1')
+    })
+
+    it('calls showCelebration when complete button is clicked', async () => {
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      await wrapper.find('.complete-btn').trigger('click')
+      expect(mockShowCelebration).toHaveBeenCalledOnce()
+    })
+
+    it('calls completeTask before showCelebration', async () => {
+      const callOrder = []
+      mockCompleteTask.mockImplementation(() => callOrder.push('complete'))
+      mockShowCelebration.mockImplementation(() => callOrder.push('celebrate'))
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      await wrapper.find('.complete-btn').trigger('click')
+      expect(callOrder).toEqual(['complete', 'celebrate'])
     })
   })
 })
