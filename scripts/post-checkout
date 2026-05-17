@@ -1,20 +1,18 @@
 #!/bin/sh
-# Start the Vite dev server when switching branches (not on file checkouts)
-# $3 is 1 for branch checkouts, 0 for file checkouts
+# Only fire on branch checkouts, not file checkouts
 [ "$3" = "1" ] || exit 0
 
 # Skip inside git worktrees (e.g. Claude Code sessions) — they each have a
 # .git file rather than a .git directory
 [ -f .git ] && exit 0
 
-PORT=5173
+ROOT=$(git rev-parse --show-toplevel)
+. "$ROOT/scripts/kill-port.sh"
+kill_port 5173
 
-# Kill any existing server on that port
-PID=$(lsof -ti:$PORT 2>/dev/null)
-if [ -n "$PID" ]; then
-  kill -9 $PID
-fi
+cd "$ROOT"
+echo "Installing dependencies for $(git branch --show-current)..."
+npm install --silent
 
-# Start fresh in the background
 nohup npm run dev > /tmp/vite-dev.log 2>&1 &
-echo "Dev server starting on http://localhost:$PORT (log: /tmp/vite-dev.log)"
+echo "Dev server starting on http://localhost:5173 (log: /tmp/vite-dev.log)"

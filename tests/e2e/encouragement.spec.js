@@ -42,4 +42,12 @@ test.describe('Encourage Me', () => {
     await page.getByRole('button', { name: 'Encourage Me' }).click()
     await expect(page.locator('.encouragement-toast')).toBeVisible()
   })
+
+  test('clicking Encourage Me while Tough Love is showing replaces it', async ({ page }) => {
+    await page.getByRole('button', { name: 'Tough Love' }).click()
+    await expect(page.locator('.tough-love-toast')).toBeVisible()
+    await page.getByRole('button', { name: 'Encourage Me' }).click()
+    await expect(page.locator('.encouragement-toast')).toBeVisible()
+    await expect(page.locator('.tough-love-toast')).not.toBeVisible()
+  })
 })
