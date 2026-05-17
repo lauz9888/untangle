@@ -1,0 +1,16 @@
+#!/bin/sh
+# Start the Vite dev server when switching branches (not on file checkouts)
+# $3 is 1 for branch checkouts, 0 for file checkouts
+[ "$3" = "1" ] || exit 0
+
+PORT=5173
+
+# Kill any existing server on that port
+PID=$(lsof -ti:$PORT 2>/dev/null)
+if [ -n "$PID" ]; then
+  kill -9 $PID
+fi
+
+# Start fresh in the background
+nohup npm run dev > /tmp/vite-dev.log 2>&1 &
+echo "Dev server starting on http://localhost:$PORT (log: /tmp/vite-dev.log)"
