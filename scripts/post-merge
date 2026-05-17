@@ -1,0 +1,8 @@
+#!/bin/sh
+# Kill any process listening on the Vite dev server port after a merge
+PORT=5173
+PID=$(lsof -ti:$PORT 2>/dev/null)
+if [ -n "$PID" ]; then
+  echo "Killing dev server on port $PORT (pid $PID)"
+  kill -9 $PID
+fi
