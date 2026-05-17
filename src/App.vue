@@ -6,12 +6,18 @@ import TaskBoard from './components/TaskBoard.vue'
 import HistoryPanel from './components/HistoryPanel.vue'
 import CelebrationPopup from './components/CelebrationPopup.vue'
 import EncouragementToast from './components/EncouragementToast.vue'
+import ToughLoveToast from './components/ToughLoveToast.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import { useEncouragement } from './composables/useEncouragement.js'
+import { useToughLove } from './composables/useToughLove.js'
 
 const showHistory = ref(false)
 const showSettings = ref(false)
-const { showEncouragement } = useEncouragement()
+const { showEncouragement, dismissEncouragement } = useEncouragement()
+const { showToughLove, dismissToughLove } = useToughLove()
+
+function handleEncourage() { dismissToughLove(); showEncouragement() }
+function handleToughLove() { dismissEncouragement(); showToughLove() }
 </script>
 
 <template>
@@ -26,7 +32,8 @@ const { showEncouragement } = useEncouragement()
         <EnergySelector />
       </div>
       <div class="app-controls">
-        <button class="encourage-btn" @click="showEncouragement">Encourage Me</button>
+        <button class="encourage-btn" @click="handleEncourage">Encourage Me</button>
+        <button class="tough-love-btn" @click="handleToughLove">Tough Love</button>
         <button class="history-btn" @click="showHistory = true">History</button>
         <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -45,6 +52,7 @@ const { showEncouragement } = useEncouragement()
     <SettingsPanel v-if="showSettings" @close="showSettings = false" />
     <CelebrationPopup />
     <EncouragementToast />
+    <ToughLoveToast />
   </div>
 </template>
 
@@ -97,7 +105,15 @@ const { showEncouragement } = useEncouragement()
   line-height: 1.2;
 }
 
-.encourage-btn {
+.app-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.encourage-btn,
+.tough-love-btn,
+.history-btn {
   padding: 5px 13px;
   border-radius: 7px;
   border: 1.5px solid var(--border);
@@ -111,30 +127,8 @@ const { showEncouragement } = useEncouragement()
   flex-shrink: 0;
 }
 
-.encourage-btn:hover {
-  background: var(--border);
-  color: var(--text-h);
-}
-
-.app-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.history-btn {
-  padding: 5px 13px;
-  border-radius: 7px;
-  border: 1.5px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-
+.encourage-btn:hover,
+.tough-love-btn:hover,
 .history-btn:hover {
   background: var(--border);
   color: var(--text-h);
