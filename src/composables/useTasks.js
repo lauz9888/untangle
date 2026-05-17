@@ -1,0 +1,137 @@
+import { ref, watch } from 'vue'
+import { ENERGY_LEVELS, COLUMNS } from '../constants/energy.js'
+
+const STORAGE_KEY = 'untangle-tasks'
+const ENERGY_KEY = 'untangle-energy'
+
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch {
+    return fallback
+  }
+}
+
+function migrateTask(task) {
+  return {
+    energy: null,
+    dueDate: null,
+    availableFrom: null,
+    subtasks: [],
+    completedAt: null,
+    ...task,
+  }
+}
+
+const tasks = ref(loadFromStorage(STORAGE_KEY, []).map(migrateTask))
+const savedEnergy = localStorage.getItem(ENERGY_KEY)
+const currentEnergy = ref(savedEnergy || null)
+
+watch(tasks, (val) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
+}, { deep: true })
+
+watch(currentEnergy, (val) => {
+  localStorage.setItem(ENERGY_KEY, val ?? '')
+})
+
+function energyRank(id) {
+  return ENERGY_LEVELS.find(e => e.id === id)?.rank ?? 0
+}
+
+export function useTasks() {
+  function isOverCapacity(task) {
+    if (!task.energy || !currentEnergy.value) return false
+    return energyRank(task.energy) > energyRank(currentEnergy.value)
+  }
+
+  function tasksForColumn(columnId) {
+    return tasks.value.filter(t => t.column === columnId && !t.completedAt)
+  }
+
+  function addTask(title, column, { energy = null, dueDate = null, availableFrom = null, subtasks = [] } = {}) {
+    tasks.value.push({
+      id: crypto.randomUUID(),
+      title: title.trim(),
+      energy,
+      column,
+      createdAt: Date.now(),
+      completedAt: null,
+      dueDate: dueDate || null,
+      availableFrom: availableFrom || null,
+      subtasks: subtasks.map(s => ({
+        id: crypto.randomUUID(),
+        title: typeof s === 'string' ? s.trim() : s.title.trim(),
+        done: false,
+      })).filter(s => s.title),
+    })
+  }
+
+  function deleteTask(id) {
+    tasks.value = tasks.value.filter(t => t.id !== id)
+  }
+
+  function completeTask(id) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task) task.completedAt = Date.now()
+  }
+
+  function updateTask(id, changes) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task) Object.assign(task, changes)
+  }
+
+  function moveTask(id, direction) {
+    const columnIds = COLUMNS.map(c => c.id)
+    const task = tasks.value.find(t => t.id === id)
+    if (!task) return
+    const idx = columnIds.indexOf(task.column)
+    const newIdx = idx + direction
+    if (newIdx >= 0 && newIdx < columnIds.length) {
+      task.column = columnIds[newIdx]
+    }
+  }
+
+  function moveTaskToColumn(id, columnId) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task && COLUMNS.some(c => c.id === columnId)) {
+      task.column = columnId
+    }
+  }
+
+  function addSubtask(taskId, title) {
+    const task = tasks.value.find(t => t.id === taskId)
+    const trimmed = title?.trim()
+    if (task && trimmed) {
+      task.subtasks.push({ id: crypto.randomUUID(), title: trimmed, done: false })
+    }
+  }
+
+  function deleteSubtask(taskId, subtaskId) {
+    const task = tasks.value.find(t => t.id === taskId)
+    if (task) task.subtasks = task.subtasks.filter(s => s.id !== subtaskId)
+  }
+
+  function toggleSubtask(taskId, subtaskId) {
+    const task = tasks.value.find(t => t.id === taskId)
+    const subtask = task?.subtasks.find(s => s.id === subtaskId)
+    if (subtask) subtask.done = !subtask.done
+  }
+
+  return {
+    tasks,
+    currentEnergy,
+    tasksForColumn,
+    isOverCapacity,
+    addTask,
+    deleteTask,
+    completeTask,
+    updateTask,
+    moveTask,
+    moveTaskToColumn,
+    addSubtask,
+    deleteSubtask,
+    toggleSubtask,
+  }
+}
