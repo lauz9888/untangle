@@ -38,6 +38,7 @@ describe('persistence — composable', () => {
     expect(tasks.value[0].dueDate).toBeNull()
     expect(tasks.value[0].availableFrom).toBeNull()
     expect(tasks.value[0].subtasks).toEqual([])
+    expect(tasks.value[0].completedAt).toBeNull()
   })
 
   it('persists currentEnergy to localStorage', async () => {
@@ -45,6 +46,21 @@ describe('persistence — composable', () => {
     currentEnergy.value = 'large'
     await Promise.resolve()
     expect(localStorage.getItem('untangle-energy')).toBe('large')
+  })
+
+  it('loads currentEnergy from localStorage on init', async () => {
+    localStorage.setItem('untangle-energy', 'medium')
+    vi.resetModules()
+    const { useTasks: fresh } = await import('../../../src/composables/useTasks.js')
+    const { currentEnergy } = fresh()
+    expect(currentEnergy.value).toBe('medium')
+  })
+
+  it('restores currentEnergy as null when no energy is stored', async () => {
+    vi.resetModules()
+    const { useTasks: fresh } = await import('../../../src/composables/useTasks.js')
+    const { currentEnergy } = fresh()
+    expect(currentEnergy.value).toBeNull()
   })
 
   it('persists completedAt when a task is completed', async () => {

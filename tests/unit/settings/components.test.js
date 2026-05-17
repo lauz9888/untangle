@@ -21,7 +21,7 @@ describe('settings panel — components', () => {
   })
 
   describe('SettingsPanel — About modal', () => {
-    it('does not show the About modal by default', () => {
+    it('hides the About modal by default', () => {
       const wrapper = mount(SettingsPanel)
       expect(wrapper.find('.about-overlay').exists()).toBe(false)
     })
@@ -29,27 +29,27 @@ describe('settings panel — components', () => {
     it('shows the About modal when About is clicked', async () => {
       const wrapper = mount(SettingsPanel)
       await wrapper.find('.settings-nav-item').trigger('click')
-      expect(wrapper.find('.about-overlay').exists()).toBe(true)
+      expect(wrapper.find('.about-modal').exists()).toBe(true)
     })
 
-    it('shows descriptive text in the About modal', async () => {
-      const wrapper = mount(SettingsPanel)
-      await wrapper.find('.settings-nav-item').trigger('click')
-      expect(wrapper.find('.about-lead').text()).toBeTruthy()
-    })
-
-    it('closes the About modal when its close button is clicked', async () => {
+    it('hides the About modal when the modal close button is clicked', async () => {
       const wrapper = mount(SettingsPanel)
       await wrapper.find('.settings-nav-item').trigger('click')
       await wrapper.find('.about-modal-close').trigger('click')
       expect(wrapper.find('.about-overlay').exists()).toBe(false)
     })
 
-    it('closes the About modal when its overlay is clicked', async () => {
+    it('hides the About modal when the backdrop is clicked', async () => {
       const wrapper = mount(SettingsPanel)
       await wrapper.find('.settings-nav-item').trigger('click')
       await wrapper.find('.about-overlay').trigger('click')
       expect(wrapper.find('.about-overlay').exists()).toBe(false)
+    })
+
+    it('shows descriptive text in the About modal', async () => {
+      const wrapper = mount(SettingsPanel)
+      await wrapper.find('.settings-nav-item').trigger('click')
+      expect(wrapper.find('.about-lead').text()).toBeTruthy()
     })
   })
 
