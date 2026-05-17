@@ -3,6 +3,10 @@
 # $3 is 1 for branch checkouts, 0 for file checkouts
 [ "$3" = "1" ] || exit 0
 
+# Skip inside git worktrees (e.g. Claude Code sessions) — they each have a
+# .git file rather than a .git directory
+[ -f .git ] && exit 0
+
 PORT=5173
 
 # Kill any existing server on that port
