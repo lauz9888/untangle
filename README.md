@@ -20,6 +20,8 @@ The **History panel** (opened from the header) shows a bar chart of how many tas
 
 The **settings cog** (top-right corner) opens a side panel. Clicking the **About** entry opens a popup with a plain-language overview of what the app is and how it works.
 
+The **Encourage Me** button (next to the energy selector) displays a gentle, encouraging message in a toast notification at the bottom of the screen. Messages are written to be neurodivergent-friendly, with a low-pressure tone designed for people who may struggle with demand avoidance or executive dysfunction. There are 100 messages picked at random. The toast dismisses itself after five seconds, or can be clicked to dismiss it early.
+
 ### Task details
 
 Each task supports:
@@ -64,7 +66,7 @@ The app is built with **Vue 3** and **Vite**, using no UI libraries, no router, 
 
 All task logic lives in a single composable (`useTasks.js`). This acts as a shared store — every component that calls it gets the same reactive state. It handles creating, editing, moving, completing, and deleting tasks, as well as tracking the current energy level.
 
-Notification state lives in a separate composable (`useCelebration.js`), also a singleton. When a task is completed, `showCelebration()` picks one of 50 encouraging messages at random and displays it as a full-screen centred popup for 3.5 seconds. Clicking anywhere dismisses it early. Any previously running timer is cancelled so rapid completions don't stack.
+Notification state is split across two composables, both singletons. `useCelebration.js` handles task-completion messages: `showCelebration()` picks one of 50 messages at random and displays it as a full-screen centred popup for 3.5 seconds. `useEncouragement.js` handles the Encourage Me feature: `showEncouragement()` picks one of 100 neurodivergent-friendly messages at random and displays it as a bottom-centre toast for 5 seconds. Both dismiss early on click, and both cancel any running timer before starting a new one.
 
 Everything is saved to `localStorage` automatically whenever state changes, so nothing is lost on a page refresh. Completed tasks stay in storage (they're just hidden from the board columns) so the history panel can use them.
 
@@ -104,11 +106,12 @@ Unit tests use **Vitest** and **Vue Test Utils** and live in `tests/unit/`, orga
 | `energy/` | The energy selector component and over-capacity logic |
 | `persistence/` | localStorage round-tripping and migration of older data |
 | `celebration/` | The useCelebration composable (messages, auto-dismiss, dismiss) and CelebrationPopup component |
+| `encouragement/` | The useEncouragement composable (messages, auto-dismiss, dismiss) and EncouragementToast component |
 | `settings/` | The SettingsPanel component — structure, About modal, and close behaviour |
 
 Each feature folder has two files: one that tests the composable logic directly, and one that tests the components that render it. This split exists because the two test styles are technically incompatible — composable tests reset the module between each test to get fresh state, while component tests mock the composable entirely to isolate the component's rendering and event handling.
 
-There are 150 unit tests in total.
+There are 165 unit tests in total.
 
 ### End-to-end tests
 
@@ -124,8 +127,9 @@ End-to-end tests use **Playwright** and run against a real dev server. They live
 | `persistence.spec.js` | Tasks, moves, edits, and energy level surviving a page reload |
 | `history.spec.js` | History panel opens, shows chart, shows best-week message |
 | `settings.spec.js` | Settings cog opens the panel; About opens a modal; modal and panel close buttons work |
+| `encouragement.spec.js` | Encourage Me button visibility, toast appearance, auto-dismiss, early dismiss |
 
-Each test clears localStorage and reloads before it runs, so tests are fully independent. There are 70 end-to-end tests in total.
+Each test clears localStorage and reloads before it runs, so tests are fully independent. There are 76 end-to-end tests in total.
 
 ### CI
 
