@@ -91,3 +91,14 @@ Then ask:
 ### 6. Wait
 
 Do not advance the workflow automatically from here. The developer will trigger `/deploy-main` when they're ready.
+
+### 7. Handle bugs reported during manual testing
+
+If the developer reports a problem found while testing the branch, treat it as a bug found during manual testing — even if it looks minor or was introduced by this change. Before fixing anything:
+
+1. Trigger `/report-bug` with source `manual`. Provide a concise title and description of what the developer observed.
+2. Fix the bug.
+3. Close the issue via `/report-bug` (the close step).
+4. Commit the fix and push to the branch.
+5. Re-run the full CI suite (step 2) to confirm nothing regressed.
+6. Return to step 5 — report the updated branch to the developer and ask them to re-test.
