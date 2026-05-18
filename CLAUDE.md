@@ -47,6 +47,12 @@ The `pre-push` git hook and the Claude Code `PreToolUse` hook both enforce this 
 
 To re-approve after adding commits, just run `/qa-review` again.
 
+## Wiki updates
+
+The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated automatically. When a PR is merged and main is pushed, a GitHub Actions workflow (`wiki-update.yml`) diffs the change against every wiki page and updates any that are out of date. It requires `ANTHROPIC_API_KEY` to be set as a repository secret.
+
+For direct pushes to main, run `/wiki-update` in Claude Code to trigger the same review manually.
+
 ## Key files
 
 | File | Purpose |
