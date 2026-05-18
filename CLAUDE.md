@@ -33,6 +33,20 @@ Don't mix the two styles in the same file — they're incompatible.
 
 E2E tests in `tests/e2e/` clear `localStorage` and reload before every test so they're fully independent.
 
+## QA review and pull requests
+
+Before pushing a branch or creating a PR, QA review must pass. Run:
+
+```
+/qa-review
+```
+
+This skill reviews all changed code for logic issues, inefficiency, and maintainability problems; fixes what it finds; checks whether unit and e2e tests are needed and writes them if so; and updates README/CLAUDE.md if the change affects documented behaviour. When everything is clean it writes a QA approval marker for the current branch and commit.
+
+The `pre-push` git hook and the Claude Code `PreToolUse` hook both enforce this — pushing or running `gh pr create` will be blocked if the marker is missing or stale (i.e. new commits were added after the last review).
+
+To re-approve after adding commits, just run `/qa-review` again.
+
 ## Key files
 
 | File | Purpose |

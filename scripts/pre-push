@@ -1,0 +1,11 @@
+#!/bin/sh
+# Pre-push hook: enforces QA approval before any branch is pushed.
+# Installed by scripts/install-hooks.sh via npm prepare.
+
+# Skip in worktree environments (worktrees share the main repo's hooks)
+git_dir=$(git rev-parse --git-dir 2>/dev/null)
+if [ -f "${git_dir}/commondir" ]; then
+  exit 0
+fi
+
+exec "$(git rev-parse --show-toplevel)/scripts/check-qa-approved.sh"
