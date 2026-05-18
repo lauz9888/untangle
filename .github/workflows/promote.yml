@@ -10,10 +10,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write  # wiki-update job pushes to the wiki repo
+  contents: write  # deploy pushes to gh-pages branch; wiki-update pushes to wiki repo
   issues: write    # bug-tracker creates issues on test failures
-  pages: write     # deploy job uploads to GitHub Pages
-  id-token: write  # deploy job authenticates with OIDC
 
 jobs:
   unit-tests:
@@ -113,9 +111,6 @@ jobs:
     name: Deploy to GitHub Pages
     needs: [unit-tests, e2e-tests, build]
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -130,14 +125,13 @@ jobs:
         env:
           GITHUB_ACTIONS: true
 
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      # keep_files: true preserves the preview/ subdirectories written by branch CI.
+      - uses: peaceiris/actions-gh-pages@v4
         with:
-          path: dist
-
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          keep_files: true
+          commit_message: "deploy: main @ ${{ github.sha }}"
 
   wiki-update:
     name: Update wiki

@@ -94,19 +94,26 @@ Two GitHub Actions workflows govern every change.
 2. **AI code review** — calls Claude (`scripts/ai-review.mjs`) to check for requirement conflicts, code quality issues, missing/outdated tests, and documentation gaps. Any corrections are committed and pushed back to the branch automatically. The review fails the pipeline if it finds blocking issues that cannot be auto-fixed.
 3. **Unit tests** — runs after the AI review so any test file changes it made are included.
 4. **E2E tests** — same; runs in parallel with unit tests.
+5. **Deploy preview** — also runs after the AI review; builds the app with the branch-specific base URL and deploys it to the `gh-pages` branch under `preview/{branch-name}/`. For PRs, the preview URL is posted as a comment on the PR. Skipped for PRs from forks.
 
 Both test jobs run whether the AI review succeeded or failed (so test results are always visible), but only if the build check passed.
+
+Preview URL pattern: `https://lauz9888.github.io/untangle/preview/{branch-name}/`
+
+Preview cleanup (`.github/workflows/cleanup-preview.yml`) — removes the preview directory from `gh-pages` automatically when a PR closes or a branch is deleted.
 
 **Promote to main** (`.github/workflows/promote.yml`) — triggers on every push to main (i.e., after a merge):
 
 1. **Unit tests** and **E2E tests** — final verification that main is green (run in parallel).
 2. **Build check** — runs in parallel with tests.
-3. **Deploy to GitHub Pages** — runs after all three pass.
+3. **Deploy to GitHub Pages** — runs after all three pass; pushes to the `gh-pages` branch root (preserving the `preview/` subdirectories written by branch CI).
 4. **Wiki update** — runs after deploy; diffs the merged commit and updates any wiki pages that are out of date.
 
 Both pipelines create GitHub issues (labelled `found:ci`) on unit or E2E test failures.
 
-Required repository secret: `ANTHROPIC_API_KEY` (used by both the AI review and the wiki update).
+Required repository secrets: `ANTHROPIC_API_KEY` (AI review and wiki update).
+
+**One-time GitHub Pages setup** — the deployment strategy uses the `gh-pages` branch rather than the GitHub Actions Pages API. In the repository settings, go to **Settings → Pages → Build and deployment** and set the source to **Deploy from a branch**, selecting branch `gh-pages` and folder `/ (root)`. This only needs to be done once.
 
 ## Wiki updates
 

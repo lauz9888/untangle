@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? '/untangle/' : '/',
+  base: process.env.VITE_BASE || (process.env.GITHUB_ACTIONS ? '/untangle/' : '/'),
   plugins: [
     vue(),
     VitePWA({

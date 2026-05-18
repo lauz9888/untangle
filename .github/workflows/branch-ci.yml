@@ -12,8 +12,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write  # ai-review job pushes corrections back to the branch
-  issues: write    # bug-tracker creates issues on test failures
+  contents: write       # ai-review pushes corrections; deploy-preview pushes to gh-pages
+  issues: write         # bug-tracker creates issues on test failures
+  pull-requests: write  # deploy-preview posts the preview URL as a PR comment
 
 jobs:
   build-check:
@@ -64,6 +65,66 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/ai-review.mjs
+
+  deploy-preview:
+    name: Deploy preview
+    needs: [build-check, ai-review]
+    # Run whether ai-review passed or failed; skip if build failed, run was cancelled,
+    # or this is a PR from a fork (GITHUB_TOKEN cannot write to the base repo in that case).
+    if: >-
+      ${{ always() &&
+          needs.build-check.result == 'success' &&
+          (github.event_name == 'push' ||
+           github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compute preview path
+        id: preview
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          SAFE=$(echo "$BRANCH" | tr '/\\' '-' | sed 's/-\+/-/g' | sed 's/^-//;s/-$//')
+          echo "safe=$SAFE" >> $GITHUB_OUTPUT
+          echo "path=preview/${SAFE}" >> $GITHUB_OUTPUT
+          echo "url=https://lauz9888.github.io/untangle/preview/${SAFE}/" >> $GITHUB_OUTPUT
+
+      # Fetch the branch HEAD so we include any corrections the AI review committed.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build for preview
+        run: npm run build
+        env:
+          VITE_BASE: /untangle/${{ steps.preview.outputs.path }}/
+          GITHUB_ACTIONS: true
+
+      - name: Deploy to gh-pages preview path
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: ${{ steps.preview.outputs.path }}
+          keep_files: true
+          commit_message: "preview: ${{ steps.preview.outputs.safe }} @ ${{ github.sha }}"
+
+      - name: Post preview URL on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          URL="${{ steps.preview.outputs.url }}"
+          BODY="**Preview:** [${URL}](${URL}) — built from \`${{ github.sha }}\`"
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --edit-last --body "$BODY" 2>/dev/null || \
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "$BODY"
 
   unit-tests:
     name: Unit tests
