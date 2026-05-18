@@ -33,7 +33,21 @@ Ask the developer what they want to change or build. Keep asking until you have 
 
 Ask one focused question at a time. Don't ask for everything at once.
 
-If the developer's initial message already answers most of these, confirm your understanding rather than re-asking. For example: "I understand you want to [X], which should [Y], and it's done when [Z]. Is that right?"
+Before asking each question, register it so the workflow is blocked until the developer answers:
+
+```
+node scripts/workflow-state.mjs await-input "<the question you are about to ask>"
+```
+
+Then ask the question and end your turn. Do not continue until the developer responds. When the answer arrives, call:
+
+```
+node scripts/workflow-state.mjs clear-awaiting
+```
+
+Then either ask the next question (repeating the await-input pattern) or proceed to step 3 if you have everything you need.
+
+If the developer's initial message already answers most of these, confirm your understanding rather than re-asking. For example: "I understand you want to [X], which should [Y], and it's done when [Z]. Is that right?" Register this confirmation as an await-input, then end your turn.
 
 ### 3. Log a bug issue if the requirement is a bug fix
 
