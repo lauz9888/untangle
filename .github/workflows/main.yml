@@ -273,11 +273,13 @@ jobs:
         run: npm ci
 
       - name: Build for Lighthouse (root base path)
-        # Do NOT set GITHUB_ACTIONS here — Vite's base is '/' when that env
-        # var is absent, so LHCI can serve assets from the static root without
-        # path-prefix mismatches (the production deploy job rebuilds separately
-        # with GITHUB_ACTIONS=true for the /untangle/ GitHub Pages base).
+        # GitHub Actions always injects GITHUB_ACTIONS=true into the runner
+        # environment. vite.config.js uses that to set base: '/untangle/' for
+        # production deploys. For LHCI we need base: '/' so assets resolve from
+        # the server root — override GITHUB_ACTIONS to empty for this step only.
         run: npm run build
+        env:
+          GITHUB_ACTIONS: ""
 
       - name: Run Lighthouse CI (PWA + accessibility)
         id: lhci
