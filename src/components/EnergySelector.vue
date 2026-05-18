@@ -69,4 +69,27 @@ const { currentEnergy } = useTasks()
 .energy-btn.energy-small.active { border-color: var(--energy-small-active);  color: var(--energy-small-active);  background: var(--energy-small-bg); }
 .energy-btn.energy-medium.active{ border-color: var(--energy-medium-active); color: var(--energy-medium-active); background: var(--energy-medium-bg); }
 .energy-btn.energy-large.active { border-color: var(--energy-large-active);  color: var(--energy-large-active);  background: var(--energy-large-bg); }
+
+@media (max-width: 600px) {
+  .energy-selector {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+
+  .energy-label {
+    display: none;
+  }
+
+  .energy-buttons {
+    flex: 1;
+    justify-content: space-between;
+  }
+
+  .energy-btn {
+    flex: 1;
+    padding: 6px 4px;
+    font-size: 12px;
+    text-align: center;
+  }
+}
 </style>

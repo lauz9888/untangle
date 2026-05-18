@@ -26,6 +26,7 @@ import TaskColumn from './TaskColumn.vue'
   .task-board {
     flex-direction: column;
     padding: 16px;
+    align-items: stretch;
   }
 }
 </style>
