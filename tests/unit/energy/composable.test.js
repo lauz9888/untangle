@@ -11,6 +11,32 @@ describe('energy — composable and EnergySelector', () => {
     ;({ default: EnergySelector } = await import('../../../src/components/EnergySelector.vue'))
   })
 
+  describe('isNotYetAvailable', () => {
+    it('returns false when availableFrom is null', () => {
+      const { addTask, isNotYetAvailable, tasks } = useTasks()
+      addTask('Task', 'now')
+      expect(isNotYetAvailable(tasks.value[0])).toBe(false)
+    })
+
+    it('returns false when availableFrom is today', () => {
+      const { addTask, isNotYetAvailable, tasks, today } = useTasks()
+      addTask('Task', 'now', { availableFrom: today.value })
+      expect(isNotYetAvailable(tasks.value[0])).toBe(false)
+    })
+
+    it('returns false when availableFrom is in the past', () => {
+      const { addTask, isNotYetAvailable, tasks } = useTasks()
+      addTask('Task', 'now', { availableFrom: '2020-01-01' })
+      expect(isNotYetAvailable(tasks.value[0])).toBe(false)
+    })
+
+    it('returns true when availableFrom is in the future', () => {
+      const { addTask, isNotYetAvailable, tasks } = useTasks()
+      addTask('Task', 'now', { availableFrom: '2099-12-31' })
+      expect(isNotYetAvailable(tasks.value[0])).toBe(true)
+    })
+  })
+
   describe('isOverCapacity', () => {
     it('returns false when task has no energy set', () => {
       const { addTask, isOverCapacity, tasks } = useTasks()

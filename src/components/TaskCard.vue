@@ -1,9 +1,9 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed } from 'vue'
 import { useTasks } from '../composables/useTasks.js'
 import { useCelebration, STREAK_MILESTONES } from '../composables/useCelebration.js'
+import { useTaskDrag } from '../composables/useDragDrop.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
-import { activeTouchDragId } from '../composables/useDragDrop.js'
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -11,7 +11,7 @@ const props = defineProps({
   isLast: { type: Boolean, default: false },
 })
 
-const { deleteTask, completeTask, updateTask, moveTask, moveTaskToColumn, isOverCapacity, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
+const { deleteTask, completeTask, updateTask, moveTask, isOverCapacity, isNotYetAvailable, today, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
 const { showCelebration, showMilestone } = useCelebration()
 
 function handleComplete(id) {
@@ -30,8 +30,6 @@ const subtaskProgress = computed(() =>
   props.task.subtasks.length ? (doneSubtasks.value / props.task.subtasks.length) * 100 : 0
 )
 
-// Computed so it stays correct if the app is left open past midnight
-const today = computed(() => new Date().toISOString().slice(0, 10))
 const isOverdue = computed(() => !!props.task.dueDate && props.task.dueDate < today.value)
 
 function formatDate(dateStr) {
@@ -42,125 +40,13 @@ function formatDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-// ── HTML5 drag (desktop mouse) ────────────────────────────────────────────────
+// ── drag + edit ───────────────────────────────────────────────────────────────
 
 const cardEl = ref(null)
-const isDragging = ref(false)
-
-function onDragStart(e) {
-  isDragging.value = true
-  e.dataTransfer.setData('text/plain', props.task.id)
-  e.dataTransfer.effectAllowed = 'move'
-}
-
-function onDragEnd() {
-  isDragging.value = false
-}
-
-// ── Touch drag ────────────────────────────────────────────────────────────────
-
-const isTouchDragging = ref(false)
-let ghostEl = null
-let ghostOffsetX = 0
-let ghostOffsetY = 0
-let touchStartX = 0
-let touchStartY = 0
-
-function handleTouchStart(e) {
-  if (editing.value || activeTouchDragId.value) return
-  const touch = e.touches[0]
-  touchStartX = touch.clientX
-  touchStartY = touch.clientY
-  document.addEventListener('touchmove', handleTouchMove, { passive: false })
-  document.addEventListener('touchend', handleTouchEnd)
-  document.addEventListener('touchcancel', handleTouchCancel)
-}
-
-function handleTouchMove(e) {
-  const touch = e.touches[0]
-  if (!isTouchDragging.value) {
-    if (activeTouchDragId.value) return
-    const dx = Math.abs(touch.clientX - touchStartX)
-    const dy = Math.abs(touch.clientY - touchStartY)
-    if (dx < 8 && dy < 8) return
-    startTouchDrag(touch)
-  }
-  if (isTouchDragging.value) {
-    e.preventDefault()
-    if (ghostEl) {
-      ghostEl.style.left = (touch.clientX - ghostOffsetX) + 'px'
-      ghostEl.style.top = (touch.clientY - ghostOffsetY) + 'px'
-    }
-  }
-}
-
-function handleTouchEnd(e) {
-  removeTouchListeners()
-  if (!isTouchDragging.value) return
-  const touch = e.changedTouches[0]
-  dropTouchDrag(touch.clientX, touch.clientY)
-}
-
-function handleTouchCancel() {
-  removeTouchListeners()
-  cleanupTouchDrag()
-}
-
-function removeTouchListeners() {
-  document.removeEventListener('touchmove', handleTouchMove)
-  document.removeEventListener('touchend', handleTouchEnd)
-  document.removeEventListener('touchcancel', handleTouchCancel)
-}
-
-function startTouchDrag(touch) {
-  isTouchDragging.value = true
-  isDragging.value = true
-  activeTouchDragId.value = props.task.id
-  const rect = cardEl.value.getBoundingClientRect()
-  ghostOffsetX = touch.clientX - rect.left
-  ghostOffsetY = touch.clientY - rect.top
-  ghostEl = cardEl.value.cloneNode(true)
-  Object.assign(ghostEl.style, {
-    position: 'fixed',
-    left: rect.left + 'px',
-    top: rect.top + 'px',
-    width: rect.width + 'px',
-    opacity: '0.85',
-    pointerEvents: 'none',
-    zIndex: '9999',
-    transform: 'rotate(1.5deg) scale(1.03)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-    transition: 'none',
-    margin: '0',
-  })
-  document.body.appendChild(ghostEl)
-}
-
-function dropTouchDrag(x, y) {
-  if (ghostEl) { ghostEl.remove(); ghostEl = null }
-  isTouchDragging.value = false
-  isDragging.value = false
-  activeTouchDragId.value = null
-  const elements = document.elementsFromPoint(x, y)
-  const columnEl = elements.find(el => el.dataset?.column)
-  if (columnEl) moveTaskToColumn(props.task.id, columnEl.dataset.column)
-}
-
-function cleanupTouchDrag() {
-  if (ghostEl) { ghostEl.remove(); ghostEl = null }
-  isTouchDragging.value = false
-  isDragging.value = false
-  activeTouchDragId.value = null
-}
-
-onBeforeUnmount(() => {
-  removeTouchListeners()
-  cleanupTouchDrag()
-})
-
-// ── edit ─────────────────────────────────────────────────────────────────────
-
 const editing = ref(false)
+
+const { isDragging, onDragStart, onDragEnd, handleTouchStart } = useTaskDrag(props.task.id, cardEl, editing)
+
 const editTitle = ref('')
 const editEnergy = ref(null)
 const editDueDate = ref('')
@@ -205,7 +91,7 @@ function addSubtaskAction() {
     ref="cardEl"
     class="task-card"
     :class="[task.energy ? `energy-border-${task.energy}` : 'energy-border-none',
-             { 'over-capacity': isOverCapacity(task), 'is-dragging': isDragging, 'is-editing': editing }]"
+             { 'over-capacity': isOverCapacity(task), 'not-yet-available': isNotYetAvailable(task), 'is-dragging': isDragging, 'is-editing': editing }]"
     :draggable="!editing"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
@@ -349,6 +235,10 @@ function addSubtaskAction() {
 }
 
 .task-card.over-capacity {
+  opacity: 0.35;
+}
+
+.task-card.not-yet-available {
   opacity: 0.35;
 }
 

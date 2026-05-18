@@ -7,6 +7,12 @@ const { recordCompletion } = useStreak()
 const STORAGE_KEY = 'untangle-tasks'
 const ENERGY_KEY = 'untangle-energy'
 
+function todayString() {
+  return new Date().toISOString().slice(0, 10)
+}
+const today = ref(todayString())
+setInterval(() => { today.value = todayString() }, 60_000)
+
 function loadFromStorage(key, fallback, { raw = false } = {}) {
   try {
     const val = localStorage.getItem(key)
@@ -48,6 +54,10 @@ export function useTasks() {
   function isOverCapacity(task) {
     if (!task.energy || !currentEnergy.value) return false
     return energyRank(task.energy) > energyRank(currentEnergy.value)
+  }
+
+  function isNotYetAvailable(task) {
+    return !!task.availableFrom && task.availableFrom > today.value
   }
 
   function tasksForColumn(columnId) {
@@ -130,8 +140,10 @@ export function useTasks() {
   return {
     tasks,
     currentEnergy,
+    today,
     tasksForColumn,
     isOverCapacity,
+    isNotYetAvailable,
     addTask,
     deleteTask,
     completeTask,

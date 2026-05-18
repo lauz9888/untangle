@@ -39,7 +39,13 @@ Before pushing any branch, run `/qa-review` in Claude Code. The pre-push hook wi
 
 ---
 
-Untangle was built using an AI-assisted workflow. See the [wiki](https://github.com/lauz9888/untangle/wiki) for more information.
+## AI involvement
+
+Untangle was built using an AI-assisted development workflow. Claude writes the code; the human author owns the architecture, makes all design decisions, and reviews every change before it ships.
+
+All AI-generated code goes through the same pipeline as hand-written code: automated unit and end-to-end tests, a QA review step, and human sign-off before merging. Generated code that can't be read, reasoned about, and defended is treated as a liability — not a shortcut.
+
+Full details on the workflow (skills, pipeline steps, and the test strategy that keeps generated code honest) are in the [wiki](https://github.com/lauz9888/untangle/wiki).
 
 ---
 

@@ -24,6 +24,8 @@ vi.mock('../../../src/composables/useTasks.js', () => ({
     addTask: mockAddTask,
     tasksForColumn: mockTasksForColumn,
     isOverCapacity: mockIsOverCapacity,
+    isNotYetAvailable: vi.fn(() => false),
+    today: { value: new Date().toISOString().slice(0, 10) },
     deleteTask: mockDeleteTask,
     updateTask: mockUpdateTask,
     moveTask: mockMoveTask,
