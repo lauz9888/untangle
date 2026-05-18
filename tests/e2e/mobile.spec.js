@@ -152,6 +152,10 @@ test.describe('mobile — layout at narrow viewport', () => {
     await expect(page.locator('.app-title')).toBeVisible()
   })
 
+  test('energy selector label is visible at narrow viewport', async ({ page }) => {
+    await expect(page.locator('.energy-label')).toBeVisible()
+  })
+
   test('action buttons are present in the DOM and functional on narrow viewport', async ({ page }) => {
     await addTask(page, 'now', 'Mobile task')
     const card = taskCard(page, 'now', 'Mobile task')

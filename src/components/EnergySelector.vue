@@ -76,10 +76,6 @@ const { currentEnergy } = useTasks()
     justify-content: space-between;
   }
 
-  .energy-label {
-    display: none;
-  }
-
   .energy-buttons {
     flex: 1;
     justify-content: space-between;
