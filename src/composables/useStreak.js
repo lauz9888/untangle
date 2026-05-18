@@ -81,16 +81,6 @@ function isExcluded(dateStr, settings) {
   return false
 }
 
-// Most recent non-excluded day strictly before dateStr (up to 730 days back)
-function prevActiveDay(dateStr, settings) {
-  let d = addDays(dateStr, -1)
-  for (let i = 0; i < 730; i++) {
-    if (!isExcluded(d, settings)) return d
-    d = addDays(d, -1)
-  }
-  return null
-}
-
 // True if any non-excluded day falls strictly between fromDate and toDate
 function hasActiveDayBetween(fromDate, toDate, settings) {
   let d = addDays(fromDate, 1)
