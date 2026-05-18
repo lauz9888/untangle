@@ -74,6 +74,7 @@ When you send Claude a message asking for a code change, the workflow starts aut
 | 8a | `/deploy-branch` | Deploys to a branch for manual testing |
 | 8b | `/deploy-main` | Runs full CI and merges to main |
 | 9 | `/post-deploy-report` | Generates a change report (summary + bug analysis) and commits it to `reports/` |
+| 10 | (part of `/deploy-main`) | Deletes the source branch from the remote and removes the local git worktree |
 
 Each skill can also be run manually at any time by typing `/skill-name`.
 

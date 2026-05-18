@@ -120,8 +120,28 @@ node scripts/workflow-state.mjs reset
 
 Tell the developer:
 - The PR number and that it has been merged to main
-- The source branch has been deleted
+- The source branch has been deleted from the remote
 - The report filename that was committed to `reports/`
-- The full workflow is complete
+- That the local worktree and branch are about to be removed
 
 If the wiki auto-update workflow is running, mention that it will update the GitHub wiki automatically.
+
+### 9. Clean up the local worktree and branch
+
+Capture the current worktree path and branch, then remove them. This is the last action in the session — the directory will be gone afterwards.
+
+```bash
+worktree_path=$(git rev-parse --show-toplevel)
+branch=$(git rev-parse --abbrev-ref HEAD)
+git_dir=$(git rev-parse --git-dir)
+
+if [ -f "${git_dir}/commondir" ]; then
+  common=$(cat "${git_dir}/commondir")
+  main_root=$(cd "${git_dir}/${common}/.." && pwd)
+  cd "$main_root"
+  git worktree remove "$worktree_path" --force
+  git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
+fi
+```
+
+If not in a worktree (no `commondir` file), skip silently — there is nothing local to clean up.
