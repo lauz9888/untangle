@@ -304,12 +304,14 @@ function onDrop(e) {
 
 .energy-picker {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 3px;
 }
 
 .energy-opt {
-  padding: 3px 10px;
+  flex: 1;
+  padding: 3px 6px;
+  text-align: center;
   border-radius: 100px;
   border: 1.5px solid var(--border);
   background: transparent;
@@ -334,7 +336,6 @@ function onDrop(e) {
 .form-dates {
   display: flex;
   gap: 8px;
-  align-items: flex-end;
 }
 
 .form-date-field {
@@ -346,6 +347,7 @@ function onDrop(e) {
 }
 
 .date-input {
+  margin-top: auto;
   padding: 7px 8px;
   border-radius: 7px;
   border: 1.5px solid var(--border);
@@ -431,15 +433,8 @@ function onDrop(e) {
     font-size: 14px;
   }
 
-  .energy-picker {
-    flex-wrap: nowrap;
-  }
-
   .energy-opt {
-    flex: 1;
     padding: 5px 2px;
-    font-size: 12px;
-    text-align: center;
   }
 
   .task-input,
