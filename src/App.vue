@@ -135,8 +135,7 @@ function handleToughLove() {
 
 .app-tagline {
   font-size: 11px;
-  color: var(--text);
-  opacity: 0.7;
+  color: var(--text-subtle);
   letter-spacing: 0.1px;
   line-height: 1.2;
 }
@@ -167,8 +166,7 @@ function handleToughLove() {
   border-radius: 7px;
   border: 1.5px solid var(--border);
   font-size: 13px;
-  color: var(--text);
-  opacity: 0.5;
+  color: var(--text-subtle);
   flex-shrink: 0;
   user-select: none;
 }

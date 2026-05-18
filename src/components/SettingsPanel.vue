@@ -258,8 +258,7 @@ const freezeEnabled = computed({
 .section-title {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text);
-  opacity: 0.5;
+  color: var(--text-subtle);
   letter-spacing: 0.5px;
   text-transform: uppercase;
   padding: 0 4px 8px;
@@ -296,8 +295,7 @@ const freezeEnabled = computed({
 
 .toggle-desc {
   font-size: 11.5px;
-  color: var(--text);
-  opacity: 0.65;
+  color: var(--text-subtle);
   line-height: 1.35;
 }
 
