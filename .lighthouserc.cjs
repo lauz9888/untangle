@@ -11,9 +11,15 @@
  *
  * Thresholds are intentionally pragmatic for an initial baseline:
  * raise them incrementally as the scores improve.
+ *
+ * NOTE: Must be .cjs (CommonJS) — LHCI uses require() to load config files,
+ * which fails for ES modules. Since this project has "type": "module" in
+ * package.json, a plain .js file would be treated as ESM and silently ignored,
+ * causing LHCI to fall back to auto-detection defaults (wrong static server,
+ * wrong URL, NO_FCP). The .cjs extension forces CommonJS regardless.
  */
 
-export default {
+module.exports = {
   ci: {
     collect: {
       // Use `vite preview` rather than LHCI's built-in static server.
