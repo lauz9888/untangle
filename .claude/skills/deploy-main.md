@@ -1,8 +1,8 @@
-Run the full CI pipeline and deploy the change to main.
+Push the change directly to main and confirm CI passes.
 
-This skill is part of the automated development workflow. It runs automatically when the developer chooses to skip branch testing, or is triggered manually with `/deploy-main` after branch testing.
+This skill is part of the automated development workflow. It is the default deployment path for small and medium changes. For larger changes where you want browser verification before merging, use `/deploy-branch` instead.
 
-GitHub CI is the gate — all four required checks (Unit tests, E2E tests, Coverage gate, Build check) must pass before the merge executes. This relies on branch protection requiring those checks on main; if branch protection is ever removed, `--auto` will merge immediately without waiting.
+Changes are pushed directly to main. GitHub CI runs after the push via the `push: branches: [main]` trigger in `ci.yml`. If CI fails, the failure lands on main — fix it with a follow-up commit.
 
 ## Steps
 
@@ -44,52 +44,30 @@ mkdir -p "${git_dir}/claude-qa"
 git rev-parse HEAD > "${git_dir}/claude-qa/${safe_branch}.approved"
 ```
 
-### 4. Push and create a pull request
-
-Push the branch, then create the PR:
+### 4. Push directly to main
 
 ```
-git push -u origin <branch>
-
-gh pr create \
-  --title "<concise title of the change>" \
-  --body "$(cat <<'EOF'
-## Summary
-- <bullet 1>
-- <bullet 2>
-
-## Test plan
-- [x] Unit tests: run by GitHub CI
-- [x] E2E tests: run by GitHub CI
-- [x] Coverage gate: run by GitHub CI
-- [x] Build check: run by GitHub CI
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
+git push origin HEAD:main
 ```
 
-### 5. Queue the merge and wait for CI
+### 5. Watch CI
 
-Enable auto-merge so GitHub merges the PR once all required checks pass:
-
-```
-gh pr merge <PR-number> --squash --delete-branch --auto
-```
-
-Then watch CI progress until the merge completes:
+Get the run ID for the push just triggered and watch it:
 
 ```
-gh pr checks <PR-number> --watch
+gh run list --branch main --limit 1 --json databaseId --jq '.[0].databaseId'
+gh run watch <run-id>
 ```
 
-If any check fails, GitHub CI will have already opened a bug issue via `ci.yml`. Do not re-open a duplicate. Investigate the failure, push a fix commit to the branch, and the auto-merge will re-queue automatically once checks pass.
+If CI fails, do not open a duplicate bug issue — `ci.yml` already does that automatically. Investigate the failure, push a fix commit (`git push origin HEAD:main` again), then watch the new run.
 
 ### 6. Generate the post-deploy report
 
-Once `gh pr checks` exits (merge complete), run `/post-deploy-report` passing the PR number. This generates a markdown report in `reports/` and commits it to main. The report reads `started_at` from current workflow state to compute cycle time, so it must run before the state is reset.
+Once CI passes, run `/post-deploy-report` passing the merge commit SHA or the short commit reference. This generates a markdown report in `reports/` and commits it to main. The report reads `started_at` from current workflow state to compute cycle time, so it must run before the state is reset.
 
-If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the merge has already completed successfully.
+For the PR number field, use the commit SHA short form (e.g. `abc1234`) if there is no PR number — the report skill accepts either.
+
+If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the push has already completed successfully.
 
 ### 7. Reset workflow state
 
@@ -100,8 +78,7 @@ node scripts/workflow-state.mjs reset
 ### 8. Report to the developer
 
 Tell the developer:
-- The PR number and that it has been merged to main
-- The source branch has been deleted
+- That the change has been pushed to main and CI passed
 - The report filename that was committed to `reports/`
 - The full workflow is complete
 
