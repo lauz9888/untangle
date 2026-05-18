@@ -84,11 +84,35 @@ sh scripts/mark-qa-approved.sh --e2e  # also runs E2E tests
 
 This runs the test suite and writes the same approval marker. You are responsible for the code review itself — the script only verifies the tests pass.
 
+## CI pipelines
+
+Two GitHub Actions workflows govern every change.
+
+**Branch CI** (`.github/workflows/branch-ci.yml`) — triggers on any push to a non-main branch and on PRs targeting main:
+
+1. **Build check** — verifies the project builds with no errors.
+2. **AI code review** — calls Claude (`scripts/ai-review.mjs`) to check for requirement conflicts, code quality issues, missing/outdated tests, and documentation gaps. Any corrections are committed and pushed back to the branch automatically. The review fails the pipeline if it finds blocking issues that cannot be auto-fixed.
+3. **Unit tests** — runs after the AI review so any test file changes it made are included.
+4. **E2E tests** — same; runs in parallel with unit tests.
+
+Both test jobs run whether the AI review succeeded or failed (so test results are always visible), but only if the build check passed.
+
+**Promote to main** (`.github/workflows/promote.yml`) — triggers on every push to main (i.e., after a merge):
+
+1. **Unit tests** and **E2E tests** — final verification that main is green (run in parallel).
+2. **Build check** — runs in parallel with tests.
+3. **Deploy to GitHub Pages** — runs after all three pass.
+4. **Wiki update** — runs after deploy; diffs the merged commit and updates any wiki pages that are out of date.
+
+Both pipelines create GitHub issues (labelled `found:ci`) on unit or E2E test failures.
+
+Required repository secret: `ANTHROPIC_API_KEY` (used by both the AI review and the wiki update).
+
 ## Wiki updates
 
-The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated automatically. When a PR is merged and main is pushed, a GitHub Actions workflow (`wiki-update.yml`) diffs the change against every wiki page and updates any that are out of date. It requires `ANTHROPIC_API_KEY` to be set as a repository secret.
+The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated automatically by the promote pipeline each time a commit lands on main. The `wiki-update.yml` workflow remains available for manual one-off updates via `workflow_dispatch` (or `/wiki-update` in Claude Code).
 
-For direct pushes to main, run `/wiki-update` in Claude Code to trigger the same review manually.
+The update script (`scripts/update-wiki.mjs`) diffs the latest commit against every wiki page and rewrites any that are out of date. It requires `ANTHROPIC_API_KEY` to be set as a repository secret.
 
 ## Key files
 
@@ -102,3 +126,4 @@ For direct pushes to main, run `/wiki-update` in Claude Code to trigger the same
 | `src/components/TaskColumn.vue` | Column with add-task form and drop zone |
 | `tests/e2e/helpers.js` | Shared Playwright helpers (`addTask`, `taskCard`, `openEdit`) |
 | `scripts/bug-tracker.mjs` | CLI for creating and closing GitHub bug issues |
+| `scripts/ai-review.mjs` | AI review script run by branch CI — reviews diff, fixes issues, updates tests/docs |

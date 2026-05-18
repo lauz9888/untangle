@@ -1,0 +1,152 @@
+name: Branch CI
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel any in-progress run for the same branch when a new commit arrives.
+concurrency:
+  group: branch-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write  # ai-review job pushes corrections back to the branch
+  issues: write    # bug-tracker creates issues on test failures
+
+jobs:
+  build-check:
+    name: Build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+  ai-review:
+    name: AI code review
+    needs: build-check
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the actual branch HEAD (not the PR merge commit) so we can push back.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
+      - name: Fetch main
+        run: git fetch origin main
+
+      - name: Run AI review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/ai-review.mjs
+
+  unit-tests:
+    name: Unit tests
+    needs: [build-check, ai-review]
+    # Run whether ai-review passed or failed; skip only if build failed or run was cancelled.
+    if: ${{ always() && needs.build-check.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      # Fetch branch HEAD so we pick up any corrections the AI review committed.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run unit tests
+        id: unit-tests
+        run: npm test -- --run --reporter=verbose
+        continue-on-error: true
+
+      - name: Create issue on failure
+        if: steps.unit-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Unit tests failing on ${{ github.ref_name }}" \
+            --body "Unit tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`)." \
+            --source "ci-unit-tests"
+
+      - name: Fail if tests failed
+        if: steps.unit-tests.outcome == 'failure'
+        run: exit 1
+
+  e2e-tests:
+    name: E2E tests
+    needs: [build-check, ai-review]
+    if: ${{ always() && needs.build-check.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        id: e2e-tests
+        run: npm run test:e2e
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        if: steps.e2e-tests.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Create issue on failure
+        if: steps.e2e-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: E2E tests failing on ${{ github.ref_name }}" \
+            --body "E2E tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`). Playwright report uploaded as a build artifact." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if tests failed
+        if: steps.e2e-tests.outcome == 'failure'
+        run: exit 1
