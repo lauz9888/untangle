@@ -1,12 +1,23 @@
 #!/usr/bin/env node
 // Usage:
-//   node scripts/bug-tracker.mjs create --title "..." --body "..." --source "qa-review|unit-test|e2e-test|manual|ci"
+//   node scripts/bug-tracker.mjs create --title "..." --body "..." --source "development|qa-review|unit-test|e2e-test|manual|ci-unit-tests|ci-e2e-tests"
 //   node scripts/bug-tracker.mjs close  --number 42 --cause "..." --fix "..."
 //   node scripts/bug-tracker.mjs find   --title "..."   → prints issue number, or nothing
 import { spawnSync } from 'child_process';
 import { writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
+
+// Maps source values to a GitHub label that records the detection process.
+const PROCESS_LABELS = {
+  'development':   { name: 'found:development', color: '0075ca', description: 'Identified during development' },
+  'qa-review':     { name: 'found:qa',          color: 'e4e669', description: 'Identified during QA review' },
+  'unit-test':     { name: 'found:qa',          color: 'e4e669', description: 'Identified during QA review' },
+  'e2e-test':      { name: 'found:qa',          color: 'e4e669', description: 'Identified during QA review' },
+  'ci-unit-tests': { name: 'found:ci',          color: 'd876e3', description: 'Identified in CI pipeline' },
+  'ci-e2e-tests':  { name: 'found:ci',          color: 'd876e3', description: 'Identified in CI pipeline' },
+  'manual':        { name: 'found:manual',      color: '0e8a16', description: 'Reported manually' },
+};
 
 function parseArgs(argv) {
   const opts = {};
@@ -44,6 +55,15 @@ function ensureBugLabel() {
   } catch {}
 }
 
+function ensureProcessLabel(source) {
+  const meta = PROCESS_LABELS[source];
+  if (!meta) return null;
+  try {
+    gh('label', 'create', meta.name, '--color', meta.color, '--description', meta.description, '--force');
+  } catch {}
+  return meta.name;
+}
+
 function openBugIssues() {
   const out = gh('issue', 'list', '--label', 'bug', '--state', 'open', '--json', 'title,number', '--limit', '100');
   return JSON.parse(out);
@@ -57,6 +77,7 @@ if (command === 'create') {
   if (!title) { console.error('--title is required'); process.exit(1); }
 
   ensureBugLabel();
+  const processLabel = ensureProcessLabel(source);
 
   const existing = openBugIssues();
   const dup = existing.find(i => i.title === title);
@@ -66,8 +87,11 @@ if (command === 'create') {
   }
 
   const fullBody = `**Detected by:** ${source}\n\n${body}`;
+  const labelArgs = processLabel
+    ? ['--label', 'bug', '--label', processLabel]
+    : ['--label', 'bug'];
   const url = withTempFile(fullBody, f =>
-    gh('issue', 'create', '--title', title, '--body-file', f, '--label', 'bug')
+    gh('issue', 'create', '--title', title, '--body-file', f, ...labelArgs)
   );
   const num = url.match(/\/(\d+)$/)?.[1];
   if (num) process.stdout.write(`CREATED:${num}\n`);
