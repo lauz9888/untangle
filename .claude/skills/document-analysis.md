@@ -46,14 +46,14 @@ Give the developer a concise summary of everything done in this workflow:
 Register the question so the workflow is blocked until the developer answers:
 
 ```
-node scripts/workflow-state.mjs await-input "Deploy to a branch for manual testing first, or directly to main?"
+node scripts/workflow-state.mjs await-input "Deploy directly to main, or deploy to a branch for manual testing first?"
 ```
 
 Then ask:
 
-> "Everything is complete. Would you like to:
-> - **Test manually first** — I'll deploy the changes to a branch so you can verify in a browser before merging
-> - **Deploy directly to main** — I'll run the full CI pipeline and merge straight to main"
+> "Everything is complete. How would you like to deploy?
+> - **Deploy directly to main** *(default)* — I'll run the full CI pipeline and merge straight to main. Choose this for logic, text, or config changes that don't need browser verification.
+> - **Test manually first** — I'll deploy to a branch so you can verify the change in a browser before merging. Choose this for UI or interaction changes where you want to see it working."
 
 End your turn. Do not continue until the developer responds.
 

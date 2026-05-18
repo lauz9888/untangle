@@ -1,6 +1,6 @@
 Run the full CI pipeline and deploy the change to main.
 
-This skill is part of the automated development workflow. It runs automatically when the developer chooses to skip branch testing, or is triggered manually with `/deploy-main` after branch testing.
+This skill is part of the automated development workflow. It is the default deployment path — triggered automatically when no manual browser testing is needed, or manually with `/deploy-main` after branch testing is complete.
 
 ## Steps
 
