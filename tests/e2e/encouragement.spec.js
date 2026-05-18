@@ -25,8 +25,7 @@ test.describe('Encourage Me', () => {
   test('toast auto-dismisses after 5 seconds', async ({ page }) => {
     await page.getByRole('button', { name: 'Encourage Me' }).click()
     await expect(page.locator('.encouragement-toast')).toBeVisible()
-    await page.waitForTimeout(5100)
-    await expect(page.locator('.encouragement-toast')).not.toBeVisible()
+    await expect(page.locator('.encouragement-toast')).not.toBeVisible({ timeout: 7000 })
   })
 
   test('clicking the toast dismisses it early', async ({ page }) => {

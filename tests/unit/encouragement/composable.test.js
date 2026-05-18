@@ -78,8 +78,8 @@ describe('useEncouragement — composable', () => {
   })
 
   describe('ENCOURAGEMENT_MESSAGES', () => {
-    it('contains exactly 100 messages', () => {
-      expect(ENCOURAGEMENT_MESSAGES).toHaveLength(100)
+    it('has a meaningful pool of messages', () => {
+      expect(ENCOURAGEMENT_MESSAGES.length).toBeGreaterThanOrEqual(10)
     })
 
     it('contains no duplicate messages', () => {

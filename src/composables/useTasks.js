@@ -28,7 +28,8 @@ function migrateTask(task) {
   }
 }
 
-const tasks = ref(loadFromStorage(STORAGE_KEY, []).map(migrateTask))
+const rawTasks = loadFromStorage(STORAGE_KEY, [])
+const tasks = ref((Array.isArray(rawTasks) ? rawTasks : []).map(migrateTask))
 const currentEnergy = ref(loadFromStorage(ENERGY_KEY, null, { raw: true }) || null)
 
 watch(tasks, (val) => {

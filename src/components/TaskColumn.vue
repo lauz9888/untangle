@@ -115,13 +115,14 @@ function onDrop(e) {
       <p v-if="columnTasks.length === 0" class="empty-hint">No tasks yet</p>
     </div>
     <div class="add-task-area">
-      <button v-if="!showForm" class="add-task-btn" @click="showForm = true">
+      <button v-if="!showForm" class="add-task-btn" data-testid="add-task-btn" @click="showForm = true">
         + Add task
       </button>
-      <form v-else class="add-task-form" @submit.prevent="submit">
+      <form v-else class="add-task-form" data-testid="add-task-form" @submit.prevent="submit">
         <input
           v-model="newTitle"
           class="task-input"
+          data-testid="task-input"
           placeholder="Task name"
           autofocus
           required

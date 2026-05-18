@@ -4,6 +4,7 @@ const port = process.env.PORT || 5173
 
 export default defineConfig({
   testDir: './tests/e2e',
+  workers: 4,
   use: {
     baseURL: `http://localhost:${port}`,
   },

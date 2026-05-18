@@ -102,78 +102,78 @@ describe('task management — components', () => {
   describe('TaskColumn — add task form', () => {
     it('shows the Add task button initially', () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      expect(wrapper.find('.add-task-btn').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="add-task-btn"]').exists()).toBe(true)
     })
 
     it('hides the form initially', () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      expect(wrapper.find('.add-task-form').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="add-task-form"]').exists()).toBe(false)
     })
 
     it('shows the form when Add task is clicked', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
-      expect(wrapper.find('.add-task-form').exists()).toBe(true)
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      expect(wrapper.find('[data-testid="add-task-form"]').exists()).toBe(true)
     })
 
     it('hides the Add task button when the form is open', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
-      expect(wrapper.find('.add-task-btn').exists()).toBe(false)
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      expect(wrapper.find('[data-testid="add-task-btn"]').exists()).toBe(false)
     })
 
     it('calls addTask with title and column on submit', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
-      await wrapper.find('.task-input').setValue('My new task')
-      await wrapper.find('.add-task-form').trigger('submit')
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      await wrapper.find('[data-testid="task-input"]').setValue('My new task')
+      await wrapper.find('[data-testid="add-task-form"]').trigger('submit')
       expect(mockAddTask).toHaveBeenCalledWith('My new task', 'now', expect.any(Object))
     })
 
     it('hides the form after a successful submit', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
-      await wrapper.find('.task-input').setValue('Task')
-      await wrapper.find('.add-task-form').trigger('submit')
-      expect(wrapper.find('.add-task-form').exists()).toBe(false)
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      await wrapper.find('[data-testid="task-input"]').setValue('Task')
+      await wrapper.find('[data-testid="add-task-form"]').trigger('submit')
+      expect(wrapper.find('[data-testid="add-task-form"]').exists()).toBe(false)
     })
 
     it('does not call addTask for an empty title', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
-      await wrapper.find('.task-input').setValue('   ')
-      await wrapper.find('.add-task-form').trigger('submit')
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      await wrapper.find('[data-testid="task-input"]').setValue('   ')
+      await wrapper.find('[data-testid="add-task-form"]').trigger('submit')
       expect(mockAddTask).not.toHaveBeenCalled()
     })
 
     it('hides the form when Cancel is clicked', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
       await wrapper.find('.btn-secondary').trigger('click')
-      expect(wrapper.find('.add-task-form').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="add-task-form"]').exists()).toBe(false)
     })
 
     it('shows the Add task button again after cancel', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
       await wrapper.find('.btn-secondary').trigger('click')
-      expect(wrapper.find('.add-task-btn').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="add-task-btn"]').exists()).toBe(true)
     })
 
     it('resets the title input after submit', async () => {
       const wrapper = mount(TaskColumn, { props: { column: nowColumn } })
-      await wrapper.find('.add-task-btn').trigger('click')
-      await wrapper.find('.task-input').setValue('A task')
-      await wrapper.find('.add-task-form').trigger('submit')
-      await wrapper.find('.add-task-btn').trigger('click')
-      expect(wrapper.find('.task-input').element.value).toBe('')
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      await wrapper.find('[data-testid="task-input"]').setValue('A task')
+      await wrapper.find('[data-testid="add-task-form"]').trigger('submit')
+      await wrapper.find('[data-testid="add-task-btn"]').trigger('click')
+      expect(wrapper.find('[data-testid="task-input"]').element.value).toBe('')
     })
   })
 
   describe('TaskCard — title and date display', () => {
     it('renders the task title', () => {
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
-      expect(wrapper.find('.task-title').text()).toBe('Write unit tests')
+      expect(wrapper.find('[data-testid="task-title"]').text()).toBe('Write unit tests')
     })
 
     it('shows the due date when set', () => {
@@ -200,7 +200,7 @@ describe('task management — components', () => {
   describe('TaskCard — delete', () => {
     it('calls deleteTask when delete button is clicked', async () => {
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
-      await wrapper.find('.delete-btn').trigger('click')
+      await wrapper.find('[data-testid="delete-btn"]').trigger('click')
       expect(mockDeleteTask).toHaveBeenCalledWith('task-1')
     })
   })
@@ -208,13 +208,13 @@ describe('task management — components', () => {
   describe('TaskCard — complete', () => {
     it('calls completeTask when complete button is clicked', async () => {
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
-      await wrapper.find('.complete-btn').trigger('click')
+      await wrapper.find('[data-testid="complete-btn"]').trigger('click')
       expect(mockCompleteTask).toHaveBeenCalledWith('task-1')
     })
 
     it('calls showCelebration when complete button is clicked', async () => {
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
-      await wrapper.find('.complete-btn').trigger('click')
+      await wrapper.find('[data-testid="complete-btn"]').trigger('click')
       expect(mockShowCelebration).toHaveBeenCalledOnce()
     })
 
@@ -223,7 +223,7 @@ describe('task management — components', () => {
       mockCompleteTask.mockImplementation(() => callOrder.push('complete'))
       mockShowCelebration.mockImplementation(() => callOrder.push('celebrate'))
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
-      await wrapper.find('.complete-btn').trigger('click')
+      await wrapper.find('[data-testid="complete-btn"]').trigger('click')
       expect(callOrder).toEqual(['complete', 'celebrate'])
     })
   })

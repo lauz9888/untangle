@@ -106,7 +106,7 @@ function addSubtaskAction() {
     <!-- ── Display mode ── -->
     <template v-if="!editing">
       <div class="task-main">
-        <p class="task-title">{{ task.title }}</p>
+        <p class="task-title" data-testid="task-title">{{ task.title }}</p>
         <div v-if="task.energy || task.dueDate || task.availableFrom" class="task-meta">
           <span v-if="task.energy" class="energy-badge" :class="`energy-${task.energy}`">{{ task.energy }}</span>
           <span v-if="task.availableFrom" class="date-chip from-chip">
@@ -124,11 +124,11 @@ function addSubtaskAction() {
         </div>
       </div>
       <div class="task-actions">
-        <button class="action-btn complete-btn" title="Mark complete" :aria-label="`Mark complete: ${task.title}`" @click="handleComplete(task.id)">✓</button>
-        <button class="action-btn edit-btn" title="Edit task" aria-label="Edit task" @click="startEdit">✎</button>
-        <button class="action-btn move-prev-btn" :disabled="isFirst" title="Move to earlier column" aria-label="Move to earlier column" @click="moveTask(task.id, -1)">←</button>
-        <button class="action-btn move-next-btn" :disabled="isLast"  title="Move to later column"   aria-label="Move to later column"   @click="moveTask(task.id, 1)">→</button>
-        <button class="action-btn delete-btn" :aria-label="`Delete task: ${task.title}`" title="Delete task" @click="deleteTask(task.id)">✕</button>
+        <button class="action-btn complete-btn" data-testid="complete-btn" title="Mark complete" :aria-label="`Mark complete: ${task.title}`" @click="handleComplete(task.id)">✓</button>
+        <button class="action-btn edit-btn" data-testid="edit-btn" title="Edit task" aria-label="Edit task" @click="startEdit">✎</button>
+        <button class="action-btn move-prev-btn" data-testid="move-prev-btn" :disabled="isFirst" title="Move to earlier column" aria-label="Move to earlier column" @click="moveTask(task.id, -1)">←</button>
+        <button class="action-btn move-next-btn" data-testid="move-next-btn" :disabled="isLast"  title="Move to later column"   aria-label="Move to later column"   @click="moveTask(task.id, 1)">→</button>
+        <button class="action-btn delete-btn" data-testid="delete-btn" :aria-label="`Delete task: ${task.title}`" title="Delete task" @click="deleteTask(task.id)">✕</button>
       </div>
     </template>
 
@@ -139,6 +139,7 @@ function addSubtaskAction() {
         <input
           v-model="editTitle"
           class="edit-title-input"
+          data-testid="edit-title-input"
           placeholder="Task name"
           required
           autofocus

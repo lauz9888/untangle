@@ -1,10 +1,10 @@
 /** Add a task via the column form, optionally selecting an energy level. */
 export async function addTask(page, column, title, { energy } = {}) {
-  await page.locator(`[data-column="${column}"] .add-task-btn`).click()
-  await page.locator(`[data-column="${column}"] .task-input`).fill(title)
+  await page.locator(`[data-column="${column}"] [data-testid="add-task-btn"]`).click()
+  await page.locator(`[data-column="${column}"] [data-testid="task-input"]`).fill(title)
   if (energy) {
     await page
-      .locator(`[data-column="${column}"] .add-task-form .energy-opt`)
+      .locator(`[data-column="${column}"] [data-testid="add-task-form"] .energy-opt`)
       .filter({ hasText: new RegExp(`^${energy}$`, 'i') })
       .click()
   }
@@ -24,6 +24,6 @@ export function taskCard(page, column, titleText) {
 export async function openEdit(page, column, title) {
   const card = taskCard(page, column, title)
   await card.hover()
-  await card.locator('.edit-btn').click()
+  await card.locator('[data-testid="edit-btn"]').click()
   return page.locator('.task-card.is-editing')
 }

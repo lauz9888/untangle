@@ -33,5 +33,15 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./tests/unit/setup.js'],
     include: ['tests/unit/**/*.test.js'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      thresholds: {
+        lines: 80,
+        functions: 80,
+        branches: 75,
+        statements: 80,
+      },
+    },
   },
 })
