@@ -1,5 +1,8 @@
 import { ref, watch } from 'vue'
 import { ENERGY_LEVELS, COLUMNS } from '../constants/energy.js'
+import { useStreak } from './useStreak.js'
+
+const { recordCompletion } = useStreak()
 
 const STORAGE_KEY = 'untangle-tasks'
 const ENERGY_KEY = 'untangle-energy'
@@ -74,7 +77,10 @@ export function useTasks() {
 
   function completeTask(id) {
     const task = tasks.value.find(t => t.id === id)
-    if (task) task.completedAt = Date.now()
+    if (task) {
+      task.completedAt = Date.now()
+      recordCompletion()
+    }
   }
 
   function updateTask(id, changes) {

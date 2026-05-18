@@ -10,11 +10,13 @@ import ToughLoveToast from './components/ToughLoveToast.vue'
 import SettingsPanel from './components/SettingsPanel.vue'
 import { useEncouragement } from './composables/useEncouragement.js'
 import { useToughLove } from './composables/useToughLove.js'
+import { useStreak } from './composables/useStreak.js'
 
 const showHistory = ref(false)
 const showSettings = ref(false)
 const { showEncouragement, dismissEncouragement } = useEncouragement()
 const { showToughLove, dismissToughLove } = useToughLove()
+const { streakCount } = useStreak()
 
 function handleEncourage() { dismissToughLove(); showEncouragement() }
 function handleToughLove() { dismissEncouragement(); showToughLove() }
@@ -32,6 +34,10 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
         <EnergySelector />
       </div>
       <div class="app-controls">
+        <div class="streak-display" :class="{ 'streak-active': streakCount > 0 }" title="Days in a row you've completed a task">
+          <span class="streak-icon">🔥</span>
+          <span class="streak-text">{{ streakCount }} {{ streakCount === 1 ? 'day' : 'days' }}</span>
+        </div>
         <button class="encourage-btn" @click="handleEncourage">Encourage Me</button>
         <button class="tough-love-btn" @click="handleToughLove">Tough Love</button>
         <button class="history-btn" @click="showHistory = true">History</button>
@@ -109,6 +115,35 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.streak-display {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: 1.5px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0.5;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.streak-display.streak-active {
+  opacity: 1;
+  border-color: #f97316;
+  color: var(--text-h);
+}
+
+.streak-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.streak-text {
+  font-variant-numeric: tabular-nums;
 }
 
 .encourage-btn,
