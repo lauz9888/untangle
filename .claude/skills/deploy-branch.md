@@ -81,7 +81,7 @@ git branch --show-current
 
 Tell the developer:
 - The branch name and that it's been pushed
-- How to access this version locally: `git checkout <branch>` then `npm run dev` (or provide a preview URL if one is generated)
+- How to access this version locally: `git checkout <branch>` then `$env:PORT="5174"; npm run dev` — using port 5174 keeps it separate from the main branch server on 5173
 - All CI checks passed
 
 Then ask:
