@@ -1,6 +1,8 @@
 Run the full CI pipeline and deploy the change to main.
 
-This skill is part of the automated development workflow. It is the default deployment path — triggered automatically when no manual browser testing is needed, or manually with `/deploy-main` after branch testing is complete.
+This skill is part of the automated development workflow. It runs automatically when the developer chooses to skip branch testing, or is triggered manually with `/deploy-main` after branch testing.
+
+GitHub CI is the gate — all four required checks (Unit tests, E2E tests, Coverage gate, Build check) must pass before the merge executes. This relies on branch protection requiring those checks on main; if branch protection is ever removed, `--auto` will merge immediately without waiting.
 
 ## Steps
 
@@ -12,40 +14,7 @@ node scripts/workflow-state.mjs get
 
 `docs_done` must be true before proceeding.
 
-Determine the project root for running npm commands (handles worktrees):
-
-```
-git_dir=$(git rev-parse --git-dir)
-if [ -f "${git_dir}/commondir" ]; then
-  common=$(cat "${git_dir}/commondir")
-  project_root=$(cd "${git_dir}/${common}/.." && pwd)
-else
-  project_root=$(git rev-parse --show-toplevel)
-fi
-```
-
-### 2. Run CI checks in order
-
-Run each check individually. Fix any failures before continuing.
-
-**Build check:**
-```
-cd $project_root && npm run build
-```
-
-**Unit tests (full suite):**
-```
-cd $project_root && npm test -- --run
-```
-
-**E2E tests (full suite):**
-```
-cd $project_root && npm run test:e2e
-```
-
-For each test failure (excluding CI infrastructure issues such as network errors or missing environment dependencies), trigger `/report-bug` before fixing — use source `ci-unit-tests` for unit test failures or `ci-e2e-tests` for e2e failures. Provide the failure message and location. After the fix is confirmed passing, explicitly run the close step (`bug-tracker.mjs close`) before continuing — do not leave the issue open. If the fix cannot be made inline and requires its own PR, include `Closes #N` in that PR's commit message or body, then run `bug-tracker.mjs close` after the PR merges.
-
-### 3. Stage and commit all changes (if not already committed)
+### 2. Stage and commit all changes (if not already committed)
 
 Check whether the changes have been committed:
 
@@ -63,9 +32,9 @@ git commit -m "<summary>
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ```
 
-### 4. Write the QA approval marker
+### 3. Write the QA approval marker
 
-All CI checks have passed. Write the approval marker so the pre-push hook allows the push:
+Write the approval marker so the pre-push hook allows the push:
 
 ```
 git_dir=$(git rev-parse --git-dir)
@@ -75,11 +44,13 @@ mkdir -p "${git_dir}/claude-qa"
 git rev-parse HEAD > "${git_dir}/claude-qa/${safe_branch}.approved"
 ```
 
-### 5. Create a pull request and merge
+### 4. Push and create a pull request
 
-Create the PR:
+Push the branch, then create the PR:
 
 ```
+git push -u origin <branch>
+
 gh pr create \
   --title "<concise title of the change>" \
   --body "$(cat <<'EOF'
@@ -88,25 +59,35 @@ gh pr create \
 - <bullet 2>
 
 ## Test plan
-- [x] Unit tests updated and passing
-- [x] E2E tests updated and passing
-- [x] Build passes
-- [x] Documentation updated
+- [x] Unit tests: run by GitHub CI
+- [x] E2E tests: run by GitHub CI
+- [x] Coverage gate: run by GitHub CI
+- [x] Build check: run by GitHub CI
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 EOF
 )"
 ```
 
-Get the PR number from the output, then merge:
+### 5. Queue the merge and wait for CI
+
+Enable auto-merge so GitHub merges the PR once all required checks pass:
 
 ```
-gh pr merge <PR-number> --squash --delete-branch
+gh pr merge <PR-number> --squash --delete-branch --auto
 ```
+
+Then watch CI progress until the merge completes:
+
+```
+gh pr checks <PR-number> --watch
+```
+
+If any check fails, GitHub CI will have already opened a bug issue via `ci.yml`. Do not re-open a duplicate. Investigate the failure, push a fix commit to the branch, and the auto-merge will re-queue automatically once checks pass.
 
 ### 6. Generate the post-deploy report
 
-Run `/post-deploy-report` passing the PR number from step 5. This generates a markdown report in `reports/` and commits it to main. The report reads `started_at` from current workflow state to compute cycle time, so it must run before the state is reset.
+Once `gh pr checks` exits (merge complete), run `/post-deploy-report` passing the PR number. This generates a markdown report in `reports/` and commits it to main. The report reads `started_at` from current workflow state to compute cycle time, so it must run before the state is reset.
 
 If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the merge has already completed successfully.
 
@@ -120,9 +101,9 @@ node scripts/workflow-state.mjs reset
 
 Tell the developer:
 - The PR number and that it has been merged to main
-- The source branch has been deleted from the remote
+- The source branch has been deleted
 - The report filename that was committed to `reports/`
-- That the local worktree and branch are about to be removed
+- The full workflow is complete
 
 If the wiki auto-update workflow is running, mention that it will update the GitHub wiki automatically.
 
