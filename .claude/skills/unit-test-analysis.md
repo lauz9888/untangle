@@ -54,7 +54,7 @@ Run only the test files that were changed or are directly related to the change:
 cd $project_root && npm test -- --run --reporter=verbose <test-file-pattern>
 ```
 
-If a test fails because of a real bug in the source (not a test setup issue), trigger `/report-bug` with source `unit-test` before fixing. Provide the test file, line, failure message, and what the test exercises. After the issue is created and the bug is fixed, re-run the tests to confirm they pass.
+If any test fails, trigger `/report-bug` with source `unit-test` before fixing. Provide the test file, line, failure message, and what the test exercises. After the issue is created and the failure is resolved, re-run the tests to confirm they pass.
 
 ### 5. Advance to e2e test analysis
 
