@@ -28,6 +28,32 @@ describe('persistence — composable', () => {
     expect(tasks.value[0].title).toBe('Stored task')
   })
 
+  it('recovers from garbled JSON in tasks', async () => {
+    localStorage.setItem('untangle-tasks', 'not-valid-json{{')
+    vi.resetModules()
+    const { useTasks: fresh } = await import('../../../src/composables/useTasks.js')
+    const { tasks } = fresh()
+    expect(tasks.value).toEqual([])
+  })
+
+  it('recovers from valid JSON that is not an array', async () => {
+    localStorage.setItem('untangle-tasks', JSON.stringify({ title: 'stray object' }))
+    vi.resetModules()
+    const { useTasks: fresh } = await import('../../../src/composables/useTasks.js')
+    const { tasks } = fresh()
+    expect(tasks.value).toEqual([])
+  })
+
+  it('can add tasks after recovering from corrupted storage', async () => {
+    localStorage.setItem('untangle-tasks', 'not-valid-json{{')
+    vi.resetModules()
+    const { useTasks: fresh } = await import('../../../src/composables/useTasks.js')
+    const { tasks, addTask } = fresh()
+    addTask('Recovery task', 'now')
+    expect(tasks.value).toHaveLength(1)
+    expect(tasks.value[0].title).toBe('Recovery task')
+  })
+
   it('migrates old tasks without new fields', async () => {
     localStorage.setItem('untangle-tasks', JSON.stringify([
       { id: 'old', title: 'Old task', energy: 'small', column: 'now', createdAt: 1000 }

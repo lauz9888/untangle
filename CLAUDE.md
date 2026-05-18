@@ -11,8 +11,9 @@ Opens at `http://localhost:5173`. Vite's HMR reloads the browser on every save. 
 ## Tests
 
 ```
-npm test           # unit tests (Vitest, watch mode)
-npm run test:e2e   # end-to-end tests (Playwright, requires dev server running)
+npm test                # unit tests (Vitest, watch mode)
+npm run test:coverage   # unit tests with v8 coverage report (requires @vitest/coverage-v8)
+npm run test:e2e        # end-to-end tests (Playwright, requires dev server running)
 ```
 
 The E2E suite spins up its own dev server via `playwright.config.js`; you don't need to start one separately for it.

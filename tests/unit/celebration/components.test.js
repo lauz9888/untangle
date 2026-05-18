@@ -35,25 +35,25 @@ describe('celebration popup — components', () => {
   describe('CelebrationPopup — visibility', () => {
     it('renders nothing when popup is null', () => {
       const wrapper = mount(CelebrationPopup)
-      expect(wrapper.find('.celebration-overlay').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="celebration-overlay"]').exists()).toBe(false)
     })
 
     it('renders the overlay when there is a message', () => {
       mockPopup.value = 'You crushed it!'
       const wrapper = mount(CelebrationPopup)
-      expect(wrapper.find('.celebration-overlay').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="celebration-overlay"]').exists()).toBe(true)
     })
 
     it('displays the celebration message text', () => {
       mockPopup.value = 'Amazing work!'
       const wrapper = mount(CelebrationPopup)
-      expect(wrapper.find('.celebration-text').text()).toBe('Amazing work!')
+      expect(wrapper.find('[data-testid="celebration-text"]').text()).toBe('Amazing work!')
     })
 
     it('renders the popup card inside the overlay', () => {
       mockPopup.value = 'Well done!'
       const wrapper = mount(CelebrationPopup)
-      expect(wrapper.find('.celebration-overlay .celebration-popup').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="celebration-popup"]').exists()).toBe(true)
     })
   })
 
@@ -61,7 +61,7 @@ describe('celebration popup — components', () => {
     it('calls dismiss when the overlay is clicked', async () => {
       mockPopup.value = 'You did it!'
       const wrapper = mount(CelebrationPopup)
-      await wrapper.find('.celebration-overlay').trigger('click')
+      await wrapper.find('[data-testid="celebration-overlay"]').trigger('click')
       expect(mockDismiss).toHaveBeenCalledOnce()
     })
   })

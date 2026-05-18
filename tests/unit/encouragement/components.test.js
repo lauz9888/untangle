@@ -31,19 +31,19 @@ describe('encouragement toast — components', () => {
   describe('EncouragementToast — visibility', () => {
     it('renders nothing when encouragement is null', () => {
       const wrapper = mount(EncouragementToast)
-      expect(wrapper.find('.encouragement-toast').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="encouragement-toast"]').exists()).toBe(false)
     })
 
     it('renders the toast when there is a message', () => {
       mockEncouragement.value = 'You are doing great!'
       const wrapper = mount(EncouragementToast)
-      expect(wrapper.find('.encouragement-toast').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="encouragement-toast"]').exists()).toBe(true)
     })
 
     it('displays the encouragement message text', () => {
       mockEncouragement.value = 'One step at a time.'
       const wrapper = mount(EncouragementToast)
-      expect(wrapper.find('.encouragement-text').text()).toBe('One step at a time.')
+      expect(wrapper.find('[data-testid="encouragement-text"]').text()).toBe('One step at a time.')
     })
   })
 
@@ -51,7 +51,7 @@ describe('encouragement toast — components', () => {
     it('calls dismissEncouragement when the toast is clicked', async () => {
       mockEncouragement.value = 'You are doing great!'
       const wrapper = mount(EncouragementToast)
-      await wrapper.find('.encouragement-toast').trigger('click')
+      await wrapper.find('[data-testid="encouragement-toast"]').trigger('click')
       expect(mockDismissEncouragement).toHaveBeenCalledOnce()
     })
   })

@@ -6,9 +6,9 @@ const { popup, dismiss } = useCelebration()
 
 <template>
   <Transition name="celebration">
-    <div v-if="popup" class="celebration-overlay" @click="dismiss">
-      <div class="celebration-popup">
-        <p class="celebration-text">{{ popup }}</p>
+    <div v-if="popup" class="celebration-overlay" data-testid="celebration-overlay" @click="dismiss">
+      <div class="celebration-popup" data-testid="celebration-popup">
+        <p class="celebration-text" data-testid="celebration-text">{{ popup }}</p>
       </div>
     </div>
   </Transition>

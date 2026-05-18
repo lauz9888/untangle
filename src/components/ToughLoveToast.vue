@@ -6,8 +6,8 @@ const { toughLove, dismissToughLove } = useToughLove()
 
 <template>
   <Transition name="tough-love">
-    <div v-if="toughLove" class="tough-love-toast" @click="dismissToughLove">
-      <p class="tough-love-text">{{ toughLove }}</p>
+    <div v-if="toughLove" class="tough-love-toast" data-testid="tough-love-toast" @click="dismissToughLove">
+      <p class="tough-love-text" data-testid="tough-love-text">{{ toughLove }}</p>
     </div>
   </Transition>
   <div class="sr-live" role="status" aria-live="polite" aria-atomic="true">

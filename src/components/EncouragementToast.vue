@@ -6,8 +6,8 @@ const { encouragement, dismissEncouragement } = useEncouragement()
 
 <template>
   <Transition name="encouragement">
-    <div v-if="encouragement" class="encouragement-toast" @click="dismissEncouragement">
-      <p class="encouragement-text">{{ encouragement }}</p>
+    <div v-if="encouragement" class="encouragement-toast" data-testid="encouragement-toast" @click="dismissEncouragement">
+      <p class="encouragement-text" data-testid="encouragement-text">{{ encouragement }}</p>
     </div>
   </Transition>
   <div class="sr-live" role="status" aria-live="polite" aria-atomic="true">

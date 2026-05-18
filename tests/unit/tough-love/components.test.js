@@ -31,19 +31,19 @@ describe('tough love toast — components', () => {
   describe('ToughLoveToast — visibility', () => {
     it('renders nothing when toughLove is null', () => {
       const wrapper = mount(ToughLoveToast)
-      expect(wrapper.find('.tough-love-toast').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="tough-love-toast"]').exists()).toBe(false)
     })
 
     it('renders the toast when there is a message', () => {
       mockToughLove.value = 'Stop waiting. Start now.'
       const wrapper = mount(ToughLoveToast)
-      expect(wrapper.find('.tough-love-toast').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="tough-love-toast"]').exists()).toBe(true)
     })
 
     it('displays the tough love message text', () => {
       mockToughLove.value = 'Look at the task. Now do the task.'
       const wrapper = mount(ToughLoveToast)
-      expect(wrapper.find('.tough-love-text').text()).toBe('Look at the task. Now do the task.')
+      expect(wrapper.find('[data-testid="tough-love-text"]').text()).toBe('Look at the task. Now do the task.')
     })
   })
 
@@ -51,7 +51,7 @@ describe('tough love toast — components', () => {
     it('calls dismissToughLove when the toast is clicked', async () => {
       mockToughLove.value = 'Stop waiting. Start now.'
       const wrapper = mount(ToughLoveToast)
-      await wrapper.find('.tough-love-toast').trigger('click')
+      await wrapper.find('[data-testid="tough-love-toast"]').trigger('click')
       expect(mockDismissToughLove).toHaveBeenCalledOnce()
     })
   })
