@@ -73,6 +73,7 @@ When you send Claude a message asking for a code change, the workflow starts aut
 | 7 | `/document-analysis` | Updates docs, then asks about deployment path |
 | 8a | `/deploy-branch` | Deploys to a branch for manual testing |
 | 8b | `/deploy-main` | Runs full CI and merges to main |
+| 9 | `/post-deploy-report` | Generates a change report (summary + bug analysis) and commits it to `reports/` |
 
 Each skill can also be run manually at any time by typing `/skill-name`.
 
@@ -154,3 +155,4 @@ For direct pushes to main, run `/wiki-update` in Claude Code to trigger the same
 | `src/components/TaskColumn.vue` | Column with add-task form and drop zone |
 | `tests/e2e/helpers.js` | Shared Playwright helpers (`addTask`, `taskCard`, `openEdit`) |
 | `scripts/bug-tracker.mjs` | CLI for creating and closing GitHub bug issues |
+| `reports/` | Post-deploy change reports, one markdown file per merged PR |
