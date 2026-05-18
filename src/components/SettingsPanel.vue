@@ -114,24 +114,24 @@ const freezeEnabled = computed({
       </div>
       <div class="about-content">
         <p class="about-lead">
-          Untangle is a calm, energy-aware task manager designed to help you decide what to work on right now — without the overwhelm.
+          Most task managers treat everything as equally actionable all the time. Untangle doesn't. It's built on the idea that capacity fluctuates — and that being able to see only what's realistic right now is often the difference between starting something and doing nothing.
         </p>
         <div class="about-features">
           <div class="about-feature">
-            <span class="feature-label">Three columns</span>
-            <span class="feature-desc">Organise tasks across <strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> to keep your focus clear.</span>
+            <span class="feature-label">Energy-matched tasks</span>
+            <span class="feature-desc">Tag each task as Tiny, Small, Medium, or Large. Set your energy in the header and tasks beyond your current capacity fade out — visible, but not demanding your attention.</span>
           </div>
           <div class="about-feature">
-            <span class="feature-label">Energy levels</span>
-            <span class="feature-desc">Tag each task by how much effort it takes — Tiny, Small, Medium, or Large — so you can match tasks to how you feel.</span>
+            <span class="feature-label">Three columns, no pressure</span>
+            <span class="feature-desc"><strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> — so the things you can't touch yet have somewhere to live without cluttering your focus.</span>
           </div>
           <div class="about-feature">
-            <span class="feature-label">Filter by energy</span>
-            <span class="feature-desc">Use the energy selector in the header to surface only the tasks that fit your current capacity.</span>
+            <span class="feature-label">Gentle accountability</span>
+            <span class="feature-desc">Encouragement and Tough Love buttons, a streak counter, and a celebration on every completion — because motivation isn't one-size-fits-all.</span>
           </div>
           <div class="about-feature">
             <span class="feature-label">History</span>
-            <span class="feature-desc">Completed tasks are saved so you can look back and see everything you've accomplished.</span>
+            <span class="feature-desc">Completed tasks are saved so you can look back and see everything you've done — useful on the days it doesn't feel like enough.</span>
           </div>
         </div>
         <p class="about-footer">Your tasks are saved locally in your browser — nothing leaves your device.</p>

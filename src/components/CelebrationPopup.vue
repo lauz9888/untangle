@@ -9,7 +9,6 @@ const { popup, dismiss } = useCelebration()
     <div v-if="popup" class="celebration-overlay" @click="dismiss">
       <div class="celebration-popup">
         <p class="celebration-text">{{ popup }}</p>
-        <span class="celebration-hint">click anywhere to dismiss</span>
       </div>
     </div>
   </Transition>
@@ -47,13 +46,6 @@ const { popup, dismiss } = useCelebration()
   color: var(--text-h);
   letter-spacing: -0.5px;
   margin: 0;
-}
-
-.celebration-hint {
-  font-size: 12px;
-  color: var(--text);
-  opacity: 0.5;
-  letter-spacing: 0.2px;
 }
 
 .celebration-enter-active {
