@@ -182,8 +182,7 @@ if (cmd === 'get') {
     } catch { /* ignore parse errors */ }
 
     const isChangeRequest =
-      /\b(add|create|build|implement|make|fix|update|change|modify|delete|remove|refactor|introduce|write|develop)\b/i.test(userMsg) &&
-      !/^(what|how|why|when|where|can you explain|tell me|show me|describe|is it|does it|do you)\b/i.test(userMsg.trim());
+      /\b(add|create|build|implement|make|fix|update|change|modify|delete|remove|refactor|introduce|write|develop)\b/i.test(userMsg);
 
     if (isChangeRequest) {
       process.stdout.write(
