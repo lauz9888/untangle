@@ -110,11 +110,18 @@ gh pr merge <PR-number> --squash --delete-branch
 node scripts/workflow-state.mjs reset
 ```
 
-### 7. Report to the developer
+### 7. Generate the post-deploy report
+
+Run `/post-deploy-report` passing the PR number from step 5. This generates a markdown report in `reports/` and commits it to main.
+
+If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the merge has already completed successfully.
+
+### 8. Report to the developer
 
 Tell the developer:
 - The PR number and that it has been merged to main
 - The source branch has been deleted
+- The report filename that was committed to `reports/`
 - The full workflow is complete
 
 If the wiki auto-update workflow is running, mention that it will update the GitHub wiki automatically.
