@@ -90,6 +90,40 @@ jobs:
         if: steps.e2e-tests.outcome == 'failure'
         run: exit 1
 
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run coverage
+        id: coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Create issue for coverage failure
+        if: steps.coverage.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Coverage gate failing on ${{ github.ref_name }}" \
+            --body "Coverage fell below threshold in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`)." \
+            --source "ci-unit-tests"
+
+      - name: Fail if coverage below threshold
+        if: steps.coverage.outcome == 'failure'
+        run: exit 1
+
   build:
     name: Build check
     runs-on: ubuntu-latest

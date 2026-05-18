@@ -49,6 +49,19 @@ Full details on the workflow (skills, pipeline steps, and the test strategy that
 
 ---
 
+## What this repo demonstrates
+
+For anyone evaluating it as a portfolio project or engineering sample:
+
+- **AI-assisted SDLC governance** — every change goes through a structured pipeline (requirement capture → solution design → implementation → QA review → CI) enforced by git hooks and a custom workflow-state machine. Claude writes the code; the human author owns the architecture and signs off every change.
+- **Layered test strategy** — unit tests (Vitest) isolate composables and components; end-to-end tests (Playwright) cover full user journeys; a coverage gate (≥ 80% statements/lines/functions) is enforced both locally and in CI.
+- **CI/CD with GitHub Actions** — unit tests, E2E tests, coverage gate, and a production build check all run on every pull request. Failures automatically open GitHub issues with a link to the failing run.
+- **PWA delivery** — ships as an installable Progressive Web App (offline-capable, home-screen installable on iOS and Android) via Vite PWA plugin and a GitHub Pages deployment pipeline.
+- **Quality gates** — a `pre-push` hook blocks pushes without a QA approval marker; a `PreToolUse` hook blocks `gh pr create` without the same marker. Generated code that can't be read, reasoned about, and defended is treated as a liability.
+- **Accessibility-aware UX** — interactive elements carry ARIA roles and labels; keyboard navigation is preserved; dynamic content is announced to screen readers.
+
+---
+
 ## Wiki
 
 Full documentation lives in the [Untangle wiki](https://github.com/lauz9888/untangle/wiki):
