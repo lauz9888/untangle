@@ -80,8 +80,9 @@ export function useTasks() {
     const task = tasks.value.find(t => t.id === id)
     if (task) {
       task.completedAt = Date.now()
-      recordCompletion()
+      return recordCompletion()
     }
+    return null
   }
 
   function updateTask(id, changes) {

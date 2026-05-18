@@ -122,8 +122,8 @@ export function useStreak() {
     const now = todayString()
     const settings = streakSettings.value
 
-    if (streakData.value.lastCompletedDate === now) return
-    if (isExcluded(now, settings)) return
+    if (streakData.value.lastCompletedDate === now) return null
+    if (isExcluded(now, settings)) return null
 
     const { count, lastCompletedDate } = streakData.value
     const streakAlive = lastCompletedDate && !hasActiveDayBetween(lastCompletedDate, now, settings)
@@ -131,6 +131,7 @@ export function useStreak() {
 
     streakData.value = { count: newCount, lastCompletedDate: now }
     localStorage.setItem(STREAK_KEY, JSON.stringify(streakData.value))
+    return newCount
   }
 
   return { streakCount, streakSettings, recordCompletion }

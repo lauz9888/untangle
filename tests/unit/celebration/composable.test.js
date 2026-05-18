@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 describe('useCelebration — composable', () => {
-  let useCelebration, CELEBRATION_MESSAGES
+  let useCelebration, CELEBRATION_MESSAGES, MILESTONE_MESSAGES, STREAK_MILESTONES
 
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.resetModules()
-    ;({ useCelebration, CELEBRATION_MESSAGES } = await import('../../../src/composables/useCelebration.js'))
+    ;({ useCelebration, CELEBRATION_MESSAGES, MILESTONE_MESSAGES, STREAK_MILESTONES } = await import('../../../src/composables/useCelebration.js'))
   })
 
   afterEach(() => {
@@ -92,6 +92,59 @@ describe('useCelebration — composable', () => {
         expect(typeof msg).toBe('string')
         expect(msg.trim().length).toBeGreaterThan(0)
       }
+    })
+  })
+
+  describe('showMilestone', () => {
+    it('sets popup to the milestone message for the given count', () => {
+      const { popup, showMilestone } = useCelebration()
+      showMilestone(7)
+      expect(popup.value).toBe(MILESTONE_MESSAGES[7])
+    })
+
+    it('auto-dismisses after 5000ms', () => {
+      const { popup, showMilestone } = useCelebration()
+      showMilestone(30)
+      vi.advanceTimersByTime(5000)
+      expect(popup.value).toBeNull()
+    })
+
+    it('is still visible just before 5000ms', () => {
+      const { popup, showMilestone } = useCelebration()
+      showMilestone(30)
+      vi.advanceTimersByTime(4999)
+      expect(popup.value).not.toBeNull()
+    })
+
+    it('does nothing for an unrecognised count', () => {
+      const { popup, showMilestone } = useCelebration()
+      showMilestone(99)
+      expect(popup.value).toBeNull()
+    })
+
+    it('resets the auto-dismiss timer when called', () => {
+      const { popup, showMilestone } = useCelebration()
+      showMilestone(1)
+      vi.advanceTimersByTime(4000)
+      showMilestone(3)
+      vi.advanceTimersByTime(4000)
+      expect(popup.value).not.toBeNull()
+      vi.advanceTimersByTime(1000)
+      expect(popup.value).toBeNull()
+    })
+  })
+
+  describe('MILESTONE_MESSAGES', () => {
+    it('has an entry for every STREAK_MILESTONES value', () => {
+      for (const m of STREAK_MILESTONES) {
+        expect(typeof MILESTONE_MESSAGES[m]).toBe('string')
+        expect(MILESTONE_MESSAGES[m].trim().length).toBeGreaterThan(0)
+      }
+    })
+
+    it('all messages are unique', () => {
+      const msgs = Object.values(MILESTONE_MESSAGES)
+      expect(new Set(msgs).size).toBe(msgs.length)
     })
   })
 })

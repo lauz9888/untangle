@@ -89,6 +89,26 @@ describe('useStreak — composable', () => {
       rec()
       expect(streakCount.value).toBe(1)
     })
+
+    it('returns the new streak count', () => {
+      const { recordCompletion } = useStreak()
+      expect(recordCompletion()).toBe(1)
+    })
+
+    it('returns the incremented count on a consecutive day', async () => {
+      const { recordCompletion } = useStreak()
+      recordCompletion() // Monday
+
+      await advanceTo(TUE)
+      const { recordCompletion: rec } = useStreak()
+      expect(rec()).toBe(2)
+    })
+
+    it('returns null when already completed today', () => {
+      const { recordCompletion } = useStreak()
+      recordCompletion()
+      expect(recordCompletion()).toBeNull()
+    })
   })
 
   describe('streakCount display', () => {

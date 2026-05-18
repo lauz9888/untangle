@@ -1,5 +1,17 @@
 import { ref } from 'vue'
 
+export const STREAK_MILESTONES = [1, 3, 7, 30, 90, 180, 365]
+
+export const MILESTONE_MESSAGES = {
+  1:   "Day one — you showed up! That's where every great streak begins. Let's go! 🌱",
+  3:   "3 days in a row! The habit is forming — don't stop now! 🔥",
+  7:   "A whole week of getting things done! You've proven you can do this. Keep going! 🗓️✨",
+  30:  "30 days! One month of showing up every single day. That's not luck — that's character. 🏆",
+  90:  "90 days. Three months. This is who you are now. Consistency is your superpower! 💎",
+  180: "Half a year! 180 days of making it happen. You are genuinely unstoppable. 🌟",
+  365: "365 days. One full year. You did it — an unbroken streak of showing up for yourself. Legendary. 🎆",
+}
+
 export const CELEBRATION_MESSAGES = [
   "You crushed it! That's one less thing to worry about! 🎉",
   "Task demolished! You're unstoppable! ⚡",
@@ -64,10 +76,18 @@ export function useCelebration() {
     timer = setTimeout(() => { popup.value = null }, 3500)
   }
 
+  function showMilestone(count) {
+    const message = MILESTONE_MESSAGES[count]
+    if (!message) return
+    clearTimeout(timer)
+    popup.value = message
+    timer = setTimeout(() => { popup.value = null }, 5000)
+  }
+
   function dismiss() {
     clearTimeout(timer)
     popup.value = null
   }
 
-  return { popup, showCelebration, dismiss }
+  return { popup, showCelebration, showMilestone, dismiss }
 }
