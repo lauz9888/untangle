@@ -29,6 +29,8 @@ fi
 
 # Resolve project root (worktree-aware — node_modules lives in the main repo)
 git_dir=$(git rev-parse --git-dir)
+# Capture HEAD now, before cd'ing to project_root (worktrees have a separate HEAD)
+commit=$(git rev-parse HEAD | tr -d '[:space:]')
 if [ -f "${git_dir}/commondir" ]; then
   common=$(cat "${git_dir}/commondir")
   project_root=$(cd "${git_dir}/${common}/.." && pwd)
@@ -46,7 +48,6 @@ fi
 
 safe_branch=$(echo "$branch" | tr '/' '_' | tr '\\' '_')
 mkdir -p "${git_dir}/claude-qa"
-commit=$(git rev-parse HEAD | tr -d '[:space:]')
 printf '%s' "$commit" > "${git_dir}/claude-qa/${safe_branch}.approved"
 
 echo ""
