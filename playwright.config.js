@@ -14,4 +14,16 @@ export default defineConfig({
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
   },
+  projects: [
+    {
+      // All user-journey tests. Run with: playwright test --project=functional
+      name: 'functional',
+      testIgnore: '**/accessibility.spec.js',
+    },
+    {
+      // Axe-core accessibility checks. Run with: playwright test --project=accessibility
+      name: 'accessibility',
+      testMatch: '**/accessibility.spec.js',
+    },
+  ],
 })

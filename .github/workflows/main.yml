@@ -161,7 +161,7 @@ jobs:
 
       - name: Run E2E tests
         id: e2e-tests
-        run: npm run test:e2e -- --ignore=tests/e2e/accessibility.spec.js
+        run: npm run test:e2e -- --project=functional
         continue-on-error: true
 
       - name: Upload Playwright report
@@ -208,7 +208,7 @@ jobs:
 
       - name: Run axe accessibility tests
         id: accessibility
-        run: npm run test:e2e -- tests/e2e/accessibility.spec.js
+        run: npm run test:e2e -- --project=accessibility
         continue-on-error: true
 
       - name: Upload accessibility report
