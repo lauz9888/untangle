@@ -1,6 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { addTask, taskCard, openEdit } from './helpers.js'
 
+async function addTaskWithPastDueDate(page, column, title) {
+  await addTask(page, column, title)
+  const editCard = await openEdit(page, column, title)
+  await editCard.locator('[data-testid="due-date-input"]').fill('2020-01-01')
+  await editCard.locator('.btn-primary').click()
+}
+
 test.describe('task editing', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
@@ -67,5 +74,51 @@ test.describe('task editing', () => {
     await editCard.locator('.subtask-input').fill('New subtask')
     await editCard.locator('.btn-subtle').click()
     await expect(editCard.locator('.subtask-title')).toContainText('New subtask')
+  })
+
+  test.describe('overdue alert', () => {
+    test('shows the alert icon on a task with a past due date', async ({ page }) => {
+      await addTaskWithPastDueDate(page, 'now', 'Overdue task')
+      await expect(taskCard(page, 'now', 'Overdue task').locator('[data-testid="overdue-alert-btn"]')).toBeVisible()
+    })
+
+    test('does not show the alert icon on a task with no due date', async ({ page }) => {
+      await addTask(page, 'now', 'No due date task')
+      await expect(taskCard(page, 'now', 'No due date task').locator('[data-testid="overdue-alert-btn"]')).not.toBeVisible()
+    })
+
+    test('clicking the alert icon opens edit mode', async ({ page }) => {
+      await addTaskWithPastDueDate(page, 'now', 'Overdue task')
+      await taskCard(page, 'now', 'Overdue task').locator('[data-testid="overdue-alert-btn"]').click()
+      await expect(page.locator('.task-card.is-editing')).toBeVisible()
+    })
+
+    test('edit form shows the overdue message when opened via the alert icon', async ({ page }) => {
+      await addTaskWithPastDueDate(page, 'now', 'Overdue task')
+      await taskCard(page, 'now', 'Overdue task').locator('[data-testid="overdue-alert-btn"]').click()
+      await expect(page.locator('.task-card.is-editing .overdue-message')).toBeVisible()
+    })
+
+    test('overdue message is not shown when editing a task with no due date', async ({ page }) => {
+      await addTask(page, 'now', 'No due date task')
+      await openEdit(page, 'now', 'No due date task')
+      await expect(page.locator('.task-card.is-editing .overdue-message')).not.toBeVisible()
+    })
+
+    test('overdue message disappears after saving', async ({ page }) => {
+      await addTaskWithPastDueDate(page, 'now', 'Overdue task')
+      await taskCard(page, 'now', 'Overdue task').locator('[data-testid="overdue-alert-btn"]').click()
+      await expect(page.locator('.task-card.is-editing .overdue-message')).toBeVisible()
+      await page.locator('.task-card.is-editing .btn-primary').click()
+      await expect(page.locator('.overdue-message')).not.toBeVisible()
+    })
+
+    test('overdue message disappears after cancelling', async ({ page }) => {
+      await addTaskWithPastDueDate(page, 'now', 'Overdue task')
+      await taskCard(page, 'now', 'Overdue task').locator('[data-testid="overdue-alert-btn"]').click()
+      await expect(page.locator('.task-card.is-editing .overdue-message')).toBeVisible()
+      await page.locator('.task-card.is-editing .btn-secondary').click()
+      await expect(page.locator('.overdue-message')).not.toBeVisible()
+    })
   })
 })

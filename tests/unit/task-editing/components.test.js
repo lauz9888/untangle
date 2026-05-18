@@ -157,4 +157,77 @@ describe('task editing — components', () => {
       expect(wrapper.find('.edit-form').exists()).toBe(false)
     })
   })
+
+  describe('overdue alert icon', () => {
+    const overdueTask = makeTask({ dueDate: '2020-01-01' })
+    const futureTask = makeTask({ dueDate: '2099-12-31' })
+
+    it('shows the alert icon when the task due date is in the past', () => {
+      const wrapper = mount(TaskCard, { props: { task: overdueTask } })
+      expect(wrapper.find('[data-testid="overdue-alert-btn"]').exists()).toBe(true)
+    })
+
+    it('does not show the alert icon when the task has no due date', () => {
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      expect(wrapper.find('[data-testid="overdue-alert-btn"]').exists()).toBe(false)
+    })
+
+    it('does not show the alert icon when the due date is in the future', () => {
+      const wrapper = mount(TaskCard, { props: { task: futureTask } })
+      expect(wrapper.find('[data-testid="overdue-alert-btn"]').exists()).toBe(false)
+    })
+
+    it('clicking the alert icon opens edit mode', async () => {
+      const wrapper = mount(TaskCard, { props: { task: overdueTask } })
+      await wrapper.find('[data-testid="overdue-alert-btn"]').trigger('click')
+      expect(wrapper.find('.edit-form').exists()).toBe(true)
+    })
+  })
+
+  describe('overdue message in edit mode', () => {
+    const overdueTask = makeTask({ dueDate: '2020-01-01' })
+    const futureTask = makeTask({ dueDate: '2099-12-31' })
+
+    it('shows the overdue message when edit is opened on an overdue task via the alert icon', async () => {
+      const wrapper = mount(TaskCard, { props: { task: overdueTask } })
+      await wrapper.find('[data-testid="overdue-alert-btn"]').trigger('click')
+      const msg = wrapper.find('.overdue-message')
+      expect(msg.exists()).toBe(true)
+      expect(msg.text().length).toBeGreaterThan(0)
+    })
+
+    it('shows the overdue message when edit is opened on an overdue task via the edit button', async () => {
+      const wrapper = mount(TaskCard, { props: { task: overdueTask } })
+      await wrapper.find('.edit-btn').trigger('click')
+      expect(wrapper.find('.overdue-message').exists()).toBe(true)
+    })
+
+    it('does not show the overdue message when editing a task with no due date', async () => {
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      await wrapper.find('.edit-btn').trigger('click')
+      expect(wrapper.find('.overdue-message').exists()).toBe(false)
+    })
+
+    it('does not show the overdue message when editing a task with a future due date', async () => {
+      const wrapper = mount(TaskCard, { props: { task: futureTask } })
+      await wrapper.find('.edit-btn').trigger('click')
+      expect(wrapper.find('.overdue-message').exists()).toBe(false)
+    })
+
+    it('overdue message disappears after saving the edit', async () => {
+      const wrapper = mount(TaskCard, { props: { task: overdueTask } })
+      await wrapper.find('[data-testid="overdue-alert-btn"]').trigger('click')
+      expect(wrapper.find('.overdue-message').exists()).toBe(true)
+      await wrapper.find('.edit-form').trigger('submit')
+      expect(wrapper.find('.overdue-message').exists()).toBe(false)
+    })
+
+    it('overdue message disappears after cancelling the edit', async () => {
+      const wrapper = mount(TaskCard, { props: { task: overdueTask } })
+      await wrapper.find('[data-testid="overdue-alert-btn"]').trigger('click')
+      expect(wrapper.find('.overdue-message').exists()).toBe(true)
+      await wrapper.find('.btn-secondary').trigger('click')
+      expect(wrapper.find('.overdue-message').exists()).toBe(false)
+    })
+  })
 })
