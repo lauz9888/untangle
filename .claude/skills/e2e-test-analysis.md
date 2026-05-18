@@ -45,11 +45,21 @@ Add, remove, or update e2e tests to cover the change. If no e2e test changes are
 
 ### 4. Run the affected tests
 
-The E2E suite spins up its own dev server via `playwright.config.js`:
+Derive the list of changed or added e2e spec files:
 
 ```
-cd $project_root && npm run test:e2e -- <test-file-pattern>
+git diff main...HEAD --name-only | grep '^tests/e2e/.*\.spec\.js$'
 ```
+
+If the list is empty, skip the run — no e2e tests were touched, so there is nothing to verify here. Note this and move on.
+
+If files are listed, run only those files (space-separated):
+
+```
+cd $project_root && npm run test:e2e -- <file1> <file2> ...
+```
+
+Do not run the full suite at this step — the full suite runs in CI via `/deploy-branch` and `/deploy-main`.
 
 If a test fails because of a real bug in the source, trigger `/report-bug` with source `e2e-test` before fixing. Provide the test file, line, failure message, and what the test exercises. After the issue is created and the bug is fixed, re-run to confirm the tests pass.
 
