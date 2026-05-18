@@ -28,5 +28,9 @@ import TaskColumn from './TaskColumn.vue'
     padding: 16px;
     align-items: stretch;
   }
+
+  .task-board > * {
+    width: 100%;
+  }
 }
 </style>

@@ -26,27 +26,33 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   <div class="app-wrapper">
     <header class="app-header">
       <div class="app-brand">
-        <AppLogo />
-        <div class="app-title-group">
-          <span class="app-title">untangle</span>
-          <span class="app-tagline">A space to think</span>
+        <div class="app-brand-top">
+          <AppLogo />
+          <div class="app-title-group">
+            <span class="app-title">untangle</span>
+            <span class="app-tagline">A space to think</span>
+          </div>
         </div>
         <EnergySelector />
       </div>
       <div class="app-controls">
-        <div class="streak-display" :class="{ 'streak-active': streakCount > 0 }" title="Days in a row you've completed a task">
-          <span class="streak-icon">🔥</span>
-          <span class="streak-text">{{ streakCount }} {{ streakCount === 1 ? 'day' : 'days' }}</span>
+        <div class="controls-meta">
+          <div class="streak-display" :class="{ 'streak-active': streakCount > 0 }" title="Days in a row you've completed a task">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-text">{{ streakCount }} {{ streakCount === 1 ? 'day' : 'days' }}</span>
+          </div>
+          <button class="history-btn" @click="showHistory = true">History</button>
+          <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
-        <button class="encourage-btn" @click="handleEncourage">Encourage Me</button>
-        <button class="tough-love-btn" @click="handleToughLove">Tough Love</button>
-        <button class="history-btn" @click="showHistory = true">History</button>
-        <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+        <div class="controls-actions">
+          <button class="encourage-btn" @click="handleEncourage">Encourage Me</button>
+          <button class="tough-love-btn" @click="handleToughLove">Tough Love</button>
+        </div>
       </div>
     </header>
 
@@ -89,6 +95,12 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   flex-shrink: 0;
 }
 
+.app-brand-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .app-title-group {
   display: flex;
   flex-direction: column;
@@ -112,6 +124,18 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
 }
 
 .app-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.controls-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.controls-actions {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -202,8 +226,8 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   }
 
   .app-brand {
-    flex-shrink: 1;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 6px;
   }
 
@@ -212,27 +236,40 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   }
 
   .app-controls {
+    flex-direction: column;
     gap: 6px;
-    flex-wrap: wrap;
+  }
+
+  .controls-meta {
+    gap: 6px;
   }
 
   .streak-display {
+    flex-grow: 1;
     padding: 5px 8px;
     font-size: 12px;
   }
 
-  .encourage-btn,
-  .tough-love-btn,
   .history-btn {
     padding: 7px 10px;
     font-size: 12px;
-    flex: 1;
-    text-align: center;
   }
 
   .settings-btn {
     width: 36px;
     height: 36px;
+  }
+
+  .controls-actions {
+    gap: 6px;
+  }
+
+  .encourage-btn,
+  .tough-love-btn {
+    flex: 1;
+    padding: 7px 10px;
+    font-size: 12px;
+    text-align: center;
   }
 }
 </style>
