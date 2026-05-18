@@ -42,17 +42,17 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
             <span class="streak-text">{{ streakCount }} {{ streakCount === 1 ? 'day' : 'days' }}</span>
           </div>
           <button class="history-btn" @click="showHistory = true">History</button>
-          <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
         </div>
         <div class="controls-actions">
           <button class="encourage-btn" @click="handleEncourage">Encourage Me</button>
           <button class="tough-love-btn" @click="handleToughLove">Tough Love</button>
         </div>
+        <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -236,11 +236,17 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   }
 
   .app-controls {
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 6px;
   }
 
   .controls-meta {
+    flex: 1;
+    gap: 6px;
+  }
+
+  .controls-actions {
+    width: 100%;
     gap: 6px;
   }
 
@@ -258,10 +264,6 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   .settings-btn {
     width: 36px;
     height: 36px;
-  }
-
-  .controls-actions {
-    gap: 6px;
   }
 
   .encourage-btn,

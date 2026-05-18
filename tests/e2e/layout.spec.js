@@ -39,4 +39,15 @@ test.describe('layout', () => {
     await expect(page.locator('[data-column="next"] .add-task-btn')).toBeVisible()
     await expect(page.locator('[data-column="future"] .add-task-btn')).toBeVisible()
   })
+
+  test('settings cog is to the right of all other header buttons on desktop', async ({ page }) => {
+    const settingsBox = await page.getByRole('button', { name: /open settings/i }).boundingBox()
+    const encourageBox = await page.getByRole('button', { name: /encourage me/i }).boundingBox()
+    const toughLoveBox = await page.getByRole('button', { name: /tough love/i }).boundingBox()
+    const historyBox = await page.getByRole('button', { name: /history/i }).boundingBox()
+
+    expect(settingsBox.x).toBeGreaterThan(encourageBox.x)
+    expect(settingsBox.x).toBeGreaterThan(toughLoveBox.x)
+    expect(settingsBox.x).toBeGreaterThan(historyBox.x)
+  })
 })
