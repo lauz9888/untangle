@@ -1,4 +1,4 @@
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, getCurrentInstance } from 'vue'
 import { useTasks } from './useTasks.js'
 
 // Shared drag state so multiple components can coordinate touch drag.
@@ -116,10 +116,12 @@ export function useTaskDrag(taskId, cardEl, editing) {
     activeTouchDragId.value = null
   }
 
-  onBeforeUnmount(() => {
-    removeTouchListeners()
-    cleanupTouchDrag()
-  })
+  if (getCurrentInstance()) {
+    onBeforeUnmount(() => {
+      removeTouchListeners()
+      cleanupTouchDrag()
+    })
+  }
 
   return { isDragging, onDragStart, onDragEnd, handleTouchStart }
 }

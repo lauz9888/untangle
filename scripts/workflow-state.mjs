@@ -167,8 +167,12 @@ if (cmd === 'get') {
       if (state.loop_back_reason) lines.push(`Loop-back reason: ${state.loop_back_reason}`);
       if (state.awaiting_input && state.awaiting_input !== true) {
         lines.push(`Awaiting your answer to: ${state.awaiting_input}`);
+        lines.push(`ACTION REQUIRED: Answer the question above. Do not run any other workflow step or edit any files until you have responded to the awaiting question.`);
       } else if (state.awaiting_input) {
         lines.push(`Awaiting your answer to the last question asked.`);
+        lines.push(`ACTION REQUIRED: Answer the question above. Do not run any other workflow step or edit any files until you have responded to the awaiting question.`);
+      } else {
+        lines.push(`ACTION REQUIRED: You must immediately run /${state.current_step} to continue the workflow. Do not edit any source files and do not ask the user for permission first — just begin.`);
       }
       process.stdout.write(lines.join('\n'));
       process.exit(0);
