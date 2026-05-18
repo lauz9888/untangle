@@ -19,7 +19,7 @@ The E2E suite spins up its own dev server via `playwright.config.js`; you don't 
 
 ## Architecture in brief
 
-All task state lives in `src/composables/useTasks.js` — a module-level singleton (Vue reactive refs outside the function). Every component that calls `useTasks()` shares the same state. `useCelebration.js` follows the same pattern for popup state.
+All task state lives in `src/composables/useTasks.js` — a module-level singleton (Vue reactive refs outside the function). Every component that calls `useTasks()` shares the same state. `useCelebration.js`, `useEncouragement.js`, `useToughLove.js`, and `useStreak.js` follow the same singleton pattern.
 
 Components are thin: they call composable functions and render results. Business logic stays in the composables.
 
@@ -38,6 +38,7 @@ E2E tests in `tests/e2e/` clear `localStorage` and reload before every test so t
 | File | Purpose |
 |---|---|
 | `src/composables/useTasks.js` | All task logic, energy filtering, localStorage persistence |
+| `src/composables/useStreak.js` | Streak counter logic, exclusion rules, settings persistence |
 | `src/composables/useCelebration.js` | Celebration popup state and messages |
 | `src/constants/energy.js` | Energy level definitions and column definitions |
 | `src/components/TaskCard.vue` | Display and edit mode for a single task |
