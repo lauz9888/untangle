@@ -159,3 +159,16 @@ p {
 .btn-subtle:hover {
   background: var(--border);
 }
+
+@media (hover: none) {
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .btn-subtle {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}

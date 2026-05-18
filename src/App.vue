@@ -196,13 +196,45 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
 @media (max-width: 600px) {
   .app-header {
     flex-wrap: wrap;
-    padding: 12px 16px;
-    gap: 10px;
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .app-tagline {
+    display: none;
   }
 
   .app-controls {
     width: 100%;
-    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .streak-display {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .encourage-btn,
+  .tough-love-btn,
+  .history-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .settings-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 400px) {
+  .encourage-btn,
+  .tough-love-btn {
+    flex-basis: calc(50% - 3px);
   }
 }
 </style>

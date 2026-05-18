@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import { useTasks } from '../composables/useTasks.js'
 import { useCelebration } from '../composables/useCelebration.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
+import { activeTouchDragId } from '../composables/useDragDrop.js'
 
 const props = defineProps({
   task: { type: Object, required: true },
@@ -10,7 +11,7 @@ const props = defineProps({
   isLast: { type: Boolean, default: false },
 })
 
-const { deleteTask, completeTask, updateTask, moveTask, isOverCapacity, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
+const { deleteTask, completeTask, updateTask, moveTask, moveTaskToColumn, isOverCapacity, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
 const { showCelebration } = useCelebration()
 
 function handleComplete(id) {
@@ -37,8 +38,9 @@ function formatDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-// ── drag ─────────────────────────────────────────────────────────────────────
+// ── HTML5 drag (desktop mouse) ────────────────────────────────────────────────
 
+const cardEl = ref(null)
 const isDragging = ref(false)
 
 function onDragStart(e) {
@@ -50,6 +52,107 @@ function onDragStart(e) {
 function onDragEnd() {
   isDragging.value = false
 }
+
+// ── Touch drag ────────────────────────────────────────────────────────────────
+
+const isTouchDragging = ref(false)
+let ghostEl = null
+let ghostOffsetX = 0
+let ghostOffsetY = 0
+let touchStartX = 0
+let touchStartY = 0
+
+function handleTouchStart(e) {
+  if (editing.value || activeTouchDragId.value) return
+  const touch = e.touches[0]
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
+  document.addEventListener('touchmove', handleTouchMove, { passive: false })
+  document.addEventListener('touchend', handleTouchEnd)
+  document.addEventListener('touchcancel', handleTouchCancel)
+}
+
+function handleTouchMove(e) {
+  const touch = e.touches[0]
+  if (!isTouchDragging.value) {
+    if (activeTouchDragId.value) return
+    const dx = Math.abs(touch.clientX - touchStartX)
+    const dy = Math.abs(touch.clientY - touchStartY)
+    if (dx < 8 && dy < 8) return
+    startTouchDrag(touch)
+  }
+  if (isTouchDragging.value) {
+    e.preventDefault()
+    if (ghostEl) {
+      ghostEl.style.left = (touch.clientX - ghostOffsetX) + 'px'
+      ghostEl.style.top = (touch.clientY - ghostOffsetY) + 'px'
+    }
+  }
+}
+
+function handleTouchEnd(e) {
+  removeTouchListeners()
+  if (!isTouchDragging.value) return
+  const touch = e.changedTouches[0]
+  dropTouchDrag(touch.clientX, touch.clientY)
+}
+
+function handleTouchCancel() {
+  removeTouchListeners()
+  cleanupTouchDrag()
+}
+
+function removeTouchListeners() {
+  document.removeEventListener('touchmove', handleTouchMove)
+  document.removeEventListener('touchend', handleTouchEnd)
+  document.removeEventListener('touchcancel', handleTouchCancel)
+}
+
+function startTouchDrag(touch) {
+  isTouchDragging.value = true
+  isDragging.value = true
+  activeTouchDragId.value = props.task.id
+  const rect = cardEl.value.getBoundingClientRect()
+  ghostOffsetX = touch.clientX - rect.left
+  ghostOffsetY = touch.clientY - rect.top
+  ghostEl = cardEl.value.cloneNode(true)
+  Object.assign(ghostEl.style, {
+    position: 'fixed',
+    left: rect.left + 'px',
+    top: rect.top + 'px',
+    width: rect.width + 'px',
+    opacity: '0.85',
+    pointerEvents: 'none',
+    zIndex: '9999',
+    transform: 'rotate(1.5deg) scale(1.03)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+    transition: 'none',
+    margin: '0',
+  })
+  document.body.appendChild(ghostEl)
+}
+
+function dropTouchDrag(x, y) {
+  if (ghostEl) { ghostEl.remove(); ghostEl = null }
+  isTouchDragging.value = false
+  isDragging.value = false
+  activeTouchDragId.value = null
+  const elements = document.elementsFromPoint(x, y)
+  const columnEl = elements.find(el => el.dataset?.column)
+  if (columnEl) moveTaskToColumn(props.task.id, columnEl.dataset.column)
+}
+
+function cleanupTouchDrag() {
+  if (ghostEl) { ghostEl.remove(); ghostEl = null }
+  isTouchDragging.value = false
+  isDragging.value = false
+  activeTouchDragId.value = null
+}
+
+onBeforeUnmount(() => {
+  removeTouchListeners()
+  cleanupTouchDrag()
+})
 
 // ── edit ─────────────────────────────────────────────────────────────────────
 
@@ -95,12 +198,14 @@ function addSubtaskAction() {
 
 <template>
   <div
+    ref="cardEl"
     class="task-card"
     :class="[task.energy ? `energy-border-${task.energy}` : 'energy-border-none',
              { 'over-capacity': isOverCapacity(task), 'is-dragging': isDragging, 'is-editing': editing }]"
     :draggable="!editing"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
+    @touchstart="handleTouchStart"
   >
 
     <!-- ── Display mode ── -->
@@ -383,7 +488,75 @@ function addSubtaskAction() {
   outline-offset: 1px;
 }
 
+/* On touch devices: always show buttons, larger tap targets */
+@media (hover: none) {
+  .action-btn {
+    opacity: 0.5;
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .task-card:hover .action-btn {
+    opacity: 0.5;
+  }
+
+  .action-btn:active:not(:disabled) {
+    opacity: 1 !important;
+    background: var(--border);
+  }
+
+  .action-btn:disabled {
+    opacity: 0 !important;
+  }
+
+  .complete-btn:active:not(:disabled) {
+    color: var(--energy-tiny-active);
+    background: var(--energy-tiny-bg);
+    opacity: 1 !important;
+  }
+
+  .delete-btn:active:not(:disabled) {
+    color: var(--energy-large-text);
+    background: var(--energy-large-bg);
+    opacity: 1 !important;
+  }
+
+  .task-actions {
+    gap: 2px;
+  }
+}
+
 /* ── Edit mode ─────────────────────────────────────── */
+
+@media (hover: none) {
+  .subtask-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+
+  .subtask-delete-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .energy-opt {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+
+  .edit-title-input,
+  .subtask-input,
+  .date-input {
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
+  }
+}
 
 .edit-form {
   display: flex;
