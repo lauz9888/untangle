@@ -36,44 +36,96 @@ E2E tests in `tests/e2e/` clear `localStorage` and reload before every test so t
 
 ## Bug tracking
 
-Bugs are tracked as GitHub issues whenever they are identified, regardless of the process that found them. Every issue records which process detected the bug — both in the issue body (`**Detected by:**`) and as a GitHub label (`found:development`, `found:qa`, `found:ci`, or `found:manual`) so issues can be filtered by detection process.
+Bugs are tracked as GitHub issues whenever they are identified, regardless of where they're found. Every issue records which process detected it — in the issue body (`**Detected by:**`) and as a GitHub label — so issues can be filtered by detection process.
 
-| Process | Source value | How issues are created | How issues are closed |
+In all cases, run `/report-bug` to log an issue. When triggered by a workflow skill it happens automatically; when you find a bug manually, run it yourself.
+
+| Where the bug was found | Source value | How issues are created | How issues are closed |
 |---|---|---|---|
-| Development | `development` | Create before fixing with `--source development` (see below) | Include `Fixes #N` in the commit message |
-| QA review (`/qa-review`) | `qa-review` | Created for each bug found, before fixing | Closed with root cause + fix details after the fix |
-| Unit / E2E test failures (during QA) | `unit-test` / `e2e-test` | Created when a test fails due to a source bug | Closed after the source fix is applied |
-| CI pipeline | `ci-unit-tests` / `ci-e2e-tests` | Created automatically on any test job failure | Include `Fixes #N` in a commit message |
-| Manual report | `manual` | Run `/report-bug` and describe what you saw | Include `Fixes #N` in a commit message |
-
-**Reporting a development-time bug**: if you spot a bug in existing code while implementing a feature (before the QA step), create an issue before fixing it:
-
-```
-node scripts/bug-tracker.mjs create \
-  --title "Bug: <concise description>" \
-  --body "<what the bug is, which file and line, how it manifests>" \
-  --source "development"
-```
-
-Then fix the bug and include `Fixes #N` in the commit message to close the issue automatically.
+| During code writing (`/solution-implementation`) | `development` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
+| During code review (`/implementation-analysis`) | `qa-review` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
+| Unit test failure (`/unit-test-analysis`) | `unit-test` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
+| E2E test failure (`/e2e-test-analysis`) | `e2e-test` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
+| CI unit test failure (`/deploy-branch`, `/deploy-main`) | `ci-unit-tests` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
+| CI e2e test failure (`/deploy-branch`, `/deploy-main`) | `ci-e2e-tests` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
+| Developer finds a bug at any point | `manual` | Run `/report-bug` and describe what you saw | Closed by `/report-bug` after fix, or via `Fixes #N` in a commit |
 
 **Auto-close via commit message**: any commit whose message contains `Fixes #N`, `Closes #N`, or `Resolves #N` triggers the `post-commit` hook, which comments on the issue with the fix summary and closes it.
 
 The core script is `scripts/bug-tracker.mjs` — it handles deduplication (won't create a second issue if one with the same title is already open).
 
+## Developer workflow
+
+Every code change — whether made with Claude or manually — follows a structured pipeline. The skills are stored in `.claude/skills/` and available to all developers who clone the repo.
+
+### With Claude (automated)
+
+When you send Claude a message asking for a code change, the workflow starts automatically. Each step chains to the next without needing manual commands:
+
+| Step | Skill | What it does |
+|---|---|---|
+| 1 | `/requirement-analysis` | Captures and validates requirements; asks clarifying questions |
+| 2 | `/solution-analysis` | Designs the implementation approach; explores the codebase |
+| 3 | `/solution-implementation` | Writes the code |
+| 4 | `/implementation-analysis` | Verifies the code matches the requirement and solution |
+| 5 | `/unit-test-analysis` | Updates unit tests and runs affected tests |
+| 6 | `/e2e-test-analysis` | Updates e2e tests and runs affected tests |
+| 7 | `/document-analysis` | Updates docs, then asks about deployment path |
+| 8a | `/deploy-branch` | Deploys to a branch for manual testing |
+| 8b | `/deploy-main` | Runs full CI and merges to main |
+
+Each skill can also be run manually at any time by typing `/skill-name`.
+
+**Loop-backs**: if implementation or analysis discovers a gap, the workflow automatically routes back to an earlier step with full context, then resumes forward from there.
+
+**Resuming an interrupted workflow**: if a session is interrupted mid-workflow, the next Claude session detects the active state and offers to resume from where it left off.
+
+**Resetting the workflow**: if you want to start fresh:
+```
+node scripts/workflow-state.mjs reset
+```
+
+### Without Claude (manual)
+
+Run each step yourself and use these commands to advance the workflow:
+
+```
+node scripts/workflow-state.mjs start               # begin a new workflow
+node scripts/workflow-state.mjs set requirement_text "..."
+node scripts/workflow-state.mjs approve requirement  # advance to solution-analysis
+node scripts/workflow-state.mjs set solution_text "..."
+node scripts/workflow-state.mjs approve solution     # advance to solution-implementation
+node scripts/workflow-state.mjs set implementation_summary "..."
+node scripts/workflow-state.mjs set pending_next_step "implementation-analysis"
+node scripts/workflow-state.mjs approve implementation  # advance to unit-test-analysis
+node scripts/workflow-state.mjs approve unit-tests   # advance to e2e-test-analysis
+node scripts/workflow-state.mjs approve e2e-tests    # advance to document-analysis
+node scripts/workflow-state.mjs approve docs         # advance to deploy
+node scripts/workflow-state.mjs reset                # clear state after deploy
+```
+
+Check current state at any time:
+```
+node scripts/workflow-state.mjs get
+```
+
 ## QA review and pull requests
 
-Before pushing a branch or creating a PR, QA review must pass. Run:
+A QA approval marker must exist before pushing a branch or creating a PR. How it gets written depends on which workflow path you're on:
+
+**Automated workflow** (`/requirement-analysis` → … → `/deploy-main`): the marker is written automatically by `/deploy-main` after all CI checks pass. You do not need to run `/qa-review` separately.
+
+**Manual workflow** (code written outside the automated pipeline): run `/qa-review` before pushing.
 
 ```
 /qa-review
 ```
 
-This skill reviews all changed code for logic issues, inefficiency, and maintainability problems; fixes what it finds; checks whether unit and e2e tests are needed and writes them if so; and updates README/CLAUDE.md if the change affects documented behaviour. When everything is clean it writes a QA approval marker for the current branch and commit.
+This reviews all changed code for logic issues, inefficiency, and maintainability problems; fixes what it finds; checks whether unit and e2e tests are needed and writes them if so; and updates README/CLAUDE.md if the change affects documented behaviour. When everything is clean it writes the QA approval marker.
 
-The `pre-push` git hook and the Claude Code `PreToolUse` hook both enforce this — pushing or running `gh pr create` will be blocked if the marker is missing or stale (i.e. new commits were added after the last review).
+To re-approve after adding commits, run `/qa-review` again.
 
-To re-approve after adding commits, just run `/qa-review` again.
+The `pre-push` git hook and the Claude Code `PreToolUse` hook both enforce the marker — pushing or running `gh pr create` will be blocked if it is missing or stale.
 
 **Working without Claude Code?** Run the manual equivalent instead:
 
