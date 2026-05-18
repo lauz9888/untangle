@@ -39,6 +39,10 @@ Before pushing any branch, run `/qa-review` in Claude Code. The pre-push hook wi
 
 ---
 
+Untangle was built using an AI-assisted workflow. See the [wiki](https://github.com/lauz9888/untangle/wiki) for more information.
+
+---
+
 ## Wiki
 
 Full documentation lives in the [Untangle wiki](https://github.com/lauz9888/untangle/wiki):
