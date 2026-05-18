@@ -18,7 +18,8 @@ if [ ! -f "$marker" ]; then
   echo ""
   echo "QA REVIEW REQUIRED"
   echo "  Branch '${branch}' has not been QA reviewed."
-  echo "  Run /qa-review in Claude Code before creating a pull request."
+  echo "  Claude Code:  run /qa-review"
+  echo "  Manual:       sh scripts/mark-qa-approved.sh"
   echo ""
   exit 1
 fi
@@ -30,7 +31,8 @@ if [ "$approved_commit" != "$current_commit" ]; then
   echo "  New commits have been added since the last QA review."
   echo "  Approved commit: ${approved_commit}"
   echo "  Current commit:  ${current_commit}"
-  echo "  Re-run /qa-review in Claude Code before creating a pull request."
+  echo "  Claude Code:  re-run /qa-review"
+  echo "  Manual:       sh scripts/mark-qa-approved.sh"
   echo ""
   exit 1
 fi

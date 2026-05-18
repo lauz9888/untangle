@@ -62,6 +62,15 @@ The `pre-push` git hook and the Claude Code `PreToolUse` hook both enforce this 
 
 To re-approve after adding commits, just run `/qa-review` again.
 
+**Working without Claude Code?** Run the manual equivalent instead:
+
+```
+sh scripts/mark-qa-approved.sh        # unit tests + writes marker
+sh scripts/mark-qa-approved.sh --e2e  # also runs E2E tests
+```
+
+This runs the test suite and writes the same approval marker. You are responsible for the code review itself — the script only verifies the tests pass.
+
 ## Wiki updates
 
 The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated automatically. When a PR is merged and main is pushed, a GitHub Actions workflow (`wiki-update.yml`) diffs the change against every wiki page and updates any that are out of date. It requires `ANTHROPIC_API_KEY` to be set as a repository secret.
