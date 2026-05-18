@@ -104,17 +104,17 @@ Get the PR number from the output, then merge:
 gh pr merge <PR-number> --squash --delete-branch
 ```
 
-### 6. Reset workflow state
+### 6. Generate the post-deploy report
+
+Run `/post-deploy-report` passing the PR number from step 5. This generates a markdown report in `reports/` and commits it to main. The report reads `started_at` from current workflow state to compute cycle time, so it must run before the state is reset.
+
+If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the merge has already completed successfully.
+
+### 7. Reset workflow state
 
 ```
 node scripts/workflow-state.mjs reset
 ```
-
-### 7. Generate the post-deploy report
-
-Run `/post-deploy-report` passing the PR number from step 5. This generates a markdown report in `reports/` and commits it to main.
-
-If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the merge has already completed successfully.
 
 ### 8. Report to the developer
 

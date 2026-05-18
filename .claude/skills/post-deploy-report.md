@@ -12,6 +12,8 @@ Read the current workflow state (may already be reset — that is fine, use what
 node scripts/workflow-state.mjs get
 ```
 
+Note the `started_at` field — this is when the requirement was first captured. If the workflow was reset before this skill ran, `started_at` may be absent; in that case the cycle time will be omitted from the report.
+
 The PR number must be provided — either passed as an argument or taken from the deploy-main context. If it is not available, ask the developer for it before continuing.
 
 Determine the project root (handles worktrees):
@@ -31,6 +33,13 @@ fi
 ```
 gh pr view <PR-number> --json number,title,url,mergedAt,mergeCommit,body,author
 ```
+
+Compute the cycle time using `started_at` (from workflow state) and `mergedAt` (from the PR). Format it as:
+- `Xm` if under 1 hour (e.g. `42m`)
+- `Xh Ym` if under 24 hours (e.g. `2h 7m`)
+- `Xd Yh` if 1 day or more (e.g. `1d 3h`)
+
+If `started_at` is absent, set cycle time to `null` and omit it from the report.
 
 Also fetch the list of commits on the PR to find `Fixes #N` / `Closes #N` / `Resolves #N` references:
 
@@ -72,7 +81,7 @@ Write the report with this structure:
 ```markdown
 # Change report: <PR title>
 
-**PR**: [#N](<PR URL>) · **Merged**: <merge date> · **Commit**: [`<short SHA>`](<commit URL>)
+**PR**: [#N](<PR URL>) · **Merged**: <merge date> · **Commit**: [`<short SHA>`](<commit URL>) · **Cycle time**: <cycle time (omit this field entirely if started_at was absent)>
 
 ## What changed
 
