@@ -91,12 +91,11 @@ Two GitHub Actions workflows govern every change.
 **Branch CI** (`.github/workflows/branch-ci.yml`) — triggers on any push to a non-main branch and on PRs targeting main:
 
 1. **Build check** — verifies the project builds with no errors.
-2. **AI code review** — calls Claude (`scripts/ai-review.mjs`) to check for requirement conflicts, code quality issues, missing/outdated tests, and documentation gaps. Any corrections are committed and pushed back to the branch automatically. The review fails the pipeline if it finds blocking issues that cannot be auto-fixed.
-3. **Unit tests** — runs after the AI review so any test file changes it made are included.
-4. **E2E tests** — same; runs in parallel with unit tests.
-5. **Deploy preview** — also runs after the AI review; builds the app with the branch-specific base URL and deploys it to the `gh-pages` branch under `preview/{branch-name}/`. For PRs, the preview URL is posted as a comment on the PR. Skipped for PRs from forks.
+2. **Unit tests** — runs in parallel with E2E tests after the build passes.
+3. **E2E tests** — same; runs in parallel with unit tests.
+4. **Deploy preview** — builds the app with the branch-specific base URL and deploys it to the `gh-pages` branch under `preview/{branch-name}/`. For PRs, the preview URL is posted as a comment on the PR. Skipped for PRs from forks.
 
-Both test jobs run whether the AI review succeeded or failed (so test results are always visible), but only if the build check passed.
+Both test jobs and the preview deploy all run in parallel once the build check passes.
 
 Preview URL pattern: `https://lauz9888.github.io/untangle/preview/{branch-name}/`
 
@@ -107,11 +106,8 @@ Preview cleanup (`.github/workflows/cleanup-preview.yml`) — removes the previe
 1. **Unit tests** and **E2E tests** — final verification that main is green (run in parallel).
 2. **Build check** — runs in parallel with tests.
 3. **Deploy to GitHub Pages** — runs after all three pass; pushes to the `gh-pages` branch root (preserving the `preview/` subdirectories written by branch CI).
-4. **Wiki update** — runs after deploy; diffs the merged commit and updates any wiki pages that are out of date.
 
 Both pipelines create GitHub issues (labelled `found:ci`) on unit or E2E test failures.
-
-Required repository secrets: `ANTHROPIC_API_KEY` (AI review and wiki update).
 
 **One-time GitHub Pages setup** — the deployment strategy uses the `gh-pages` branch rather than the GitHub Actions Pages API. In the repository settings, go to **Settings → Pages → Build and deployment** and set the source to **Deploy from a branch**, selecting branch `gh-pages` and folder `/ (root)`. This only needs to be done once.
 
@@ -133,4 +129,3 @@ The update script (`scripts/update-wiki.mjs`) diffs the latest commit against ev
 | `src/components/TaskColumn.vue` | Column with add-task form and drop zone |
 | `tests/e2e/helpers.js` | Shared Playwright helpers (`addTask`, `taskCard`, `openEdit`) |
 | `scripts/bug-tracker.mjs` | CLI for creating and closing GitHub bug issues |
-| `scripts/ai-review.mjs` | AI review script run by branch CI — reviews diff, fixes issues, updates tests/docs |

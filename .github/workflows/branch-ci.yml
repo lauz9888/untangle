@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write       # ai-review pushes corrections; deploy-preview pushes to gh-pages
+  contents: write       # deploy-preview pushes to gh-pages
   issues: write         # bug-tracker creates issues on test failures
   pull-requests: write  # deploy-preview posts the preview URL as a PR comment
 
@@ -32,50 +32,13 @@ jobs:
 
       - run: npm run build
 
-  ai-review:
-    name: AI code review
-    needs: build-check
-    runs-on: ubuntu-latest
-    steps:
-      # Check out the actual branch HEAD (not the PR merge commit) so we can push back.
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
-
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin \
-            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-
-      - name: Fetch main
-        run: git fetch origin main
-
-      - name: Run AI review
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: node scripts/ai-review.mjs
-
   deploy-preview:
     name: Deploy preview
-    needs: [build-check, ai-review]
-    # Run whether ai-review passed or failed; skip if build failed, run was cancelled,
-    # or this is a PR from a fork (GITHUB_TOKEN cannot write to the base repo in that case).
+    needs: build-check
+    # Skip for PRs from forks — GITHUB_TOKEN cannot write to the base repo in that case.
     if: >-
-      ${{ always() &&
-          needs.build-check.result == 'success' &&
-          (github.event_name == 'push' ||
-           github.event.pull_request.head.repo.full_name == github.repository) }}
+      ${{ github.event_name == 'push' ||
+          github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
       - name: Compute preview path
@@ -87,7 +50,7 @@ jobs:
           echo "path=preview/${SAFE}" >> $GITHUB_OUTPUT
           echo "url=https://lauz9888.github.io/untangle/preview/${SAFE}/" >> $GITHUB_OUTPUT
 
-      # Fetch the branch HEAD so we include any corrections the AI review committed.
+      # Check out the actual branch HEAD rather than the PR merge commit.
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref || github.ref_name }}
@@ -128,15 +91,10 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: [build-check, ai-review]
-    # Run whether ai-review passed or failed; skip only if build failed or run was cancelled.
-    if: ${{ always() && needs.build-check.result == 'success' }}
+    needs: build-check
     runs-on: ubuntu-latest
     steps:
-      # Fetch branch HEAD so we pick up any corrections the AI review committed.
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -167,13 +125,10 @@ jobs:
 
   e2e-tests:
     name: E2E tests
-    needs: [build-check, ai-review]
-    if: ${{ always() && needs.build-check.result == 'success' }}
+    needs: build-check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - uses: actions/setup-node@v4
         with:
