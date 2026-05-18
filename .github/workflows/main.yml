@@ -281,7 +281,7 @@ jobs:
 
       - name: Run Lighthouse CI (PWA + accessibility)
         id: lhci
-        run: npx @lhci/cli@0.14.x autorun --config=.lighthouserc.js
+        run: npx @lhci/cli@0.14.x autorun --config=.lighthouserc.cjs
         continue-on-error: true
 
       - name: Create issue for PWA / Lighthouse failure
