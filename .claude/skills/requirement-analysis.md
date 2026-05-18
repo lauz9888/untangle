@@ -35,7 +35,23 @@ Ask one focused question at a time. Don't ask for everything at once.
 
 If the developer's initial message already answers most of these, confirm your understanding rather than re-asking. For example: "I understand you want to [X], which should [Y], and it's done when [Z]. Is that right?"
 
-### 3. Review for conflicts
+### 3. Log a bug issue if the requirement is a bug fix
+
+If the requirement describes something currently broken — incorrect behaviour, a visual defect, a crash, or anything the user is reporting as wrong — create a GitHub issue before proceeding:
+
+```
+node scripts/bug-tracker.mjs create \
+  --title "Bug: <concise one-sentence description>" \
+  --body "<what was observed, where it manifests, steps to reproduce if known>" \
+  --source "manual"
+```
+
+If the output starts with `EXISTS:N`, it's already tracked as issue #N — note the number and continue.
+If the output starts with `CREATED:N`, note the number. The issue will be closed automatically when a commit message contains `Fixes #N`, or manually via `/report-bug` after the fix lands.
+
+If the requirement is a new feature or enhancement (nothing is currently broken), skip this step.
+
+### 4. Review for conflicts
 
 Once you have the requirement, check the codebase for anything that could contradict or interfere with it:
 
@@ -50,7 +66,7 @@ Read the relevant source files and identify:
 
 If you find a conflict or dependency, raise it explicitly: "This change will affect [X], which is also used by [Y]. We need to decide whether [Y] should change too."
 
-### 4. Save the approved requirements
+### 5. Save the approved requirements
 
 When the developer confirms the requirements are correct, write a concise but complete summary to state:
 
@@ -64,7 +80,7 @@ Then approve the requirement step to trigger solution-analysis automatically:
 node scripts/workflow-state.mjs approve requirement
 ```
 
-### 5. Confirm to the developer
+### 6. Confirm to the developer
 
 Tell the developer: "Requirements approved. Moving to solution analysis now."
 
