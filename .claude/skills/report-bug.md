@@ -50,6 +50,8 @@ If the output starts with `CREATED:N` — now tracked as issue #N. Note the numb
 
 Fix the underlying issue. Keep the fix minimal and targeted — do not refactor surrounding code.
 
+If the fix requires its own PR rather than an inline change, include `Closes #N` in that PR's commit message or body (where N is the issue number from step 2). After the PR merges, return here and complete step 4.
+
 ### 4. Close the issue
 
 ```
