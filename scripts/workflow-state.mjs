@@ -53,6 +53,7 @@ if (cmd === 'get') {
     unit_tests_done: false,
     e2e_tests_done: false,
     docs_done: false,
+    awaiting_input: null,
     pending_next_step: null,
     loop_back_from: null,
     loop_back_reason: null,
@@ -76,6 +77,7 @@ if (cmd === 'get') {
     process.exit(1);
   }
   flagMap[step]();
+  state.awaiting_input = null;
   state.pending_next_step = NEXT_STEP[step];
   writeState(state);
   console.log(`Approved: ${step}. Queued next step: ${NEXT_STEP[step]}`);
@@ -86,6 +88,19 @@ if (cmd === 'get') {
   const state = readState() || { active: true };
   try { state[key] = JSON.parse(value); } catch { state[key] = value; }
   writeState(state);
+
+} else if (cmd === 'await-input') {
+  const question = process.argv.slice(3).join(' ');
+  const state = readState() || { active: true };
+  state.awaiting_input = question || true;
+  writeState(state);
+  console.log('Workflow paused — awaiting developer input.');
+
+} else if (cmd === 'clear-awaiting') {
+  const state = readState() || { active: true };
+  state.awaiting_input = null;
+  writeState(state);
+  console.log('Awaiting-input cleared.');
 
 } else if (cmd === 'loop-back') {
   const target = process.argv[3];
@@ -105,6 +120,7 @@ if (cmd === 'get') {
   // Stop hook: exit 2 if a step transition is pending so Claude continues its turn
   const state = readState();
   if (!state?.active || !state.pending_next_step) process.exit(0);
+  if (state.awaiting_input) process.exit(0); // blocked waiting for developer answer
 
   const next = state.pending_next_step;
   const loopFrom = state.loop_back_from;
@@ -149,6 +165,11 @@ if (cmd === 'get') {
         `Docs: ${state.docs_done ? 'done' : 'pending'}`,
       ];
       if (state.loop_back_reason) lines.push(`Loop-back reason: ${state.loop_back_reason}`);
+      if (state.awaiting_input && state.awaiting_input !== true) {
+        lines.push(`Awaiting your answer to: ${state.awaiting_input}`);
+      } else if (state.awaiting_input) {
+        lines.push(`Awaiting your answer to the last question asked.`);
+      }
       process.stdout.write(lines.join('\n'));
       process.exit(0);
     }
@@ -175,6 +196,6 @@ if (cmd === 'get') {
   });
 
 } else {
-  console.error('Usage: node scripts/workflow-state.mjs <get|start|approve|set|loop-back|reset|check-transition|check-prompt>');
+  console.error('Usage: node scripts/workflow-state.mjs <get|start|approve|set|await-input|clear-awaiting|loop-back|reset|check-transition|check-prompt>');
   process.exit(1);
 }

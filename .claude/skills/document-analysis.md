@@ -43,15 +43,27 @@ Give the developer a concise summary of everything done in this workflow:
 - Test results (unit + e2e)
 - Doc updates made (or "none needed")
 
+Register the question so the workflow is blocked until the developer answers:
+
+```
+node scripts/workflow-state.mjs await-input "Deploy to a branch for manual testing first, or directly to main?"
+```
+
 Then ask:
 
 > "Everything is complete. Would you like to:
 > - **Test manually first** — I'll deploy the changes to a branch so you can verify in a browser before merging
 > - **Deploy directly to main** — I'll run the full CI pipeline and merge straight to main"
 
-Wait for their response before advancing. Do not set a next step automatically here.
+End your turn. Do not continue until the developer responds.
 
 ### 5. Route to the chosen deployment path
+
+When the developer answers, first clear the awaiting state:
+
+```
+node scripts/workflow-state.mjs clear-awaiting
+```
 
 If the developer wants to test manually:
 ```

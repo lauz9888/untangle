@@ -76,7 +76,19 @@ node scripts/workflow-state.mjs loop-back requirement-analysis "Non-functional r
 
 If the solution has open questions the developer needs to decide — naming, UI behaviour, data model shape, whether an existing abstraction should be extended or replaced — ask now, not during implementation.
 
-Ask one question at a time. Stop when the solution is fully specified.
+Before asking each question, register it so the workflow is blocked until the developer answers:
+
+```
+node scripts/workflow-state.mjs await-input "<the question you are about to ask>"
+```
+
+Then ask the question and end your turn. Do not continue until the developer responds. When the answer arrives, call:
+
+```
+node scripts/workflow-state.mjs clear-awaiting
+```
+
+Then either ask the next question (repeating the await-input pattern) or proceed to step 6 if the solution is fully specified.
 
 If you discover that the requirements are incomplete or contradictory and that's blocking solution design, loop back:
 
