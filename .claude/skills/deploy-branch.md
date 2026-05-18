@@ -81,7 +81,7 @@ git branch --show-current
 
 Tell the developer:
 - The branch name and that it's been pushed
-- How to access this version locally: `git checkout <branch>` then `npm run dev -- --port 5174` — using port 5174 keeps it separate from the main branch server on 5173
+- How to access this version locally: the worktree is already checked out at `.claude/worktrees/<worktree-name>`. Run `npm run dev` from there — `vite.config.js` auto-detects the worktree and serves on port 5174, leaving the main server on 5173 undisturbed. Navigate to `http://localhost:5174` to test
 - All CI checks passed
 
 Then ask:
