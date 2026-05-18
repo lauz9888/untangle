@@ -75,6 +75,7 @@ function handleTouchStart(e) {
 function handleTouchMove(e) {
   const touch = e.touches[0]
   if (!isTouchDragging.value) {
+    if (activeTouchDragId.value) return
     const dx = Math.abs(touch.clientX - touchStartX)
     const dy = Math.abs(touch.clientY - touchStartY)
     if (dx < 8 && dy < 8) return

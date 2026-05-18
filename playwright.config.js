@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test'
 
-const port = process.env.PORT || 5173
+// Use 5174 in worktrees to avoid conflicting with the main project's server on 5173.
+const port = process.env.PORT || 5174
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -8,8 +9,8 @@ export default defineConfig({
     baseURL: `http://localhost:${port}`,
   },
   webServer: {
-    command: 'npm run dev',
+    command: `npm run dev -- --port ${port}`,
     url: `http://localhost:${port}`,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
   },
 })
