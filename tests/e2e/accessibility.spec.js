@@ -43,7 +43,7 @@ test.describe('accessibility', () => {
 
   test('settings panel has no critical axe violations', async ({ page }) => {
     // Open settings
-    await page.locator('[data-testid="settings-btn"]').click()
+    await page.getByRole('button', { name: /open settings/i }).click()
     await page.locator('.settings-panel').waitFor({ state: 'visible' })
 
     const results = await new AxeBuilder({ page })
