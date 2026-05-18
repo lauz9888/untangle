@@ -1,6 +1,7 @@
 :root {
   /* Base */
   --text: #78716c;
+  --text-subtle: #6b6460;
   --text-h: #1c1917;
   --bg: #fafaf9;
   --column-bg: #f3f2f0;
@@ -50,6 +51,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --text: #a1a1aa;
+    --text-subtle: #8f8f9a;
     --text-h: #f4f4f5;
     --bg: #18181b;
     --column-bg: #1f1f23;

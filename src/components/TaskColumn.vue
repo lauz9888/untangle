@@ -232,7 +232,7 @@ function onDrop(e) {
 .column-header {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-subtle);
   margin: 0 0 2px;
   letter-spacing: 0.2px;
 }
@@ -246,8 +246,7 @@ function onDrop(e) {
 
 .empty-hint {
   font-size: 13px;
-  color: var(--text);
-  opacity: 0.4;
+  color: var(--text-subtle);
   text-align: center;
   padding: 16px 0 8px;
   margin: 0;
@@ -263,13 +262,11 @@ function onDrop(e) {
   border-radius: 8px;
   border: 1.5px dashed var(--border);
   background: transparent;
-  color: var(--text);
+  color: var(--text-subtle);
   font-size: 13px;
   cursor: pointer;
   font-family: inherit;
-  opacity: 0.6;
   transition:
-    opacity 0.12s,
     border-color 0.12s,
     color 0.12s;
 }
