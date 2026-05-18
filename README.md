@@ -10,6 +10,14 @@ Tasks are organised across three columns (Now, Next, Future) and can have an ene
 
 Untangle runs in your browser. No account, login, or internet connection required — all data is stored locally.
 
+### Install the app (recommended)
+
+Visit **[lauz9888.github.io/untangle](https://lauz9888.github.io/untangle/)** in Chrome or Edge, then click the install icon in the address bar (or open the browser menu and choose "Install Untangle"). It lands on your desktop like a normal app and works fully offline from then on.
+
+Safari on iPhone/iPad: tap the Share button and choose **Add to Home Screen**.
+
+### Run it locally (developers)
+
 ```
 npm install
 npm run dev
