@@ -334,6 +334,7 @@ function onDrop(e) {
 .form-dates {
   display: flex;
   gap: 8px;
+  align-items: flex-end;
 }
 
 .form-date-field {
@@ -430,9 +431,15 @@ function onDrop(e) {
     font-size: 14px;
   }
 
+  .energy-picker {
+    flex-wrap: nowrap;
+  }
+
   .energy-opt {
-    padding: 6px 14px;
-    font-size: 13px;
+    flex: 1;
+    padding: 5px 2px;
+    font-size: 12px;
+    text-align: center;
   }
 
   .task-input,
