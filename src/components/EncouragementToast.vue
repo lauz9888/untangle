@@ -6,7 +6,12 @@ const { encouragement, dismissEncouragement } = useEncouragement()
 
 <template>
   <Transition name="encouragement">
-    <div v-if="encouragement" class="encouragement-toast" data-testid="encouragement-toast" @click="dismissEncouragement">
+    <div
+      v-if="encouragement"
+      class="encouragement-toast"
+      data-testid="encouragement-toast"
+      @click="dismissEncouragement"
+    >
       <p class="encouragement-text" data-testid="encouragement-text">{{ encouragement }}</p>
     </div>
   </Transition>
@@ -28,7 +33,9 @@ const { encouragement, dismissEncouragement } = useEncouragement()
   max-width: min(440px, calc(100vw - 40px));
   width: max-content;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -58,11 +65,15 @@ const { encouragement, dismissEncouragement } = useEncouragement()
 }
 
 .encouragement-enter-active {
-  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .encouragement-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .encouragement-enter-from {

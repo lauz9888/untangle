@@ -1,0 +1,240 @@
+name: Branch pipeline
+
+# Runs on every pull-request targeting main and on direct pushes to any
+# non-main branch.  Lighter than the main pipeline — proves the branch is
+# safe for manual human review and deploys a preview build artifact.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write   # needed to post the preview comment on PRs
+
+jobs:
+  # ── 1. Build ────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  # ── 2. Unit tests ────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        id: unit-tests
+        run: npm test -- --run --reporter=verbose
+        continue-on-error: true
+
+      - name: Create issue for unit test failure
+        if: steps.unit-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Unit tests failing on ${{ github.ref_name }}" \
+            --body "Unit tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`)." \
+            --source "ci-unit-tests"
+
+      - name: Fail if tests failed
+        if: steps.unit-tests.outcome == 'failure'
+        run: exit 1
+
+  # ── 3. Coverage gate ─────────────────────────────────────────────────────────
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run coverage
+        id: coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Create issue for coverage failure
+        if: steps.coverage.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Coverage gate failing on ${{ github.ref_name }}" \
+            --body "Coverage fell below threshold in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`)." \
+            --source "ci-unit-tests"
+
+      - name: Fail if coverage below threshold
+        if: steps.coverage.outcome == 'failure'
+        run: exit 1
+
+  # ── 4. E2E tests ─────────────────────────────────────────────────────────────
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        id: e2e-tests
+        run: npm run test:e2e -- --ignore=tests/e2e/accessibility.spec.js
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: steps.e2e-tests.outcome == 'failure'
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Create issue for E2E test failure
+        if: steps.e2e-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: E2E tests failing on ${{ github.ref_name }}" \
+            --body "E2E tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`). Playwright report uploaded as a build artifact." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if tests failed
+        if: steps.e2e-tests.outcome == 'failure'
+        run: exit 1
+
+  # ── 5. Basic accessibility check ─────────────────────────────────────────────
+  accessibility:
+    name: Basic accessibility check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run axe accessibility tests
+        id: accessibility
+        run: npm run test:e2e -- tests/e2e/accessibility.spec.js
+        continue-on-error: true
+
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: steps.accessibility.outcome == 'failure'
+        with:
+          name: accessibility-report-${{ github.sha }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Create issue for accessibility failure
+        if: steps.accessibility.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Accessibility check failing on ${{ github.ref_name }}" \
+            --body "Accessibility tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`). Accessibility report uploaded as a build artifact." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if accessibility tests failed
+        if: steps.accessibility.outcome == 'failure'
+        run: exit 1
+
+  # ── 6. Deploy branch preview ─────────────────────────────────────────────────
+  # Runs only when all other checks pass. Uploads the built dist as an artifact
+  # and posts a comment on the PR with a direct link so reviewers can download
+  # and test the exact build — no external hosting required.
+  deploy-preview:
+    name: Deploy branch preview
+    needs: [build, unit-tests, coverage, e2e-tests, accessibility]
+    runs-on: ubuntu-latest
+    # Only comment on PRs (push events have no PR number)
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Post preview comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY="## Branch preview ready
+
+          All checks passed for commit \`${{ github.sha }}\`.
+
+          **Download the preview build:** [Actions run → Artifacts → \`dist-${{ github.sha }}\`]($RUN_URL)
+
+          To test locally:
+          1. Download and unzip the \`dist-${{ github.sha }}\` artifact from the link above.
+          2. \`npx serve dist/\` (or any static server) then open the printed URL.
+
+          > Built at: $(date -u '+%Y-%m-%d %H:%M UTC')"
+
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$BODY" \
+            --edit-last 2>/dev/null || \
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$BODY"

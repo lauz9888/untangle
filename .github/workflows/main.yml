@@ -1,0 +1,386 @@
+name: Main pipeline
+
+# Runs on every push to main (i.e. after a PR is merged).
+# Full quality gate + production deployment + post-deploy smoke check.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: main-pipeline-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ── 1. Lint / format check ───────────────────────────────────────────────────
+  lint-format:
+    name: Lint / format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier
+        run: npm run format:check
+
+  # ── 2. Build ─────────────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          GITHUB_ACTIONS: true
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 1
+
+  # ── 3. Unit tests ────────────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        id: unit-tests
+        run: npm test -- --run --reporter=verbose
+        continue-on-error: true
+
+      - name: Create issue for unit test failure
+        if: steps.unit-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Unit tests failing on main" \
+            --body "Unit tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\`." \
+            --source "ci-unit-tests"
+
+      - name: Fail if tests failed
+        if: steps.unit-tests.outcome == 'failure'
+        run: exit 1
+
+  # ── 4. Coverage gate ─────────────────────────────────────────────────────────
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run coverage
+        id: coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Create issue for coverage failure
+        if: steps.coverage.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Coverage gate failing on main" \
+            --body "Coverage fell below threshold in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\`." \
+            --source "ci-unit-tests"
+
+      - name: Fail if coverage below threshold
+        if: steps.coverage.outcome == 'failure'
+        run: exit 1
+
+  # ── 5. E2E tests ─────────────────────────────────────────────────────────────
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        id: e2e-tests
+        run: npm run test:e2e -- --ignore=tests/e2e/accessibility.spec.js
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: steps.e2e-tests.outcome == 'failure'
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Create issue for E2E test failure
+        if: steps.e2e-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: E2E tests failing on main" \
+            --body "E2E tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\`. Playwright report uploaded as a build artifact." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if tests failed
+        if: steps.e2e-tests.outcome == 'failure'
+        run: exit 1
+
+  # ── 6. Accessibility checks (full) ───────────────────────────────────────────
+  accessibility:
+    name: Accessibility checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run axe accessibility tests
+        id: accessibility
+        run: npm run test:e2e -- tests/e2e/accessibility.spec.js
+        continue-on-error: true
+
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: steps.accessibility.outcome == 'failure'
+        with:
+          name: accessibility-report-${{ github.sha }}
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Create issue for accessibility failure
+        if: steps.accessibility.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Accessibility check failing on main" \
+            --body "Accessibility tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\`. Accessibility report uploaded as a build artifact." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if accessibility tests failed
+        if: steps.accessibility.outcome == 'failure'
+        run: exit 1
+
+  # ── 7. Dependency / security audit ───────────────────────────────────────────
+  security-audit:
+    name: Dependency / security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        # --audit-level=high: blocks only high and critical vulnerabilities.
+        # Moderate/low issues surface as warnings in the output but don't
+        # fail the build. Raise to 'moderate' once the baseline is clean.
+        run: npm audit --audit-level=high --omit=dev
+
+  # ── 8. PWA validation ────────────────────────────────────────────────────────
+  pwa-validation:
+    name: PWA validation
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+
+      - name: Run Lighthouse CI (PWA + accessibility)
+        id: lhci
+        run: npx @lhci/cli@0.14.x autorun --config=.lighthouserc.js
+        continue-on-error: true
+
+      - name: Create issue for PWA / Lighthouse failure
+        if: steps.lhci.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: PWA / Lighthouse check failing on main" \
+            --body "Lighthouse CI failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\`. Check the Lighthouse report linked in the run summary." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if Lighthouse checks failed
+        if: steps.lhci.outcome == 'failure'
+        run: exit 1
+
+  # ── 9. Documentation / README check ─────────────────────────────────────────
+  docs-check:
+    name: Documentation / README check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Check documentation
+        run: node scripts/check-docs.mjs
+
+  # ── 10. Deploy production ────────────────────────────────────────────────────
+  deploy:
+    name: Deploy production
+    needs:
+      [lint-format, build, unit-tests, coverage, e2e-tests, accessibility, security-audit, pwa-validation, docs-check]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for production
+        run: npm run build
+        env:
+          GITHUB_ACTIONS: true
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ── 11. Post-deploy smoke check ──────────────────────────────────────────────
+  smoke-test:
+    name: Post-deploy smoke check
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Pages propagation
+        # GitHub Pages CDN can take up to ~60 s to reflect a new deploy.
+        run: sleep 30
+
+      - name: Check production URL is reachable
+        id: smoke
+        env:
+          PAGES_URL: ${{ needs.deploy.outputs.page_url || 'https://lauz9888.github.io/untangle/' }}
+        run: |
+          MAX_ATTEMPTS=5
+          DELAY=15
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $i/$MAX_ATTEMPTS — checking $PAGES_URL"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$PAGES_URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ Production URL returned HTTP 200"
+              break
+            fi
+            echo "  Got HTTP $STATUS — retrying in ${DELAY}s..."
+            if [ "$i" = "$MAX_ATTEMPTS" ]; then
+              echo "✗ Production URL did not return 200 after $MAX_ATTEMPTS attempts"
+              exit 1
+            fi
+            sleep $DELAY
+          done
+
+      - name: Verify app content is present
+        env:
+          PAGES_URL: ${{ needs.deploy.outputs.page_url || 'https://lauz9888.github.io/untangle/' }}
+        run: |
+          BODY=$(curl -s --max-time 15 "$PAGES_URL")
+          if echo "$BODY" | grep -qi "untangle"; then
+            echo "✓ App content verified in response"
+          else
+            echo "✗ Expected app content ('Untangle') not found in response"
+            exit 1
+          fi

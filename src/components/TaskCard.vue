@@ -9,18 +9,18 @@ const OVERDUE_MESSAGES = [
   "Every deadline is a chance to reset — what's a realistic date you can commit to today?",
   "You've got this! Take a moment to choose a due date that actually works for you.",
   "Progress, not perfection. Let's find a new timeline that sets you up to succeed.",
-  "Being honest with yourself about time is a superpower. Pick a date that feels achievable.",
+  'Being honest with yourself about time is a superpower. Pick a date that feels achievable.',
   "Plans change, and that's okay. What's a new due date you can genuinely commit to?",
-  "This task is still worth doing! When realistically could you get it done?",
+  'This task is still worth doing! When realistically could you get it done?',
   "Rescheduling isn't failing — it's planning smarter. What date works better for you?",
-  "Future you will thank you for setting a realistic deadline. What date makes sense?",
+  'Future you will thank you for setting a realistic deadline. What date makes sense?',
   "Take a breath — now, what's a due date you can actually meet?",
   "Every great plan gets adjusted. What's your new target date for this one?",
   "You're being thoughtful by reviewing this. What's a due date that respects your current capacity?",
-  "Timelines shift — what matters is keeping momentum. Set a new date and keep going!",
+  'Timelines shift — what matters is keeping momentum. Set a new date and keep going!',
   "Be kind to yourself. What's a due date that's both ambitious and realistic?",
-  "The best deadline is one you can actually meet. What date works for you now?",
-  "One small adjustment to the timeline could unlock a lot of momentum. What date feels right?",
+  'The best deadline is one you can actually meet. What date works for you now?',
+  'One small adjustment to the timeline could unlock a lot of momentum. What date feels right?',
 ]
 
 const props = defineProps({
@@ -29,7 +29,18 @@ const props = defineProps({
   isLast: { type: Boolean, default: false },
 })
 
-const { deleteTask, completeTask, updateTask, moveTask, isOverCapacity, isNotYetAvailable, today, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
+const {
+  deleteTask,
+  completeTask,
+  updateTask,
+  moveTask,
+  isOverCapacity,
+  isNotYetAvailable,
+  today,
+  addSubtask,
+  deleteSubtask,
+  toggleSubtask,
+} = useTasks()
 const { showCelebration, showMilestone } = useCelebration()
 
 function handleComplete(id) {
@@ -43,7 +54,7 @@ function handleComplete(id) {
 
 // ── display ──────────────────────────────────────────────────────────────────
 
-const doneSubtasks = computed(() => props.task.subtasks.filter(s => s.done).length)
+const doneSubtasks = computed(() => props.task.subtasks.filter((s) => s.done).length)
 const subtaskProgress = computed(() =>
   props.task.subtasks.length ? (doneSubtasks.value / props.task.subtasks.length) * 100 : 0
 )
@@ -63,7 +74,11 @@ function formatDate(dateStr) {
 const cardEl = ref(null)
 const editing = ref(false)
 
-const { isDragging, onDragStart, onDragEnd, handleTouchStart } = useTaskDrag(props.task.id, cardEl, editing)
+const { isDragging, onDragStart, onDragEnd, handleTouchStart } = useTaskDrag(
+  props.task.id,
+  cardEl,
+  editing
+)
 
 const editTitle = ref('')
 const editEnergy = ref(null)
@@ -118,14 +133,20 @@ function addSubtaskAction() {
   <div
     ref="cardEl"
     class="task-card"
-    :class="[task.energy ? `energy-border-${task.energy}` : 'energy-border-none',
-             { 'over-capacity': isOverCapacity(task), 'not-yet-available': isNotYetAvailable(task), 'is-dragging': isDragging, 'is-editing': editing }]"
+    :class="[
+      task.energy ? `energy-border-${task.energy}` : 'energy-border-none',
+      {
+        'over-capacity': isOverCapacity(task),
+        'not-yet-available': isNotYetAvailable(task),
+        'is-dragging': isDragging,
+        'is-editing': editing,
+      },
+    ]"
     :draggable="!editing"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
     @touchstart="handleTouchStart"
   >
-
     <!-- ── Display mode ── -->
     <template v-if="!editing">
       <button
@@ -136,11 +157,15 @@ function addSubtaskAction() {
         aria-label="Overdue task — click to update due date"
         data-testid="overdue-alert-btn"
         @click="startEdit"
-      >!</button>
+      >
+        !
+      </button>
       <div class="task-main" :class="{ 'has-overdue-icon': isOverdue }">
         <p class="task-title" data-testid="task-title">{{ task.title }}</p>
         <div v-if="task.energy || task.dueDate || task.availableFrom" class="task-meta">
-          <span v-if="task.energy" class="energy-badge" :class="`energy-${task.energy}`">{{ task.energy }}</span>
+          <span v-if="task.energy" class="energy-badge" :class="`energy-${task.energy}`">{{
+            task.energy
+          }}</span>
           <span v-if="task.availableFrom" class="date-chip from-chip">
             From {{ formatDate(task.availableFrom) }}
           </span>
@@ -156,18 +181,59 @@ function addSubtaskAction() {
         </div>
       </div>
       <div class="task-actions">
-        <button class="action-btn complete-btn" data-testid="complete-btn" title="Mark complete" :aria-label="`Mark complete: ${task.title}`" @click="handleComplete(task.id)">✓</button>
-        <button class="action-btn edit-btn" data-testid="edit-btn" title="Edit task" aria-label="Edit task" @click="startEdit">✎</button>
-        <button class="action-btn move-prev-btn" data-testid="move-prev-btn" :disabled="isFirst" title="Move to earlier column" aria-label="Move to earlier column" @click="moveTask(task.id, -1)">←</button>
-        <button class="action-btn move-next-btn" data-testid="move-next-btn" :disabled="isLast"  title="Move to later column"   aria-label="Move to later column"   @click="moveTask(task.id, 1)">→</button>
-        <button class="action-btn delete-btn" data-testid="delete-btn" :aria-label="`Delete task: ${task.title}`" title="Delete task" @click="deleteTask(task.id)">✕</button>
+        <button
+          class="action-btn complete-btn"
+          data-testid="complete-btn"
+          title="Mark complete"
+          :aria-label="`Mark complete: ${task.title}`"
+          @click="handleComplete(task.id)"
+        >
+          ✓
+        </button>
+        <button
+          class="action-btn edit-btn"
+          data-testid="edit-btn"
+          title="Edit task"
+          aria-label="Edit task"
+          @click="startEdit"
+        >
+          ✎
+        </button>
+        <button
+          class="action-btn move-prev-btn"
+          data-testid="move-prev-btn"
+          :disabled="isFirst"
+          title="Move to earlier column"
+          aria-label="Move to earlier column"
+          @click="moveTask(task.id, -1)"
+        >
+          ←
+        </button>
+        <button
+          class="action-btn move-next-btn"
+          data-testid="move-next-btn"
+          :disabled="isLast"
+          title="Move to later column"
+          aria-label="Move to later column"
+          @click="moveTask(task.id, 1)"
+        >
+          →
+        </button>
+        <button
+          class="action-btn delete-btn"
+          data-testid="delete-btn"
+          :aria-label="`Delete task: ${task.title}`"
+          title="Delete task"
+          @click="deleteTask(task.id)"
+        >
+          ✕
+        </button>
       </div>
     </template>
 
     <!-- ── Edit mode ── -->
     <template v-else>
       <form class="edit-form" @submit.prevent="saveEdit">
-
         <input
           v-model="editTitle"
           class="edit-title-input"
@@ -180,7 +246,14 @@ function addSubtaskAction() {
         <fieldset class="edit-section">
           <legend class="edit-label">Energy</legend>
           <div class="energy-picker" role="group" aria-label="Energy level">
-            <button type="button" class="energy-opt" :class="{ active: editEnergy === null }" @click="editEnergy = null">None</button>
+            <button
+              type="button"
+              class="energy-opt"
+              :class="{ active: editEnergy === null }"
+              @click="editEnergy = null"
+            >
+              None
+            </button>
             <button
               v-for="level in ENERGY_LEVELS"
               :key="level.id"
@@ -188,7 +261,9 @@ function addSubtaskAction() {
               class="energy-opt"
               :class="[`energy-${level.id}`, { active: editEnergy === level.id }]"
               @click="editEnergy = level.id"
-            >{{ level.label }}</button>
+            >
+              {{ level.label }}
+            </button>
           </div>
         </fieldset>
 
@@ -197,11 +272,21 @@ function addSubtaskAction() {
         <div class="edit-dates">
           <div class="edit-date-field">
             <label class="edit-label">Available from</label>
-            <input type="date" v-model="editAvailableFrom" class="date-input" data-testid="available-from-input" />
+            <input
+              type="date"
+              v-model="editAvailableFrom"
+              class="date-input"
+              data-testid="available-from-input"
+            />
           </div>
           <div class="edit-date-field">
             <label class="edit-label">Due date</label>
-            <input type="date" v-model="editDueDate" class="date-input" data-testid="due-date-input" />
+            <input
+              type="date"
+              v-model="editDueDate"
+              class="date-input"
+              data-testid="due-date-input"
+            />
           </div>
         </div>
 
@@ -221,7 +306,9 @@ function addSubtaskAction() {
                 class="subtask-delete-btn"
                 :aria-label="`Delete subtask: ${subtask.title}`"
                 @click="deleteSubtask(task.id, subtask.id)"
-              >✕</button>
+              >
+                ✕
+              </button>
             </li>
           </ul>
           <div class="add-subtask-row">
@@ -239,10 +326,8 @@ function addSubtaskAction() {
           <button type="submit" class="btn-primary">Save</button>
           <button type="button" class="btn-secondary" @click="cancelEdit">Cancel</button>
         </div>
-
       </form>
     </template>
-
   </div>
 </template>
 
@@ -253,7 +338,9 @@ function addSubtaskAction() {
   padding: 12px 12px 8px;
   box-shadow: var(--card-shadow);
   border-left: 3px solid transparent;
-  transition: opacity 0.2s, box-shadow 0.15s;
+  transition:
+    opacity 0.2s,
+    box-shadow 0.15s;
   cursor: grab;
   user-select: none;
   position: relative;
@@ -277,7 +364,9 @@ function addSubtaskAction() {
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: background 0.12s, transform 0.1s;
+  transition:
+    background 0.12s,
+    transform 0.1s;
   z-index: 1;
 }
 
@@ -329,11 +418,21 @@ function addSubtaskAction() {
   opacity: 0.35;
 }
 
-.energy-border-tiny   { border-left-color: var(--energy-tiny-border); }
-.energy-border-small  { border-left-color: var(--energy-small-border); }
-.energy-border-medium { border-left-color: var(--energy-medium-border); }
-.energy-border-large  { border-left-color: var(--energy-large-border); }
-.energy-border-none   { border-left-color: transparent; }
+.energy-border-tiny {
+  border-left-color: var(--energy-tiny-border);
+}
+.energy-border-small {
+  border-left-color: var(--energy-small-border);
+}
+.energy-border-medium {
+  border-left-color: var(--energy-medium-border);
+}
+.energy-border-large {
+  border-left-color: var(--energy-large-border);
+}
+.energy-border-none {
+  border-left-color: transparent;
+}
 
 /* ── Display mode ──────────────────────────────────── */
 
@@ -364,10 +463,22 @@ function addSubtaskAction() {
   white-space: nowrap;
 }
 
-.energy-badge.energy-tiny   { background: var(--energy-tiny-bg);   color: var(--energy-tiny-text); }
-.energy-badge.energy-small  { background: var(--energy-small-bg);  color: var(--energy-small-text); }
-.energy-badge.energy-medium { background: var(--energy-medium-bg); color: var(--energy-medium-text); }
-.energy-badge.energy-large  { background: var(--energy-large-bg);  color: var(--energy-large-text); }
+.energy-badge.energy-tiny {
+  background: var(--energy-tiny-bg);
+  color: var(--energy-tiny-text);
+}
+.energy-badge.energy-small {
+  background: var(--energy-small-bg);
+  color: var(--energy-small-text);
+}
+.energy-badge.energy-medium {
+  background: var(--energy-medium-bg);
+  color: var(--energy-medium-text);
+}
+.energy-badge.energy-large {
+  background: var(--energy-large-bg);
+  color: var(--energy-large-text);
+}
 
 .date-chip {
   font-size: 11px;
@@ -434,7 +545,9 @@ function addSubtaskAction() {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.12s, background 0.12s;
+  transition:
+    opacity 0.12s,
+    background 0.12s;
 }
 
 .task-card:hover .action-btn {
@@ -511,7 +624,7 @@ function addSubtaskAction() {
 /* ── Edit mode ─────────────────────────────────────── */
 
 @media (hover: none) {
-  .subtask-item input[type="checkbox"] {
+  .subtask-item input[type='checkbox'] {
     width: 20px;
     height: 20px;
   }
@@ -600,10 +713,26 @@ function addSubtaskAction() {
   background: var(--border);
 }
 
-.energy-opt.energy-tiny.active   { border-color: var(--energy-tiny-active);   color: var(--energy-tiny-active);   background: var(--energy-tiny-bg); }
-.energy-opt.energy-small.active  { border-color: var(--energy-small-active);  color: var(--energy-small-active);  background: var(--energy-small-bg); }
-.energy-opt.energy-medium.active { border-color: var(--energy-medium-active); color: var(--energy-medium-active); background: var(--energy-medium-bg); }
-.energy-opt.energy-large.active  { border-color: var(--energy-large-active);  color: var(--energy-large-active);  background: var(--energy-large-bg); }
+.energy-opt.energy-tiny.active {
+  border-color: var(--energy-tiny-active);
+  color: var(--energy-tiny-active);
+  background: var(--energy-tiny-bg);
+}
+.energy-opt.energy-small.active {
+  border-color: var(--energy-small-active);
+  color: var(--energy-small-active);
+  background: var(--energy-small-bg);
+}
+.energy-opt.energy-medium.active {
+  border-color: var(--energy-medium-active);
+  color: var(--energy-medium-active);
+  background: var(--energy-medium-bg);
+}
+.energy-opt.energy-large.active {
+  border-color: var(--energy-large-active);
+  color: var(--energy-large-active);
+  background: var(--energy-large-bg);
+}
 
 .edit-dates {
   display: flex;
@@ -652,7 +781,7 @@ function addSubtaskAction() {
   font-size: 13px;
 }
 
-.subtask-item input[type="checkbox"] {
+.subtask-item input[type='checkbox'] {
   flex-shrink: 0;
   accent-color: var(--accent);
   width: 14px;
@@ -681,7 +810,9 @@ function addSubtaskAction() {
   padding: 2px 4px;
   border-radius: 3px;
   flex-shrink: 0;
-  transition: opacity 0.12s, color 0.12s;
+  transition:
+    opacity 0.12s,
+    color 0.12s;
 }
 
 .subtask-delete-btn:hover {

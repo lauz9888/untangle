@@ -17,7 +17,6 @@ const freezeEnabled = computed({
     }
   },
 })
-
 </script>
 
 <template>
@@ -27,7 +26,12 @@ const freezeEnabled = computed({
         <span class="settings-title">Settings</span>
         <button class="settings-close" @click="$emit('close')" aria-label="Close settings">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <path
+              d="M12 4L4 12M4 4l8 8"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </div>
@@ -36,8 +40,13 @@ const freezeEnabled = computed({
         <nav class="settings-nav">
           <button class="settings-nav-item" @click="showAbout = true">
             <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M8 7v5M8 5v.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
             </svg>
             About
           </button>
@@ -108,33 +117,55 @@ const freezeEnabled = computed({
         <span class="about-modal-title">About Untangle</span>
         <button class="about-modal-close" @click="showAbout = false" aria-label="Close about">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <path
+              d="M12 4L4 12M4 4l8 8"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </div>
       <div class="about-content">
         <p class="about-lead">
-          Most task managers treat everything as equally actionable all the time. Untangle doesn't. It's built on the idea that capacity fluctuates — and that being able to see only what's realistic right now is often the difference between starting something and doing nothing.
+          Most task managers treat everything as equally actionable all the time. Untangle doesn't.
+          It's built on the idea that capacity fluctuates — and that being able to see only what's
+          realistic right now is often the difference between starting something and doing nothing.
         </p>
         <div class="about-features">
           <div class="about-feature">
             <span class="feature-label">Energy-matched tasks</span>
-            <span class="feature-desc">Tag each task as Tiny, Small, Medium, or Large. Set your energy in the header and tasks beyond your current capacity fade out — visible, but not demanding your attention.</span>
+            <span class="feature-desc"
+              >Tag each task as Tiny, Small, Medium, or Large. Set your energy in the header and
+              tasks beyond your current capacity fade out — visible, but not demanding your
+              attention.</span
+            >
           </div>
           <div class="about-feature">
             <span class="feature-label">Three columns, no pressure</span>
-            <span class="feature-desc"><strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> — so the things you can't touch yet have somewhere to live without cluttering your focus.</span>
+            <span class="feature-desc"
+              ><strong>Now</strong>, <strong>Next</strong>, and <strong>Future</strong> — so the
+              things you can't touch yet have somewhere to live without cluttering your focus.</span
+            >
           </div>
           <div class="about-feature">
             <span class="feature-label">Gentle accountability</span>
-            <span class="feature-desc">Encouragement and Tough Love buttons, a streak counter, and a celebration on every completion — because motivation isn't one-size-fits-all.</span>
+            <span class="feature-desc"
+              >Encouragement and Tough Love buttons, a streak counter, and a celebration on every
+              completion — because motivation isn't one-size-fits-all.</span
+            >
           </div>
           <div class="about-feature">
             <span class="feature-label">History</span>
-            <span class="feature-desc">Completed tasks are saved so you can look back and see everything you've done — useful on the days it doesn't feel like enough.</span>
+            <span class="feature-desc"
+              >Completed tasks are saved so you can look back and see everything you've done —
+              useful on the days it doesn't feel like enough.</span
+            >
           </div>
         </div>
-        <p class="about-footer">Your tasks are saved locally in your browser — nothing leaves your device.</p>
+        <p class="about-footer">
+          Your tasks are saved locally in your browser — nothing leaves your device.
+        </p>
       </div>
     </div>
   </div>
@@ -163,8 +194,12 @@ const freezeEnabled = computed({
 }
 
 @keyframes slide-in {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .settings-header {
@@ -194,7 +229,9 @@ const freezeEnabled = computed({
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .settings-close:hover {
@@ -364,7 +401,9 @@ const freezeEnabled = computed({
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .settings-nav-item:hover {
@@ -395,14 +434,22 @@ const freezeEnabled = computed({
   border-radius: 12px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   animation: modal-in 0.15s ease-out;
 }
 
 @keyframes modal-in {
-  from { transform: scale(0.96); opacity: 0; }
-  to   { transform: scale(1);    opacity: 1; }
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .about-modal-header {
@@ -431,7 +478,9 @@ const freezeEnabled = computed({
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .about-modal-close:hover {

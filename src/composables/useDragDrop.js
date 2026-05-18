@@ -51,8 +51,8 @@ export function useTaskDrag(taskId, cardEl, editing) {
     if (isTouchDragging.value) {
       e.preventDefault()
       if (ghostEl) {
-        ghostEl.style.left = (touch.clientX - ghostOffsetX) + 'px'
-        ghostEl.style.top = (touch.clientY - ghostOffsetY) + 'px'
+        ghostEl.style.left = touch.clientX - ghostOffsetX + 'px'
+        ghostEl.style.top = touch.clientY - ghostOffsetY + 'px'
       }
     }
   }
@@ -100,17 +100,23 @@ export function useTaskDrag(taskId, cardEl, editing) {
   }
 
   function dropTouchDrag(x, y) {
-    if (ghostEl) { ghostEl.remove(); ghostEl = null }
+    if (ghostEl) {
+      ghostEl.remove()
+      ghostEl = null
+    }
     isTouchDragging.value = false
     isDragging.value = false
     activeTouchDragId.value = null
     const elements = document.elementsFromPoint(x, y)
-    const columnEl = elements.find(el => el.dataset?.column)
+    const columnEl = elements.find((el) => el.dataset?.column)
     if (columnEl) moveTaskToColumn(taskId, columnEl.dataset.column)
   }
 
   function cleanupTouchDrag() {
-    if (ghostEl) { ghostEl.remove(); ghostEl = null }
+    if (ghostEl) {
+      ghostEl.remove()
+      ghostEl = null
+    }
     isTouchDragging.value = false
     isDragging.value = false
     activeTouchDragId.value = null

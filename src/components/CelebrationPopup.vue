@@ -6,7 +6,12 @@ const { popup, dismiss } = useCelebration()
 
 <template>
   <Transition name="celebration">
-    <div v-if="popup" class="celebration-overlay" data-testid="celebration-overlay" @click="dismiss">
+    <div
+      v-if="popup"
+      class="celebration-overlay"
+      data-testid="celebration-overlay"
+      @click="dismiss"
+    >
       <div class="celebration-popup" data-testid="celebration-popup">
         <p class="celebration-text" data-testid="celebration-text">{{ popup }}</p>
       </div>
@@ -32,7 +37,9 @@ const { popup, dismiss } = useCelebration()
   padding: 48px 56px;
   max-width: min(560px, calc(100vw - 48px));
   text-align: center;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -49,11 +56,15 @@ const { popup, dismiss } = useCelebration()
 }
 
 .celebration-enter-active {
-  transition: opacity 0.2s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.2s ease,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .celebration-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .celebration-enter-from {
