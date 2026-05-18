@@ -18,6 +18,12 @@ import { dirname, resolve } from 'path';
 const MAX_DIFF_CHARS = 30_000;
 const MAX_FILE_CHARS = 10_000;
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('Error: ANTHROPIC_API_KEY is not set.');
+  console.error('Add it as a repository secret: Settings → Secrets and variables → Actions → New repository secret');
+  process.exit(1);
+}
+
 const client = new Anthropic();
 
 function run(cmd) {
