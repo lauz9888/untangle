@@ -5,7 +5,7 @@ import { ref } from 'vue'
 const { mockAddTask, mockTasksForColumn, mockIsOverCapacity, mockDeleteTask,
         mockUpdateTask, mockMoveTask, mockMoveTaskToColumn,
         mockAddSubtask, mockDeleteSubtask, mockToggleSubtask, mockCompleteTask,
-        mockShowCelebration } =
+        mockShowCelebration, mockShowMilestone } =
   vi.hoisted(() => ({
     mockAddTask: vi.fn(),
     mockTasksForColumn: vi.fn(() => []),
@@ -19,6 +19,7 @@ const { mockAddTask, mockTasksForColumn, mockIsOverCapacity, mockDeleteTask,
     mockToggleSubtask: vi.fn(),
     mockCompleteTask: vi.fn(),
     mockShowCelebration: vi.fn(),
+    mockShowMilestone: vi.fn(),
   }))
 
 vi.mock('../../../src/composables/useTasks.js', () => ({
@@ -40,8 +41,10 @@ vi.mock('../../../src/composables/useTasks.js', () => ({
 }))
 
 vi.mock('../../../src/composables/useCelebration.js', () => ({
+  STREAK_MILESTONES: [1, 3, 7, 30, 90, 180, 365],
   useCelebration: () => ({
     showCelebration: mockShowCelebration,
+    showMilestone: mockShowMilestone,
     dismiss: vi.fn(),
     popup: ref(null),
   }),
@@ -212,15 +215,44 @@ describe('task management — components', () => {
       expect(mockCompleteTask).toHaveBeenCalledWith('task-1')
     })
 
-    it('calls showCelebration when complete button is clicked', async () => {
+    it('calls showCelebration when completeTask returns null', async () => {
+      mockCompleteTask.mockReturnValue(null)
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
       await wrapper.find('[data-testid="complete-btn"]').trigger('click')
       expect(mockShowCelebration).toHaveBeenCalledOnce()
+      expect(mockShowMilestone).not.toHaveBeenCalled()
     })
 
-    it('calls completeTask before showCelebration', async () => {
+    it('calls showCelebration when completeTask returns a non-milestone streak count', async () => {
+      mockCompleteTask.mockReturnValue(5)
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      await wrapper.find('[data-testid="complete-btn"]').trigger('click')
+      expect(mockShowCelebration).toHaveBeenCalledOnce()
+      expect(mockShowMilestone).not.toHaveBeenCalled()
+    })
+
+    it('calls showMilestone when completeTask returns a milestone streak count', async () => {
+      mockCompleteTask.mockReturnValue(7)
+      const wrapper = mount(TaskCard, { props: { task: baseTask } })
+      await wrapper.find('[data-testid="complete-btn"]').trigger('click')
+      expect(mockShowMilestone).toHaveBeenCalledWith(7)
+      expect(mockShowCelebration).not.toHaveBeenCalled()
+    })
+
+    it('calls showMilestone for each defined milestone', async () => {
+      for (const milestone of [1, 3, 7, 30, 90, 180, 365]) {
+        vi.clearAllMocks()
+        mockCompleteTask.mockReturnValue(milestone)
+        const wrapper = mount(TaskCard, { props: { task: baseTask } })
+        await wrapper.find('[data-testid="complete-btn"]').trigger('click')
+        expect(mockShowMilestone).toHaveBeenCalledWith(milestone)
+        expect(mockShowCelebration).not.toHaveBeenCalled()
+      }
+    })
+
+    it('calls completeTask before the celebration', async () => {
       const callOrder = []
-      mockCompleteTask.mockImplementation(() => callOrder.push('complete'))
+      mockCompleteTask.mockImplementation(() => { callOrder.push('complete'); return null })
       mockShowCelebration.mockImplementation(() => callOrder.push('celebrate'))
       const wrapper = mount(TaskCard, { props: { task: baseTask } })
       await wrapper.find('[data-testid="complete-btn"]').trigger('click')

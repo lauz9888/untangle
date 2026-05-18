@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { useTasks } from '../composables/useTasks.js'
-import { useCelebration } from '../composables/useCelebration.js'
+import { useCelebration, STREAK_MILESTONES } from '../composables/useCelebration.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
 import { activeTouchDragId } from '../composables/useDragDrop.js'
 
@@ -12,11 +12,15 @@ const props = defineProps({
 })
 
 const { deleteTask, completeTask, updateTask, moveTask, moveTaskToColumn, isOverCapacity, addSubtask, deleteSubtask, toggleSubtask } = useTasks()
-const { showCelebration } = useCelebration()
+const { showCelebration, showMilestone } = useCelebration()
 
 function handleComplete(id) {
-  completeTask(id)
-  showCelebration()
+  const newStreak = completeTask(id)
+  if (newStreak !== null && STREAK_MILESTONES.includes(newStreak)) {
+    showMilestone(newStreak)
+  } else {
+    showCelebration()
+  }
 }
 
 // ── display ──────────────────────────────────────────────────────────────────

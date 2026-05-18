@@ -150,12 +150,70 @@ test.describe('task management', () => {
     })
 
     test('popup auto-dismisses after 3.5 seconds', async ({ page }) => {
+      // Pre-seed a non-milestone streak so completing a task gives count 5 (not a milestone)
+      const yesterday = await page.evaluate(() => {
+        const d = new Date()
+        d.setDate(d.getDate() - 1)
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      })
+      await page.evaluate((date) => {
+        localStorage.setItem('untangle-streak', JSON.stringify({ count: 4, lastCompletedDate: date }))
+      }, yesterday)
+      await page.reload()
+
       await addTask(page, 'now', 'Water plants')
       const card = taskCard(page, 'now', 'Water plants')
       await card.hover()
       await card.locator('.complete-btn').click()
       await expect(page.locator('.celebration-overlay')).toBeVisible()
       await expect(page.locator('.celebration-overlay')).not.toBeVisible({ timeout: 5000 })
+    })
+
+    test('shows a milestone message when the streak reaches 7 days', async ({ page }) => {
+      const yesterday = await page.evaluate(() => {
+        const d = new Date()
+        d.setDate(d.getDate() - 1)
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      })
+      await page.evaluate((date) => {
+        localStorage.setItem('untangle-streak', JSON.stringify({ count: 6, lastCompletedDate: date }))
+      }, yesterday)
+      await page.reload()
+
+      await addTask(page, 'now', 'Day seven task')
+      const card = taskCard(page, 'now', 'Day seven task')
+      await card.hover()
+      await card.locator('.complete-btn').click()
+      await expect(page.locator('.celebration-overlay')).toBeVisible()
+      const text = await page.locator('.celebration-text').textContent()
+      expect(text).toContain('week')
+    })
+
+    test('shows a regular message (not milestone) for second task completion on milestone day', async ({ page }) => {
+      const yesterday = await page.evaluate(() => {
+        const d = new Date()
+        d.setDate(d.getDate() - 1)
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      })
+      await page.evaluate((date) => {
+        localStorage.setItem('untangle-streak', JSON.stringify({ count: 6, lastCompletedDate: date }))
+      }, yesterday)
+      await page.reload()
+
+      await addTask(page, 'now', 'First task')
+      await addTask(page, 'now', 'Second task')
+
+      const card1 = taskCard(page, 'now', 'First task')
+      await card1.hover()
+      await card1.locator('.complete-btn').click()
+      await page.locator('.celebration-overlay').click()
+
+      const card2 = taskCard(page, 'now', 'Second task')
+      await card2.hover()
+      await card2.locator('.complete-btn').click()
+      await expect(page.locator('.celebration-overlay')).toBeVisible()
+      const text = await page.locator('.celebration-text').textContent()
+      expect(text).not.toContain('week')
     })
   })
 })
