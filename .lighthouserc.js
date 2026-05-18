@@ -16,10 +16,13 @@
 export default {
   ci: {
     collect: {
-      // The dist/ directory is built fresh in the pwa-validation job without
-      // GITHUB_ACTIONS=true so Vite uses base:'/' — assets load correctly when
-      // LHCI serves them from the local static server.
-      staticDistDir: './dist',
+      // Use `vite preview` rather than LHCI's built-in static server.
+      // The built-in server lacks SPA fallback and the correct MIME/cache
+      // headers that Vite sets, which causes NO_FCP in headless Chrome.
+      // `vite preview` serves the dist/ exactly as production would.
+      startServerCommand: 'npx vite preview --port 4173',
+      startServerReadyPattern: 'Local:',
+      url: ['http://localhost:4173/'],
       numberOfRuns: 1,
       settings: {
         // Required for headless Chrome on Linux CI runners.
