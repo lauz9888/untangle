@@ -43,7 +43,7 @@ cd $project_root && npm test -- --run
 cd $project_root && npm run test:e2e
 ```
 
-For each test failure caused by a real source bug, trigger `/report-bug` before fixing — use source `ci-unit-tests` for unit test failures or `ci-e2e-tests` for e2e failures. Provide the failure message and location. After the issue is created and the bug is fixed, re-run to confirm.
+For each test failure (excluding CI infrastructure issues such as network errors or missing environment dependencies), trigger `/report-bug` before fixing — use source `ci-unit-tests` for unit test failures or `ci-e2e-tests` for e2e failures. Provide the failure message and location. After the issue is created and the failure is resolved, re-run to confirm.
 
 ### 3. Stage and commit all changes (if not already committed)
 
