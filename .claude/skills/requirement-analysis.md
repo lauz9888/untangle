@@ -10,15 +10,15 @@ This skill is part of the automated development workflow. It runs at the start o
 node scripts/workflow-state.mjs get
 ```
 
-If the state shows `loop_back_reason`, this is a loop-back from a later step (solution or implementation). Acknowledge this context upfront — e.g. "I was sent back here from solution-analysis because [reason]. Let me revisit the requirements with that in mind."
+If the state shows `loop_back_reason`, this is a loop-back from a later step (solution or implementation). Acknowledge this context upfront — e.g. "I was sent back here from solution-analysis because [reason]. Let me revisit the requirements with that in mind." Do NOT call `start` in this case — preserve the existing `started_at`.
 
-If `requirement_text` already has content, start from that as a draft rather than asking from scratch.
-
-If no state exists yet, initialise it:
+Otherwise, always initialise fresh state regardless of whether state already exists:
 
 ```
 node scripts/workflow-state.mjs start
 ```
+
+If `requirement_text` already has content from a previous run, use the developer's current message as the starting point rather than re-asking from scratch.
 
 ### 2. Establish the requirement
 
