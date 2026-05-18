@@ -5,6 +5,24 @@ import { useCelebration, STREAK_MILESTONES } from '../composables/useCelebration
 import { useTaskDrag } from '../composables/useDragDrop.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
 
+const OVERDUE_MESSAGES = [
+  "Every deadline is a chance to reset — what's a realistic date you can commit to today?",
+  "You've got this! Take a moment to choose a due date that actually works for you.",
+  "Progress, not perfection. Let's find a new timeline that sets you up to succeed.",
+  "Being honest with yourself about time is a superpower. Pick a date that feels achievable.",
+  "Plans change, and that's okay. What's a new due date you can genuinely commit to?",
+  "This task is still worth doing! When realistically could you get it done?",
+  "Rescheduling isn't failing — it's planning smarter. What date works better for you?",
+  "Future you will thank you for setting a realistic deadline. What date makes sense?",
+  "Take a breath — now, what's a due date you can actually meet?",
+  "Every great plan gets adjusted. What's your new target date for this one?",
+  "You're being thoughtful by reviewing this. What's a due date that respects your current capacity?",
+  "Timelines shift — what matters is keeping momentum. Set a new date and keep going!",
+  "Be kind to yourself. What's a due date that's both ambitious and realistic?",
+  "The best deadline is one you can actually meet. What date works for you now?",
+  "One small adjustment to the timeline could unlock a lot of momentum. What date feels right?",
+]
+
 const props = defineProps({
   task: { type: Object, required: true },
   isFirst: { type: Boolean, default: false },
@@ -52,6 +70,8 @@ const editEnergy = ref(null)
 const editDueDate = ref('')
 const editAvailableFrom = ref('')
 const newSubtaskTitle = ref('')
+const showOverdueMessage = ref(false)
+const overdueMessage = ref('')
 
 function startEdit() {
   editTitle.value = props.task.title
@@ -59,6 +79,12 @@ function startEdit() {
   editDueDate.value = props.task.dueDate ?? ''
   editAvailableFrom.value = props.task.availableFrom ?? ''
   newSubtaskTitle.value = ''
+  if (isOverdue.value) {
+    overdueMessage.value = OVERDUE_MESSAGES[Math.floor(Math.random() * OVERDUE_MESSAGES.length)]
+    showOverdueMessage.value = true
+  } else {
+    showOverdueMessage.value = false
+  }
   editing.value = true
 }
 
@@ -71,10 +97,12 @@ function saveEdit() {
     dueDate: editDueDate.value || null,
     availableFrom: editAvailableFrom.value || null,
   })
+  showOverdueMessage.value = false
   editing.value = false
 }
 
 function cancelEdit() {
+  showOverdueMessage.value = false
   editing.value = false
 }
 
@@ -100,7 +128,16 @@ function addSubtaskAction() {
 
     <!-- ── Display mode ── -->
     <template v-if="!editing">
-      <div class="task-main">
+      <button
+        v-if="isOverdue"
+        type="button"
+        class="overdue-alert-btn"
+        title="This task is overdue — click to review"
+        aria-label="Overdue task — click to update due date"
+        data-testid="overdue-alert-btn"
+        @click="startEdit"
+      >!</button>
+      <div class="task-main" :class="{ 'has-overdue-icon': isOverdue }">
         <p class="task-title" data-testid="task-title">{{ task.title }}</p>
         <div v-if="task.energy || task.dueDate || task.availableFrom" class="task-meta">
           <span v-if="task.energy" class="energy-badge" :class="`energy-${task.energy}`">{{ task.energy }}</span>
@@ -154,6 +191,8 @@ function addSubtaskAction() {
             >{{ level.label }}</button>
           </div>
         </fieldset>
+
+        <p v-if="showOverdueMessage" class="overdue-message" role="status">{{ overdueMessage }}</p>
 
         <div class="edit-dates">
           <div class="edit-date-field">
@@ -217,6 +256,54 @@ function addSubtaskAction() {
   transition: opacity 0.2s, box-shadow 0.15s;
   cursor: grab;
   user-select: none;
+  position: relative;
+}
+
+.overdue-alert-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--energy-large-bg);
+  color: var(--energy-large-active);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.12s, transform 0.1s;
+  z-index: 1;
+}
+
+.overdue-alert-btn:hover {
+  background: var(--energy-large-active);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.overdue-alert-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.task-main.has-overdue-icon {
+  padding-right: 26px;
+}
+
+.overdue-message {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--energy-large-bg);
+  color: var(--energy-large-active);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .task-card:hover {
