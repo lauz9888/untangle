@@ -43,7 +43,7 @@ cd $project_root && npm test -- --run
 cd $project_root && npm run test:e2e
 ```
 
-For each test failure (excluding CI infrastructure issues such as network errors or missing environment dependencies), trigger `/report-bug` before fixing — use source `ci-unit-tests` for unit test failures or `ci-e2e-tests` for e2e failures. Provide the failure message and location. After the issue is created and the failure is resolved, re-run to confirm.
+For each test failure (excluding CI infrastructure issues such as network errors or missing environment dependencies), trigger `/report-bug` before fixing — use source `ci-unit-tests` for unit test failures or `ci-e2e-tests` for e2e failures. Provide the failure message and location. After the fix is confirmed passing, explicitly run the close step (`bug-tracker.mjs close`) before continuing — do not leave the issue open. If the fix cannot be made inline and requires its own PR, include `Closes #N` in that PR's commit message or body, then run `bug-tracker.mjs close` after the PR merges.
 
 ### 3. Stage and commit all changes (if not already committed)
 
