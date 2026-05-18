@@ -36,7 +36,27 @@ For every changed source file, look for:
 - **Flakiness** — code that depends on timing, ordering of async operations, or global state without proper reset
 - **Maintainability** — deeply nested conditionals that could be early-returned, large functions doing multiple unrelated things, dead code (unused imports, unreachable branches, commented-out blocks)
 
+For each bug found, **before fixing it**, create a GitHub issue:
+
+```
+node scripts/bug-tracker.mjs create \
+  --title "Bug: <concise one-line description>" \
+  --body "<what the bug is, which file and line, how it manifests>" \
+  --source "qa-review"
+```
+
+The output will be `CREATED:N` (new issue) or `EXISTS:N` (already tracked). Note the issue number.
+
 Fix every issue you find. Prefer minimal targeted edits — don't refactor surrounding code that isn't part of the change.
+
+After fixing each bug, close its issue with the root cause and fix details:
+
+```
+node scripts/bug-tracker.mjs close \
+  --number <N> \
+  --cause "<root cause — why the bug existed>" \
+  --fix "<what was changed to fix it>"
+```
 
 ### 3. Test coverage check
 
@@ -62,6 +82,24 @@ cd $project_root && npm test -- --run          # unit tests
 cd $project_root && npm run test:e2e           # e2e tests
 ```
 
+If a test fails because of a real bug in the source code (not a test setup issue), create a GitHub issue for it before fixing:
+
+```
+node scripts/bug-tracker.mjs create \
+  --title "Bug: <failing test name — what it expected vs what happened>" \
+  --body "<test file and line, failure message, what the test exercises>" \
+  --source "unit-test"   # or "e2e-test"
+```
+
+After fixing the source bug, close the issue:
+
+```
+node scripts/bug-tracker.mjs close \
+  --number <N> \
+  --cause "<root cause>" \
+  --fix "<what was changed>"
+```
+
 ### 4. Documentation review
 
 Check every `.md` file that was changed in the branch, plus `README.md` and `CLAUDE.md` regardless of whether they were touched.
@@ -85,7 +123,7 @@ If you created or modified any E2E tests, also run:
 cd $project_root && npm run test:e2e
 ```
 
-If any test fails, fix it before continuing.
+If any test fails due to a source bug, create a GitHub issue (as in Step 3) before fixing it, then close it after.
 
 ### 6. Write the approval marker
 
