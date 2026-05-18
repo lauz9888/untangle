@@ -422,4 +422,33 @@ function onDrop(e) {
   gap: 6px;
   align-items: center;
 }
+
+@media (hover: none) {
+  .add-task-btn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .energy-opt {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+
+  .task-input,
+  .subtask-input,
+  .date-input {
+    font-size: 16px; /* prevents iOS auto-zoom on focus */
+  }
+
+  .subtask-remove-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+}
 </style>
