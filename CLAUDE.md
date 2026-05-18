@@ -36,14 +36,26 @@ E2E tests in `tests/e2e/` clear `localStorage` and reload before every test so t
 
 ## Bug tracking
 
-Bugs are automatically tracked as GitHub issues throughout the development workflow:
+Bugs are tracked as GitHub issues whenever they are identified, regardless of the process that found them. Every issue records which process detected the bug — both in the issue body (`**Detected by:**`) and as a GitHub label (`found:development`, `found:qa`, `found:ci`, or `found:manual`) so issues can be filtered by detection process.
 
-| Source | How issues are created | How issues are closed |
-|---|---|---|
-| QA review (`/qa-review`) | Created for each bug found, before fixing | Closed with root cause + fix details after the fix |
-| Unit / E2E test failures (during QA) | Created when a test fails due to a source bug | Closed after the source fix is applied |
-| CI pipeline | Created automatically on any test job failure | Include `Fixes #N` in a commit message |
-| Manual testing | Run `/report-bug` and describe what you saw | Include `Fixes #N` in a commit message |
+| Process | Source value | How issues are created | How issues are closed |
+|---|---|---|---|
+| Development | `development` | Create before fixing with `--source development` (see below) | Include `Fixes #N` in the commit message |
+| QA review (`/qa-review`) | `qa-review` | Created for each bug found, before fixing | Closed with root cause + fix details after the fix |
+| Unit / E2E test failures (during QA) | `unit-test` / `e2e-test` | Created when a test fails due to a source bug | Closed after the source fix is applied |
+| CI pipeline | `ci-unit-tests` / `ci-e2e-tests` | Created automatically on any test job failure | Include `Fixes #N` in a commit message |
+| Manual report | `manual` | Run `/report-bug` and describe what you saw | Include `Fixes #N` in a commit message |
+
+**Reporting a development-time bug**: if you spot a bug in existing code while implementing a feature (before the QA step), create an issue before fixing it:
+
+```
+node scripts/bug-tracker.mjs create \
+  --title "Bug: <concise description>" \
+  --body "<what the bug is, which file and line, how it manifests>" \
+  --source "development"
+```
+
+Then fix the bug and include `Fixes #N` in the commit message to close the issue automatically.
 
 **Auto-close via commit message**: any commit whose message contains `Fixes #N`, `Closes #N`, or `Resolves #N` triggers the `post-commit` hook, which comments on the issue with the fix summary and closes it.
 
