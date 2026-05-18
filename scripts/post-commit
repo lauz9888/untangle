@@ -1,0 +1,26 @@
+#!/bin/sh
+# Auto-close GitHub bug issues referenced in commit messages.
+# Recognises: "Fixes #N", "Closes #N", "Resolves #N" (case-insensitive).
+# Skips execution inside worktrees — only fires in the main repo checkout.
+
+git_dir=$(git rev-parse --git-dir)
+if [ -f "${git_dir}/commondir" ]; then
+  exit 0
+fi
+
+msg=$(git log -1 --pretty=%B)
+
+numbers=$(printf '%s' "$msg" | grep -oiE '(fixes|closes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+')
+
+if [ -z "$numbers" ]; then
+  exit 0
+fi
+
+fix_summary=$(git log -1 --pretty=%s)
+
+for num in $numbers; do
+  node scripts/bug-tracker.mjs close \
+    --number "$num" \
+    --cause "See linked commit for root cause" \
+    --fix "$fix_summary" 2>/dev/null || true
+done

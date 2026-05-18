@@ -9,4 +9,6 @@ cp scripts/post-checkout .git/hooks/post-checkout
 chmod +x .git/hooks/post-checkout
 cp scripts/pre-push .git/hooks/pre-push
 chmod +x .git/hooks/pre-push
+cp scripts/post-commit .git/hooks/post-commit
+chmod +x .git/hooks/post-commit
 echo "Git hooks installed."
