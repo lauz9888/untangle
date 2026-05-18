@@ -243,11 +243,13 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   .controls-meta {
     flex: 1;
     gap: 6px;
+    order: 1;
   }
 
   .controls-actions {
     width: 100%;
     gap: 6px;
+    order: 3;
   }
 
   .streak-display {
@@ -264,6 +266,7 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   .settings-btn {
     width: 36px;
     height: 36px;
+    order: 2;
   }
 
   .encourage-btn,
