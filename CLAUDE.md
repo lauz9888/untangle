@@ -50,7 +50,7 @@ In all cases, run `/report-bug` to log an issue. When triggered by a workflow sk
 | CI e2e test failure (`/deploy-branch`, `/deploy-main`) | `ci-e2e-tests` | `/report-bug` triggered automatically | Closed by `/report-bug` after fix |
 | Developer finds a bug at any point | `manual` | Run `/report-bug` and describe what you saw | Closed by `/report-bug` after fix, or via `Fixes #N` in a commit |
 
-**Auto-close via commit message**: any commit whose message contains `Fixes #N`, `Closes #N`, or `Resolves #N` triggers the `post-commit` hook, which comments on the issue with the fix summary and closes it.
+**Auto-close via commit message (manual workflow only)**: on the manual path, any commit whose message contains `Fixes #N`, `Closes #N`, or `Resolves #N` triggers the `post-commit` hook, which comments on the issue with the fix summary and closes it. The `post-commit` hook skips inside git worktrees, so commits made during the automated pipeline do not trigger it — issues are closed explicitly by `/report-bug` instead.
 
 The core script is `scripts/bug-tracker.mjs` — it handles deduplication (won't create a second issue if one with the same title is already open).
 
