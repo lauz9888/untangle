@@ -16,9 +16,15 @@
 export default {
   ci: {
     collect: {
-      // Build is already done in CI; serve the dist/ directory.
+      // The dist/ directory is built fresh in the pwa-validation job without
+      // GITHUB_ACTIONS=true so Vite uses base:'/' — assets load correctly when
+      // LHCI serves them from the local static server.
       staticDistDir: './dist',
       numberOfRuns: 1,
+      settings: {
+        // Required for headless Chrome on Linux CI runners.
+        chromeFlags: '--no-sandbox --disable-dev-shm-usage',
+      },
     },
     assert: {
       assertions: {

@@ -56,9 +56,9 @@ test.describe('history panel', () => {
     await card.locator('.complete-btn').click()
 
     await page.locator('.history-btn').click()
-    const counts = page.locator('.bar-count')
-    const texts = await counts.allTextContents()
-    expect(texts.some(t => t.trim() === '1')).toBe(true)
+    // Use Playwright's built-in retry rather than a one-shot allTextContents()
+    // so the assertion waits for the chart to finish rendering.
+    await expect(page.locator('.bar-count').filter({ hasText: '1' })).toBeVisible()
   })
 
   test('shows best-week banner after a task is completed', async ({ page }) => {

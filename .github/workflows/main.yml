@@ -272,11 +272,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Download dist artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist-${{ github.sha }}
-          path: dist/
+      - name: Build for Lighthouse (root base path)
+        # Do NOT set GITHUB_ACTIONS here — Vite's base is '/' when that env
+        # var is absent, so LHCI can serve assets from the static root without
+        # path-prefix mismatches (the production deploy job rebuilds separately
+        # with GITHUB_ACTIONS=true for the /untangle/ GitHub Pages base).
+        run: npm run build
 
       - name: Run Lighthouse CI (PWA + accessibility)
         id: lhci
