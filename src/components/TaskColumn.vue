@@ -304,12 +304,14 @@ function onDrop(e) {
 
 .energy-picker {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 3px;
 }
 
 .energy-opt {
-  padding: 3px 10px;
+  flex: 1;
+  padding: 3px 6px;
+  text-align: center;
   border-radius: 100px;
   border: 1.5px solid var(--border);
   background: transparent;
@@ -345,6 +347,7 @@ function onDrop(e) {
 }
 
 .date-input {
+  margin-top: auto;
   padding: 7px 8px;
   border-radius: 7px;
   border: 1.5px solid var(--border);
@@ -431,8 +434,7 @@ function onDrop(e) {
   }
 
   .energy-opt {
-    padding: 6px 14px;
-    font-size: 13px;
+    padding: 5px 2px;
   }
 
   .task-input,
