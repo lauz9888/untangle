@@ -16,6 +16,9 @@ dist-ssr
 .claude/settings.local.json
 .claude/launch.json
 
+# Developer workflow runtime state (per-developer, not committed)
+.claude/workflow/
+
 # Playwright test artifacts
 test-results/
 playwright-report/

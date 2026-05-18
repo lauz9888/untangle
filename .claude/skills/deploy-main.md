@@ -1,0 +1,120 @@
+Run the full CI pipeline and deploy the change to main.
+
+This skill is part of the automated development workflow. It runs automatically when the developer chooses to skip branch testing, or is triggered manually with `/deploy-main` after branch testing.
+
+## Steps
+
+### 1. Read current workflow state
+
+```
+node scripts/workflow-state.mjs get
+```
+
+`docs_done` must be true before proceeding.
+
+Determine the project root for running npm commands (handles worktrees):
+
+```
+git_dir=$(git rev-parse --git-dir)
+if [ -f "${git_dir}/commondir" ]; then
+  common=$(cat "${git_dir}/commondir")
+  project_root=$(cd "${git_dir}/${common}/.." && pwd)
+else
+  project_root=$(git rev-parse --show-toplevel)
+fi
+```
+
+### 2. Run CI checks in order
+
+Run each check individually. Fix any failures before continuing.
+
+**Build check:**
+```
+cd $project_root && npm run build
+```
+
+**Unit tests (full suite):**
+```
+cd $project_root && npm test -- --run
+```
+
+**E2E tests (full suite):**
+```
+cd $project_root && npm run test:e2e
+```
+
+For each test failure caused by a real source bug, trigger `/report-bug` before fixing — use source `ci-unit-tests` for unit test failures or `ci-e2e-tests` for e2e failures. Provide the failure message and location. After the issue is created and the bug is fixed, re-run to confirm.
+
+### 3. Stage and commit all changes (if not already committed)
+
+Check whether the changes have been committed:
+
+```
+git status
+git log --oneline main...HEAD
+```
+
+If there are uncommitted changes, commit them:
+
+```
+git add <specific files>
+git commit -m "<summary>
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+```
+
+### 4. Write the QA approval marker
+
+All CI checks have passed. Write the approval marker so the pre-push hook allows the push:
+
+```
+git_dir=$(git rev-parse --git-dir)
+branch=$(git branch --show-current)
+safe_branch=$(echo "$branch" | tr '/\\' '_')
+mkdir -p "${git_dir}/claude-qa"
+git rev-parse HEAD > "${git_dir}/claude-qa/${safe_branch}.approved"
+```
+
+### 5. Create a pull request and merge
+
+Create the PR:
+
+```
+gh pr create \
+  --title "<concise title of the change>" \
+  --body "$(cat <<'EOF'
+## Summary
+- <bullet 1>
+- <bullet 2>
+
+## Test plan
+- [x] Unit tests updated and passing
+- [x] E2E tests updated and passing
+- [x] Build passes
+- [x] Documentation updated
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+EOF
+)"
+```
+
+Get the PR number from the output, then merge:
+
+```
+gh pr merge <PR-number> --squash --delete-branch
+```
+
+### 6. Reset workflow state
+
+```
+node scripts/workflow-state.mjs reset
+```
+
+### 7. Report to the developer
+
+Tell the developer:
+- The PR number and that it has been merged to main
+- The source branch has been deleted
+- The full workflow is complete
+
+If the wiki auto-update workflow is running, mention that it will update the GitHub wiki automatically.
