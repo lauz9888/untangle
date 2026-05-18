@@ -44,6 +44,7 @@ jobs:
   # ── 2. Unit tests ────────────────────────────────────────────────────────────
   unit-tests:
     name: Unit tests
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,6 +80,7 @@ jobs:
   # ── 3. Coverage gate ─────────────────────────────────────────────────────────
   coverage:
     name: Coverage gate
+    needs: unit-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,6 +116,7 @@ jobs:
   # ── 4. E2E tests ─────────────────────────────────────────────────────────────
   e2e-tests:
     name: E2E tests
+    needs: coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -160,6 +163,7 @@ jobs:
   # ── 5. Basic accessibility check ─────────────────────────────────────────────
   accessibility:
     name: Basic accessibility check
+    needs: e2e-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -209,7 +213,7 @@ jobs:
   # and test the exact build — no external hosting required.
   deploy-preview:
     name: Deploy branch preview
-    needs: [build, unit-tests, coverage, e2e-tests, accessibility]
+    needs: accessibility
     runs-on: ubuntu-latest
     # Only comment on PRs (push events have no PR number)
     if: github.event_name == 'pull_request'
