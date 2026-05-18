@@ -57,7 +57,10 @@ const { currentEnergy } = useTasks()
   cursor: pointer;
   color: var(--text);
   font-family: inherit;
-  transition: border-color 0.12s, background 0.12s, color 0.12s;
+  transition:
+    border-color 0.12s,
+    background 0.12s,
+    color 0.12s;
 }
 
 .energy-btn:hover:not(.active) {
@@ -65,10 +68,26 @@ const { currentEnergy } = useTasks()
   color: var(--text-h);
 }
 
-.energy-btn.energy-tiny.active  { border-color: var(--energy-tiny-active);   color: var(--energy-tiny-active);   background: var(--energy-tiny-bg); }
-.energy-btn.energy-small.active { border-color: var(--energy-small-active);  color: var(--energy-small-active);  background: var(--energy-small-bg); }
-.energy-btn.energy-medium.active{ border-color: var(--energy-medium-active); color: var(--energy-medium-active); background: var(--energy-medium-bg); }
-.energy-btn.energy-large.active { border-color: var(--energy-large-active);  color: var(--energy-large-active);  background: var(--energy-large-bg); }
+.energy-btn.energy-tiny.active {
+  border-color: var(--energy-tiny-active);
+  color: var(--energy-tiny-active);
+  background: var(--energy-tiny-bg);
+}
+.energy-btn.energy-small.active {
+  border-color: var(--energy-small-active);
+  color: var(--energy-small-active);
+  background: var(--energy-small-bg);
+}
+.energy-btn.energy-medium.active {
+  border-color: var(--energy-medium-active);
+  color: var(--energy-medium-active);
+  background: var(--energy-medium-bg);
+}
+.energy-btn.energy-large.active {
+  border-color: var(--energy-large-active);
+  color: var(--energy-large-active);
+  background: var(--energy-large-bg);
+}
 
 @media (max-width: 600px) {
   .energy-selector {

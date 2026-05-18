@@ -18,8 +18,14 @@ const { showEncouragement, dismissEncouragement } = useEncouragement()
 const { showToughLove, dismissToughLove } = useToughLove()
 const { streakCount } = useStreak()
 
-function handleEncourage() { dismissToughLove(); showEncouragement() }
-function handleToughLove() { dismissEncouragement(); showToughLove() }
+function handleEncourage() {
+  dismissToughLove()
+  showEncouragement()
+}
+function handleToughLove() {
+  dismissEncouragement()
+  showToughLove()
+}
 </script>
 
 <template>
@@ -37,9 +43,15 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
       </div>
       <div class="app-controls">
         <div class="controls-meta">
-          <div class="streak-display" :class="{ 'streak-active': streakCount > 0 }" title="Days in a row you've completed a task">
+          <div
+            class="streak-display"
+            :class="{ 'streak-active': streakCount > 0 }"
+            title="Days in a row you've completed a task"
+          >
             <span class="streak-icon">🔥</span>
-            <span class="streak-text">{{ streakCount }} {{ streakCount === 1 ? 'day' : 'days' }}</span>
+            <span class="streak-text"
+              >{{ streakCount }} {{ streakCount === 1 ? 'day' : 'days' }}</span
+            >
           </div>
           <button class="history-btn" @click="showHistory = true">History</button>
         </div>
@@ -49,8 +61,14 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
         </div>
         <button class="settings-btn" @click="showSettings = true" aria-label="Open settings">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" stroke="currentColor" stroke-width="1.5" />
+            <path
+              d="M13.3 9.6a1 1 0 0 0 .2 1.1l.04.04a1.2 1.2 0 0 1-1.7 1.7l-.04-.04a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.92v.12a1.2 1.2 0 0 1-2.4 0v-.06a1 1 0 0 0-.66-.92 1 1 0 0 0-1.1.2l-.04.04a1.2 1.2 0 0 1-1.7-1.7l.04-.04a1 1 0 0 0 .2-1.1 1 1 0 0 0-.92-.6H3.2a1.2 1.2 0 0 1 0-2.4h.06a1 1 0 0 0 .92-.66 1 1 0 0 0-.2-1.1l-.04-.04a1.2 1.2 0 0 1 1.7-1.7l.04.04a1 1 0 0 0 1.1.2h.05A1 1 0 0 0 7.4 3.2V3.1a1.2 1.2 0 0 1 2.4 0v.06a1 1 0 0 0 .6.92 1 1 0 0 0 1.1-.2l.04-.04a1.2 1.2 0 0 1 1.7 1.7l-.04.04a1 1 0 0 0-.2 1.1v.05a1 1 0 0 0 .92.6h.12a1.2 1.2 0 0 1 0 2.4h-.06a1 1 0 0 0-.92.6Z"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
       </div>
@@ -182,7 +200,10 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
   flex-shrink: 0;
 }
 
@@ -204,7 +225,10 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s,
+    color 0.12s;
   flex-shrink: 0;
 }
 

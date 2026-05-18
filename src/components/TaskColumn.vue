@@ -10,7 +10,7 @@ const props = defineProps({
 
 const { tasksForColumn, addTask, moveTaskToColumn } = useTasks()
 
-const columnIndex = computed(() => COLUMNS.findIndex(c => c.id === props.column.id))
+const columnIndex = computed(() => COLUMNS.findIndex((c) => c.id === props.column.id))
 const isFirstColumn = computed(() => columnIndex.value === 0)
 const isLastColumn = computed(() => columnIndex.value === COLUMNS.length - 1)
 const columnTasks = computed(() => tasksForColumn(props.column.id))
@@ -43,7 +43,7 @@ function submit() {
     energy: newEnergy.value,
     dueDate: newDueDate.value || null,
     availableFrom: newAvailableFrom.value || null,
-    subtasks: pendingSubtasks.value.map(s => s.text),
+    subtasks: pendingSubtasks.value.map((s) => s.text),
   })
   resetForm()
 }
@@ -115,7 +115,12 @@ function onDrop(e) {
       <p v-if="columnTasks.length === 0" class="empty-hint">No tasks yet</p>
     </div>
     <div class="add-task-area">
-      <button v-if="!showForm" class="add-task-btn" data-testid="add-task-btn" @click="showForm = true">
+      <button
+        v-if="!showForm"
+        class="add-task-btn"
+        data-testid="add-task-btn"
+        @click="showForm = true"
+      >
         + Add task
       </button>
       <form v-else class="add-task-form" data-testid="add-task-form" @submit.prevent="submit">
@@ -136,7 +141,9 @@ function onDrop(e) {
               class="energy-opt"
               :class="{ active: newEnergy === null }"
               @click="newEnergy = null"
-            >None</button>
+            >
+              None
+            </button>
             <button
               v-for="level in ENERGY_LEVELS"
               :key="level.id"
@@ -144,27 +151,42 @@ function onDrop(e) {
               class="energy-opt"
               :class="[`energy-${level.id}`, { active: newEnergy === level.id }]"
               @click="newEnergy = level.id"
-            >{{ level.label }}</button>
+            >
+              {{ level.label }}
+            </button>
           </div>
         </fieldset>
 
         <div class="form-dates">
           <div class="form-date-field">
-            <label class="form-section-label">Available from <span class="optional">optional</span></label>
+            <label class="form-section-label"
+              >Available from <span class="optional">optional</span></label
+            >
             <input type="date" v-model="newAvailableFrom" class="date-input" />
           </div>
           <div class="form-date-field">
-            <label class="form-section-label">Due date <span class="optional">optional</span></label>
+            <label class="form-section-label"
+              >Due date <span class="optional">optional</span></label
+            >
             <input type="date" v-model="newDueDate" class="date-input" />
           </div>
         </div>
 
         <fieldset class="form-section">
-          <legend class="form-section-label">Subtasks <span class="optional">optional</span></legend>
+          <legend class="form-section-label">
+            Subtasks <span class="optional">optional</span>
+          </legend>
           <ul v-if="pendingSubtasks.length > 0" class="pending-subtasks">
             <li v-for="(s, i) in pendingSubtasks" :key="s.id" class="pending-subtask-item">
               <span>{{ s.text }}</span>
-              <button type="button" class="subtask-remove-btn" @click="removePendingSubtask(i)" aria-label="Remove subtask">✕</button>
+              <button
+                type="button"
+                class="subtask-remove-btn"
+                @click="removePendingSubtask(i)"
+                aria-label="Remove subtask"
+              >
+                ✕
+              </button>
             </li>
           </ul>
           <div class="add-subtask-row">
@@ -195,7 +217,9 @@ function onDrop(e) {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: background 0.15s, outline 0.15s;
+  transition:
+    background 0.15s,
+    outline 0.15s;
   outline: 2px solid transparent;
   outline-offset: -2px;
 }
@@ -244,7 +268,10 @@ function onDrop(e) {
   cursor: pointer;
   font-family: inherit;
   opacity: 0.6;
-  transition: opacity 0.12s, border-color 0.12s, color 0.12s;
+  transition:
+    opacity 0.12s,
+    border-color 0.12s,
+    color 0.12s;
 }
 
 .add-task-btn:hover {
@@ -328,10 +355,26 @@ function onDrop(e) {
   background: var(--border);
 }
 
-.energy-opt.energy-tiny.active   { border-color: var(--energy-tiny-active);   color: var(--energy-tiny-active);   background: var(--energy-tiny-bg); }
-.energy-opt.energy-small.active  { border-color: var(--energy-small-active);  color: var(--energy-small-active);  background: var(--energy-small-bg); }
-.energy-opt.energy-medium.active { border-color: var(--energy-medium-active); color: var(--energy-medium-active); background: var(--energy-medium-bg); }
-.energy-opt.energy-large.active  { border-color: var(--energy-large-active);  color: var(--energy-large-active);  background: var(--energy-large-bg); }
+.energy-opt.energy-tiny.active {
+  border-color: var(--energy-tiny-active);
+  color: var(--energy-tiny-active);
+  background: var(--energy-tiny-bg);
+}
+.energy-opt.energy-small.active {
+  border-color: var(--energy-small-active);
+  color: var(--energy-small-active);
+  background: var(--energy-small-bg);
+}
+.energy-opt.energy-medium.active {
+  border-color: var(--energy-medium-active);
+  color: var(--energy-medium-active);
+  background: var(--energy-medium-bg);
+}
+.energy-opt.energy-large.active {
+  border-color: var(--energy-large-active);
+  color: var(--energy-large-active);
+  background: var(--energy-large-bg);
+}
 
 .form-dates {
   display: flex;

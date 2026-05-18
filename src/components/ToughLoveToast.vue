@@ -6,7 +6,12 @@ const { toughLove, dismissToughLove } = useToughLove()
 
 <template>
   <Transition name="tough-love">
-    <div v-if="toughLove" class="tough-love-toast" data-testid="tough-love-toast" @click="dismissToughLove">
+    <div
+      v-if="toughLove"
+      class="tough-love-toast"
+      data-testid="tough-love-toast"
+      @click="dismissToughLove"
+    >
       <p class="tough-love-text" data-testid="tough-love-text">{{ toughLove }}</p>
     </div>
   </Transition>
@@ -28,7 +33,9 @@ const { toughLove, dismissToughLove } = useToughLove()
   max-width: min(440px, calc(100vw - 40px));
   width: max-content;
   text-align: center;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -58,11 +65,15 @@ const { toughLove, dismissToughLove } = useToughLove()
 }
 
 .tough-love-enter-active {
-  transition: opacity 0.22s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tough-love-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
 .tough-love-enter-from {

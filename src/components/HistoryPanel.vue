@@ -6,7 +6,7 @@ defineEmits(['close'])
 
 const { tasks } = useTasks()
 
-const completedTasks = computed(() => tasks.value.filter(t => t.completedAt))
+const completedTasks = computed(() => tasks.value.filter((t) => t.completedAt))
 
 function startOfWeek(ts) {
   const d = new Date(ts)
@@ -24,8 +24,8 @@ const chartWeeks = computed(() => {
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekStart.getDate() + 7)
 
-    const count = completedTasks.value.filter(t =>
-      t.completedAt >= weekStart.getTime() && t.completedAt < weekEnd.getTime()
+    const count = completedTasks.value.filter(
+      (t) => t.completedAt >= weekStart.getTime() && t.completedAt < weekEnd.getTime()
     ).length
 
     const endDay = new Date(weekEnd)
@@ -37,11 +37,11 @@ const chartWeeks = computed(() => {
   })
 })
 
-const chartMax = computed(() => Math.max(...chartWeeks.value.map(w => w.count), 1))
+const chartMax = computed(() => Math.max(...chartWeeks.value.map((w) => w.count), 1))
 
 const chartAriaLabel = computed(() => {
   const summary = chartWeeks.value
-    .map(w => `${w.label}: ${w.count} ${w.count === 1 ? 'task' : 'tasks'}`)
+    .map((w) => `${w.label}: ${w.count} ${w.count === 1 ? 'task' : 'tasks'}`)
     .join(', ')
   return `Bar chart of tasks completed over the past 4 weeks. ${summary}`
 })
@@ -80,7 +80,6 @@ const bestWeekLabel = computed(() => {
 <template>
   <div class="history-overlay" @click.self="$emit('close')">
     <div class="history-panel" role="dialog" aria-modal="true" aria-label="Task history">
-
       <div class="panel-header">
         <h2 class="panel-title">History</h2>
         <button class="panel-close" @click="$emit('close')" aria-label="Close history">✕</button>
@@ -120,7 +119,6 @@ const bestWeekLabel = computed(() => {
           {{ bestWeekEver.count === 1 ? 'task' : 'tasks' }} completed.
         </p>
       </div>
-
     </div>
   </div>
 </template>
@@ -140,7 +138,9 @@ const bestWeekLabel = computed(() => {
 .history-panel {
   background: var(--card-bg);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 480px;
   overflow: hidden;
@@ -176,7 +176,9 @@ const bestWeekLabel = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.12s, color 0.12s;
+  transition:
+    background 0.12s,
+    color 0.12s;
 }
 
 .panel-close:hover {
