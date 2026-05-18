@@ -195,9 +195,16 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
 
 @media (max-width: 600px) {
   .app-header {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     padding: 10px 14px;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .app-brand {
+    flex-shrink: 1;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
   .app-tagline {
@@ -205,7 +212,6 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   }
 
   .app-controls {
-    width: 100%;
     gap: 6px;
     flex-wrap: wrap;
   }
@@ -218,23 +224,15 @@ function handleToughLove() { dismissEncouragement(); showToughLove() }
   .encourage-btn,
   .tough-love-btn,
   .history-btn {
-    padding: 6px 10px;
+    padding: 7px 10px;
     font-size: 12px;
     flex: 1;
-    justify-content: center;
     text-align: center;
   }
 
   .settings-btn {
     width: 36px;
     height: 36px;
-  }
-}
-
-@media (max-width: 400px) {
-  .encourage-btn,
-  .tough-love-btn {
-    flex-basis: calc(50% - 3px);
   }
 }
 </style>
