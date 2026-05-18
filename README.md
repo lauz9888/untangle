@@ -12,11 +12,11 @@ Tasks are organised across three columns:
 - **Next** — what's coming up
 - **Future** — everything else, parked without pressure
 
-Each task can have an **energy level** (tiny, small, medium, or large). You set your current energy in the header, and any task that needs more energy than you have right now is faded out — still visible, but clearly deprioritised. When you haven't set your energy for the day, nothing is faded.
+Each task can have an **energy level** (tiny, small, medium, or large). You set your current energy in the header, and any task that needs more energy than you have right now is faded out — still visible, but clearly deprioritised.
 
-When a task is done, you mark it complete with the ✓ button. It disappears from the board, a celebration popup appears in the centre of the screen, and the task is remembered for your history.
+When a task is done, you mark it complete. It disappears from the board, a celebration popup appears, and the task is remembered for your history.
 
-The **History panel** (opened from the header) shows a bar chart of how many tasks you completed each week for the past four weeks, and calls out your most productive week ever.
+Each task supports a title, energy level, due date, available-from date, and subtasks. All fields can be set on creation and edited afterwards. Tasks can be moved between columns with the **← →** arrow buttons or by drag and drop.
 
 The **streak counter** (in the header, next to the controls) shows how many days in a row you've completed at least one task. It increments on the first completion of each new day and resets if a full active day passes with nothing completed. The flame icon glows when the streak is active.
 
@@ -82,25 +82,15 @@ Everything is saved to `localStorage` automatically whenever state changes, so n
 
 ### Energy filtering
 
-Energy levels have a numeric rank from 1 (tiny) to 4 (large). When you set your current energy, any task whose required energy is higher gets a reduced opacity. If you haven't set an energy level, nothing is filtered. The filtering is reactive — it updates immediately as you change your energy.
-
-### Drag and drop
-
-Drag and drop uses the browser's built-in drag-and-drop API with no external libraries. Dragging is disabled while a task is in edit mode.
-
-### History panel
-
-The History panel groups completed tasks by week (Monday–Sunday) and displays the count for each of the past four weeks as a bar chart. It also scans all completed tasks ever to find and display the most productive week.
+→ [Architecture](https://github.com/lauz9888/untangle/wiki/Architecture) and [Data Model](https://github.com/lauz9888/untangle/wiki/Data-Model) in the wiki cover the design in detail.
 
 ---
 
 ## Testing
 
-### Running tests
-
 ```bash
-npm test           # Unit tests (watch mode)
-npm run test:e2e   # End-to-end tests
+npm test           # unit tests (Vitest, watch mode)
+npm run test:e2e   # end-to-end tests (Playwright)
 ```
 
 ### Unit tests
@@ -147,4 +137,4 @@ Each test clears localStorage and reloads before it runs, so tests are fully ind
 
 ### CI
 
-Tests run automatically on every push via GitHub Actions, in three parallel jobs: unit tests, end-to-end tests, and a production build check.
+→ [Testing](https://github.com/lauz9888/untangle/wiki/Testing) in the wiki explains the coverage approach and what sits at each level.
