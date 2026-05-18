@@ -72,7 +72,7 @@ const { currentEnergy } = useTasks()
 
 @media (max-width: 600px) {
   .energy-selector {
-    flex-basis: 100%;
+    width: 100%;
     justify-content: space-between;
   }
 
