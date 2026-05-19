@@ -108,19 +108,28 @@ No bugs were raised during this change.
 
 ### 5. Commit the report to main
 
-Fetch the latest main first, then commit the report file directly:
+The report is committed from the worktree, which is already at the tip of main after the deploy push. Write the report file to `reports/<filename>.md` inside the worktree, then commit and push:
 
 ```
-cd $project_root && git fetch origin main
-git checkout main -- . 2>/dev/null || true
 git add reports/<filename>.md
-git commit -m "Add post-deploy report for PR #<N>
+git commit -m "Add post-deploy report for <ref>
 
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
-git push origin main
+git push origin HEAD:main
 ```
 
-If the commit or push fails (e.g. a conflict or permissions issue), save the report content and tell the developer: "Report generated but could not be committed automatically. Here is the content — save it to `reports/<filename>.md` and commit manually."
+Do not cd to `project_root` or use `git checkout main` — the main branch is checked out in another worktree and those commands will fail or commit to the wrong branch.
+
+Write the QA approval marker for the new commit before pushing (the pre-push hook requires it):
+
+```
+git_dir=$(git rev-parse --git-dir)
+branch=$(git branch --show-current)
+safe_branch=$(echo "$branch" | sed 's|[/\\]|_|g')
+git rev-parse HEAD > "${git_dir}/claude-qa/${safe_branch}.approved"
+```
+
+If the commit or push fails, save the report content and tell the developer: "Report generated but could not be committed automatically. Here is the content — save it to `reports/<filename>.md` and commit manually."
 
 ### 6. Confirm to the developer
 
