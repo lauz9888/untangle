@@ -70,9 +70,9 @@ When you send Claude a message asking for a code change, the workflow starts aut
 | 4 | `/implementation-analysis` | Verifies the code matches the requirement and solution |
 | 5 | `/unit-test-analysis` | Updates unit tests and runs affected tests |
 | 6 | `/e2e-test-analysis` | Updates e2e tests and runs affected tests |
-| 7 | `/document-analysis` | Updates docs, then asks about deployment path |
-| 8a | `/deploy-branch` | Only when manual testing is needed — deploys to a branch so you can verify in a browser before merging |
-| 8b | `/deploy-main` | Default path — runs full CI and merges straight to main (use this unless you need browser verification) |
+| 7 | `/document-analysis` | Updates docs, then routes to the appropriate deploy path |
+| 8a | `/deploy-branch` | Default path for all code changes — pushes to a branch, runs CI, and waits for your browser sign-off before merging |
+| 8b | `/deploy-main` | Triggered manually after you've tested on the branch, or automatically for doc-only changes (no code impact) |
 | 9 | `/post-deploy-report` | Generates a change report (summary + bug analysis) and commits it to `reports/` |
 | 10 | (part of `/deploy-main`) | Deletes the source branch from the remote and removes the local git worktree |
 

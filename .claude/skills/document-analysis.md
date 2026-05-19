@@ -35,7 +35,7 @@ If the change adds a new skill, updates workflow state commands, or changes the 
 node scripts/workflow-state.mjs approve docs
 ```
 
-### 4. Summarise and ask about deployment
+### 4. Summarise and route to deployment
 
 Give the developer a concise summary of everything done in this workflow:
 - What was built (the requirement)
@@ -43,21 +43,43 @@ Give the developer a concise summary of everything done in this workflow:
 - Test results (unit + e2e)
 - Doc updates made (or "none needed")
 
+Then determine whether this is a code change or a doc-only change:
+
+```bash
+non_doc=$(git diff main...HEAD --name-only | grep -vE '\.(md|txt)$|^reports/')
+```
+
+**If `non_doc` is non-empty (code change):**
+
+Route directly to deploy-branch — no question needed:
+
+```
+node scripts/workflow-state.mjs set pending_next_step "deploy-branch"
+```
+
+Tell the developer:
+
+> "Deploying to a branch for browser verification. I'll let you know when it's ready to test."
+
+The Stop hook will automatically start `/deploy-branch`.
+
+**If `non_doc` is empty (doc-only change):**
+
 Register the question so the workflow is blocked until the developer answers:
 
 ```
-node scripts/workflow-state.mjs await-input "Deploy directly to main, or deploy to a branch for manual testing first?"
+node scripts/workflow-state.mjs await-input "Doc-only change — deploy directly to main, or deploy to a branch first?"
 ```
 
 Then ask:
 
-> "Everything is complete. How would you like to deploy?
-> - **Deploy directly to main** *(default)* — I'll run the full CI pipeline and merge straight to main. Choose this for logic, text, or config changes that don't need browser verification.
-> - **Test manually first** — I'll deploy to a branch so you can verify the change in a browser before merging. Choose this for UI or interaction changes where you want to see it working."
+> "This change only affects documentation. How would you like to deploy?
+> - **Deploy directly to main** *(default for doc changes)* — no browser verification needed.
+> - **Test manually first** — I'll deploy to a branch so you can verify before merging."
 
 End your turn. Do not continue until the developer responds.
 
-### 5. Route to the chosen deployment path
+### 5. Route doc-only changes (after developer answers)
 
 When the developer answers, first clear the awaiting state:
 
