@@ -322,6 +322,8 @@ jobs:
     name: Deploy production
     needs: docs-check
     runs-on: ubuntu-latest
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
