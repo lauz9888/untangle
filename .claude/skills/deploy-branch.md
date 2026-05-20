@@ -65,7 +65,19 @@ git commit -m "<summary of what was implemented>
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
 ```
 
-### 4. Push to the branch
+### 4. Write the QA approval marker
+
+Write the approval marker so the pre-push hook allows the push:
+
+```bash
+git_dir=$(git rev-parse --git-dir)
+branch=$(git branch --show-current)
+safe_branch=$(echo "$branch" | tr '/\\' '_')
+mkdir -p "${git_dir}/claude-qa"
+git rev-parse HEAD > "${git_dir}/claude-qa/${safe_branch}.approved"
+```
+
+### 5. Push to the branch
 
 ```
 git push -u origin HEAD
@@ -77,7 +89,7 @@ Confirm the current branch name:
 git branch --show-current
 ```
 
-### 5. Start the dev server and open the browser
+### 6. Start the dev server and open the browser
 
 Get the worktree path — the root of the directory Claude is currently working in (not the project root from step 1):
 
@@ -113,7 +125,7 @@ if ($serverReady) { Start-Process "http://localhost:5174" }
 
 Note the value of `$serverReady` for the report in the next step.
 
-### 6. Report to the developer
+### 7. Report to the developer
 
 Tell the developer:
 - The branch name and that it's been pushed
@@ -125,11 +137,11 @@ Then ask:
 
 > "The branch is ready for manual testing. Once you've tested, let me know when you're happy and I'll run `/deploy-main` to merge to main."
 
-### 7. Wait
+### 8. Wait
 
 Do not advance the workflow automatically from here. The developer will trigger `/deploy-main` when they're ready.
 
-### 8. Handle bugs reported during manual testing
+### 9. Handle bugs reported during manual testing
 
 If the developer reports a problem found while testing the branch, treat it as a bug found during manual testing — even if it looks minor or was introduced by this change. Before fixing anything:
 
@@ -138,4 +150,4 @@ If the developer reports a problem found while testing the branch, treat it as a
 3. Close the issue via `/report-bug` (the close step).
 4. Commit the fix and push to the branch.
 5. Re-run the full CI suite (step 2) to confirm nothing regressed.
-6. Return to step 6 — report the updated branch to the developer and ask them to re-test.
+6. Return to step 7 — report the updated branch to the developer and ask them to re-test.
