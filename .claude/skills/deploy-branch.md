@@ -77,22 +77,59 @@ Confirm the current branch name:
 git branch --show-current
 ```
 
-### 5. Report to the developer
+### 5. Start the dev server and open the browser
+
+Get the worktree path — the root of the directory Claude is currently working in (not the project root from step 1):
+
+```bash
+worktree=$(git rev-parse --show-toplevel)
+```
+
+Start `npm run dev` in a new terminal window so it stays running independently after the workflow completes. Via PowerShell:
+
+```powershell
+$worktree = git rev-parse --show-toplevel
+Start-Process powershell -ArgumentList @("-NoExit", "-Command", "Set-Location '$worktree'; npm run dev")
+```
+
+Poll `http://localhost:5174` every 2 seconds until it responds or 60 seconds elapse:
+
+```powershell
+$deadline = (Get-Date).AddSeconds(60)
+$serverReady = $false
+while ((Get-Date) -lt $deadline) {
+    try {
+        $null = Invoke-WebRequest -Uri "http://localhost:5174" -UseBasicParsing -TimeoutSec 2 -ErrorAction Stop
+        $serverReady = $true; break
+    } catch { Start-Sleep -Seconds 2 }
+}
+```
+
+If the server responded, open it in the browser:
+
+```powershell
+if ($serverReady) { Start-Process "http://localhost:5174" }
+```
+
+Note the value of `$serverReady` for the report in the next step.
+
+### 6. Report to the developer
 
 Tell the developer:
 - The branch name and that it's been pushed
-- How to access this version locally: the worktree is already checked out at `.claude/worktrees/<worktree-name>`. Run `npm run dev` from there — `vite.config.js` auto-detects the worktree and serves on port 5174, leaving the main server on 5173 undisturbed. Navigate to `http://localhost:5174` to test
+- If `$serverReady` was `$true`: "The dev server is running — your browser has been opened to `http://localhost:5174` automatically."
+  If `$serverReady` was `$false`: "The dev server didn't respond within 60 seconds — open `http://localhost:5174` manually once it's ready."
 - All CI checks passed
 
 Then ask:
 
 > "The branch is ready for manual testing. Once you've tested, let me know when you're happy and I'll run `/deploy-main` to merge to main."
 
-### 6. Wait
+### 7. Wait
 
 Do not advance the workflow automatically from here. The developer will trigger `/deploy-main` when they're ready.
 
-### 7. Handle bugs reported during manual testing
+### 8. Handle bugs reported during manual testing
 
 If the developer reports a problem found while testing the branch, treat it as a bug found during manual testing — even if it looks minor or was introduced by this change. Before fixing anything:
 
@@ -101,4 +138,4 @@ If the developer reports a problem found while testing the branch, treat it as a
 3. Close the issue via `/report-bug` (the close step).
 4. Commit the fix and push to the branch.
 5. Re-run the full CI suite (step 2) to confirm nothing regressed.
-6. Return to step 5 — report the updated branch to the developer and ask them to re-test.
+6. Return to step 6 — report the updated branch to the developer and ask them to re-test.
