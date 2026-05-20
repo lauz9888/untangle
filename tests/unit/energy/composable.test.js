@@ -2,13 +2,14 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 describe('energy — composable and EnergySelector', () => {
-  let useTasks, EnergySelector
+  let useTasks, EnergySelector, useEncouragement, ENERGY_MESSAGES
 
   beforeEach(async () => {
     localStorage.clear()
     vi.resetModules()
     ;({ useTasks } = await import('../../../src/composables/useTasks.js'))
     ;({ default: EnergySelector } = await import('../../../src/components/EnergySelector.vue'))
+    ;({ useEncouragement, ENERGY_MESSAGES } = await import('../../../src/composables/useEncouragement.js'))
   })
 
   describe('isNotYetAvailable', () => {
@@ -164,6 +165,36 @@ describe('energy — composable and EnergySelector', () => {
       const wrapper = mount(EnergySelector)
       expect(wrapper.find('.energy-label').exists()).toBe(true)
       expect(wrapper.find('.energy-label').text().length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('EnergySelector — toast on selection', () => {
+    it('shows a message from the selected level list when a new level is clicked', async () => {
+      const wrapper = mount(EnergySelector)
+      const { encouragement } = useEncouragement()
+      const tinyBtn = wrapper.findAll('[role="group"] button').find(b => b.text().toLowerCase() === 'tiny')
+      await tinyBtn.trigger('click')
+      expect(ENERGY_MESSAGES.tiny).toContain(encouragement.value)
+    })
+
+    it('does not show a message when the active level is clicked to deselect', async () => {
+      const { currentEnergy } = useTasks()
+      const { encouragement } = useEncouragement()
+      currentEnergy.value = 'small'
+      const wrapper = mount(EnergySelector)
+      const smallBtn = wrapper.findAll('[role="group"] button').find(b => b.text().toLowerCase() === 'small')
+      await smallBtn.trigger('click')
+      expect(encouragement.value).toBeNull()
+    })
+
+    it('shows a message for the new level when switching directly between levels', async () => {
+      const { currentEnergy } = useTasks()
+      const { encouragement } = useEncouragement()
+      currentEnergy.value = 'tiny'
+      const wrapper = mount(EnergySelector)
+      const mediumBtn = wrapper.findAll('[role="group"] button').find(b => b.text().toLowerCase() === 'medium')
+      await mediumBtn.trigger('click')
+      expect(ENERGY_MESSAGES.medium).toContain(encouragement.value)
     })
   })
 })

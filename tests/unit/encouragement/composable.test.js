@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 describe('useEncouragement — composable', () => {
-  let useEncouragement, ENCOURAGEMENT_MESSAGES
+  let useEncouragement, ENCOURAGEMENT_MESSAGES, ENERGY_MESSAGES
 
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.resetModules()
-    ;({ useEncouragement, ENCOURAGEMENT_MESSAGES } = await import('../../../src/composables/useEncouragement.js'))
+    ;({ useEncouragement, ENCOURAGEMENT_MESSAGES, ENERGY_MESSAGES } = await import('../../../src/composables/useEncouragement.js'))
   })
 
   afterEach(() => {
@@ -92,6 +92,84 @@ describe('useEncouragement — composable', () => {
         expect(typeof msg).toBe('string')
         expect(msg.trim().length).toBeGreaterThan(0)
       }
+    })
+  })
+
+  describe('ENERGY_MESSAGES', () => {
+    it('has entries for all four energy levels', () => {
+      expect(ENERGY_MESSAGES).toHaveProperty('tiny')
+      expect(ENERGY_MESSAGES).toHaveProperty('small')
+      expect(ENERGY_MESSAGES).toHaveProperty('medium')
+      expect(ENERGY_MESSAGES).toHaveProperty('large')
+    })
+
+    it('each level has exactly 20 messages', () => {
+      for (const level of ['tiny', 'small', 'medium', 'large']) {
+        expect(ENERGY_MESSAGES[level]).toHaveLength(20)
+      }
+    })
+
+    it('all messages are non-empty strings', () => {
+      for (const messages of Object.values(ENERGY_MESSAGES)) {
+        for (const msg of messages) {
+          expect(typeof msg).toBe('string')
+          expect(msg.trim().length).toBeGreaterThan(0)
+        }
+      }
+    })
+
+    it('contains no duplicate messages within a level', () => {
+      for (const messages of Object.values(ENERGY_MESSAGES)) {
+        const unique = new Set(messages)
+        expect(unique.size).toBe(messages.length)
+      }
+    })
+  })
+
+  describe('showEnergyEncouragement', () => {
+    it('sets encouragement to a message from the specified level list', () => {
+      const { encouragement, showEnergyEncouragement } = useEncouragement()
+      showEnergyEncouragement('tiny')
+      expect(ENERGY_MESSAGES.tiny).toContain(encouragement.value)
+    })
+
+    it('picks from the correct level list for each level', () => {
+      for (const level of ['tiny', 'small', 'medium', 'large']) {
+        const { encouragement, showEnergyEncouragement } = useEncouragement()
+        showEnergyEncouragement(level)
+        expect(ENERGY_MESSAGES[level]).toContain(encouragement.value)
+      }
+    })
+
+    it('does nothing when called with an unknown levelId', () => {
+      const { encouragement, showEnergyEncouragement } = useEncouragement()
+      showEnergyEncouragement('unknown')
+      expect(encouragement.value).toBeNull()
+    })
+
+    it('auto-dismisses after 5000ms', () => {
+      const { encouragement, showEnergyEncouragement } = useEncouragement()
+      showEnergyEncouragement('medium')
+      vi.advanceTimersByTime(5000)
+      expect(encouragement.value).toBeNull()
+    })
+
+    it('is still visible just before 5000ms', () => {
+      const { encouragement, showEnergyEncouragement } = useEncouragement()
+      showEnergyEncouragement('small')
+      vi.advanceTimersByTime(4999)
+      expect(encouragement.value).not.toBeNull()
+    })
+
+    it('resets the auto-dismiss timer when called again', () => {
+      const { encouragement, showEnergyEncouragement } = useEncouragement()
+      showEnergyEncouragement('small')
+      vi.advanceTimersByTime(4000)
+      showEnergyEncouragement('large')
+      vi.advanceTimersByTime(4000)
+      expect(encouragement.value).not.toBeNull()
+      vi.advanceTimersByTime(1000)
+      expect(encouragement.value).toBeNull()
     })
   })
 })

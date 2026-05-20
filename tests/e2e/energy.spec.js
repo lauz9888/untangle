@@ -35,3 +35,40 @@ test.describe('energy filtering', () => {
     await expect(page.locator('.task-card').filter({ hasText: 'Medium task' })).not.toHaveClass(/over-capacity/)
   })
 })
+
+test.describe('energy selection toast', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+  })
+
+  test('shows a toast when selecting an energy level', async ({ page }) => {
+    await page.locator('[aria-label="Current energy level"]').getByRole('button', { name: /medium/i }).click()
+    await expect(page.locator('.encouragement-toast')).toBeVisible()
+  })
+
+  test('toast displays a non-empty message', async ({ page }) => {
+    await page.locator('[aria-label="Current energy level"]').getByRole('button', { name: /small/i }).click()
+    const text = await page.locator('.encouragement-text').textContent()
+    expect(text.trim().length).toBeGreaterThan(0)
+  })
+
+  test('does not show a toast when deselecting the active energy level', async ({ page }) => {
+    await page.locator('[aria-label="Current energy level"]').getByRole('button', { name: /large/i }).click()
+    await expect(page.locator('.encouragement-toast')).toBeVisible()
+    await page.locator('.encouragement-toast').click()
+    await expect(page.locator('.encouragement-toast')).not.toBeVisible()
+    await page.locator('[aria-label="Current energy level"]').getByRole('button', { name: /large/i }).click()
+    await expect(page.locator('.encouragement-toast')).not.toBeVisible()
+  })
+
+  test('shows a toast when switching directly between energy levels', async ({ page }) => {
+    await page.locator('[aria-label="Current energy level"]').getByRole('button', { name: /tiny/i }).click()
+    await expect(page.locator('.encouragement-toast')).toBeVisible()
+    await page.locator('.encouragement-toast').click()
+    await expect(page.locator('.encouragement-toast')).not.toBeVisible()
+    await page.locator('[aria-label="Current energy level"]').getByRole('button', { name: /large/i }).click()
+    await expect(page.locator('.encouragement-toast')).toBeVisible()
+  })
+})

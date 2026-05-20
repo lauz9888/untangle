@@ -1,8 +1,19 @@
 <script setup>
 import { useTasks } from '../composables/useTasks.js'
+import { useEncouragement } from '../composables/useEncouragement.js'
 import { ENERGY_LEVELS } from '../constants/energy.js'
 
 const { currentEnergy } = useTasks()
+const { showEnergyEncouragement } = useEncouragement()
+
+function selectEnergy(level) {
+  if (currentEnergy.value === level.id) {
+    currentEnergy.value = null
+  } else {
+    currentEnergy.value = level.id
+    showEnergyEncouragement(level.id)
+  }
+}
 </script>
 
 <template>
@@ -15,7 +26,7 @@ const { currentEnergy } = useTasks()
         class="energy-btn"
         :class="[`energy-${level.id}`, { active: currentEnergy === level.id }]"
         :aria-pressed="currentEnergy === level.id"
-        @click="currentEnergy = currentEnergy === level.id ? null : level.id"
+        @click="selectEnergy(level)"
       >
         {{ level.label }}
       </button>

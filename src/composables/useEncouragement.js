@@ -103,6 +103,97 @@ export const ENCOURAGEMENT_MESSAGES = [
   'Whatever you manage today is enough.',
 ]
 
+export const ENERGY_MESSAGES = {
+  tiny: [
+    'Tiny energy is still energy. It counts.',
+    'Being here with almost nothing left takes real courage.',
+    'You don\'t have to do much. Just a little is enough today.',
+    'Rest is valid work too.',
+    'Tiny steps are still forward.',
+    'You showed up. That\'s the whole thing.',
+    'Low energy days happen. You\'re not broken.',
+    'Just being here right now is something.',
+    'It\'s okay to do the very smallest thing today.',
+    'You\'re allowed to go slowly. As slowly as you need.',
+    'Even a tiny amount of effort matters.',
+    'Be kind to yourself — you\'re running on low.',
+    'The fact that you\'re here at all is worth noticing.',
+    'Small doesn\'t mean unimportant.',
+    'You don\'t need to be at full capacity to do something good.',
+    'One tiny thing done is still one thing done.',
+    'Give yourself permission to take it very easy today.',
+    'Whatever you manage will be enough.',
+    'Your energy is limited today, and that\'s okay.',
+    'Gentle is the right speed right now.',
+  ],
+  small: [
+    'Small energy is still something to work with.',
+    'You don\'t have to push hard today — just move at your own pace.',
+    'It\'s okay to keep it simple. Simple gets things done.',
+    'A little goes further than it feels like it will.',
+    'Be easy on yourself — you\'re working within real limits.',
+    'Small is a perfectly fine place to start from.',
+    'You can do things even when you don\'t feel great.',
+    'This is enough. You are enough.',
+    'Pick the smallest task and let that be your win today.',
+    'You\'re doing this on less energy. That takes more strength, not less.',
+    'It\'s okay to aim for small things today.',
+    'Progress doesn\'t have to be big to be real.',
+    'You\'ve got a little — let\'s use it wisely.',
+    'Low energy days need low-pressure tasks. You\'ve got this.',
+    'Something small done today is still something done.',
+    'Working at a slower pace is still working.',
+    'Be gentle with your expectations today.',
+    'Every little bit helps, even when it doesn\'t feel like it.',
+    'You\'re managing. That\'s not nothing.',
+    'Small and steady is still moving forward.',
+  ],
+  medium: [
+    'Medium energy? That\'s a good place to work from.',
+    'You\'ve got a decent amount to work with today.',
+    'Feeling okay is worth using well.',
+    'Steady days are the ones where real progress happens.',
+    'You\'re in a good spot. Let\'s make the most of it.',
+    'Moderate energy is more than enough for meaningful work.',
+    'Not every day needs to be peak performance. Today sounds manageable.',
+    'A steady pace will get you there.',
+    'You\'re in the zone where things actually get done.',
+    'Middle ground energy is solid ground.',
+    'Today sounds workable. That\'s great.',
+    'You have enough to make a real dent in things today.',
+    'Consistent and steady wins the race.',
+    'A good day for ticking things off the list.',
+    'You\'re well-placed to make some real progress.',
+    'Feeling okay is underrated. Use it.',
+    'Medium days are the backbone of getting things done.',
+    'You\'re set up well for today. Go for it.',
+    'This is a great energy level to work at your own rhythm.',
+    'Solid footing today — you\'ve got this.',
+  ],
+  large: [
+    'You\'ve got loads to work with today — make the most of it!',
+    'High energy day! Time to tackle the things you\'ve been putting off.',
+    'When you feel like this, big things get done.',
+    'Lots of energy today — this is your moment.',
+    'You\'re firing on all cylinders. Use it well.',
+    'High energy is a gift. Spend it on something that matters.',
+    'Today feels like a day for big moves.',
+    'You\'re in a great headspace. Let\'s go.',
+    'Full capacity? That\'s rare. Don\'t waste it.',
+    'This is the energy to tackle your hardest tasks.',
+    'You\'ve got more than enough today. Let that feel good.',
+    'High energy days are precious — use this one well.',
+    'You\'re ready for the big stuff today.',
+    'Everything feels possible on days like this.',
+    'Strong energy day — trust it and run with it.',
+    'Today\'s the day for the tasks you\'ve been avoiding.',
+    'You\'re in a powerful place right now.',
+    'High capacity, high possibility. Go get it.',
+    'This is your peak — enjoy it and use it.',
+    'Full energy means anything is on the table today.',
+  ],
+}
+
 const encouragement = ref(null)
 let timer = null
 
@@ -117,10 +208,21 @@ export function useEncouragement() {
     }, 5000)
   }
 
+  function showEnergyEncouragement(levelId) {
+    const messages = ENERGY_MESSAGES[levelId]
+    if (!messages) return
+    const message = messages[Math.floor(Math.random() * messages.length)]
+    clearTimeout(timer)
+    encouragement.value = message
+    timer = setTimeout(() => {
+      encouragement.value = null
+    }, 5000)
+  }
+
   function dismissEncouragement() {
     clearTimeout(timer)
     encouragement.value = null
   }
 
-  return { encouragement, showEncouragement, dismissEncouragement }
+  return { encouragement, showEncouragement, showEnergyEncouragement, dismissEncouragement }
 }
