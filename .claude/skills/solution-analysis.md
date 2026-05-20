@@ -28,13 +28,21 @@ If `git fetch` fails:
 - Attempt to resolve the specific issue (e.g. re-authenticate if credentials expired, check VPN or network if connectivity is the problem)
 - If the issue cannot be resolved, stop and explain to the developer exactly what failed and what they need to do to fix it. Do NOT continue to codebase exploration on potentially stale code.
 
-If `git fetch` succeeds and the current branch is `main`, pull to update it:
+If `git fetch` succeeds and the current branch is `main`:
 
-```
-git pull origin main
-```
+1. Pull to update it:
+   ```
+   git pull origin main
+   ```
 
-If the current branch is not `main`, skip the pull — the fetch is sufficient to make the remote state visible.
+2. Derive a branch name from the requirement text. Use `fix/<slug>` for bug fixes and corrections, or `feature/<slug>` for everything else. The `<slug>` is the requirement text lowercased, spaces replaced with hyphens, non-alphanumeric characters removed, truncated so the full name is at most 50 characters.
+
+3. Create and check out the new branch:
+   ```
+   git checkout -b <branch-name>
+   ```
+
+If the current branch is not `main`, the work is already on a feature branch — skip to step 3.
 
 ### 3. Explore the codebase
 

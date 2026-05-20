@@ -1,14 +1,11 @@
 name: Branch pipeline
 
-# Runs on every pull-request targeting main and on direct pushes to any
-# non-main branch.  Lighter than the main pipeline — proves the branch is
-# safe for manual human review and deploys a preview build artifact.
+# Runs on every pull request targeting main.  Lighter than the main pipeline —
+# proves the branch is safe for manual human review and deploys a preview build artifact.
 
 on:
   pull_request:
     branches: [main]
-  push:
-    branches-ignore: [main]
 
 permissions:
   contents: read
