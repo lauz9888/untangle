@@ -24,6 +24,22 @@ process.stdin.on('end', () => {
   if (!filePath) process.exit(0);
 
   const repoRoot = getRepoRoot();
+
+  // Block all edits directly on main — work must be on a feature branch.
+  try {
+    const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
+    if (currentBranch === 'main') {
+      process.stdout.write(
+        `[BRANCH PROTECTION] Cannot edit files directly on the main branch.\n` +
+        `All changes must be made on a feature branch. Run /solution-analysis to create one, ` +
+        `or manually: git checkout -b feature/<name>`
+      );
+      process.exit(2);
+    }
+  } catch {
+    // If branch detection fails, fall through and allow the edit.
+  }
+
   const rel = relative(repoRoot, filePath).replace(/\\/g, '/');
 
   // Only gate src/ edits — tests, scripts, config, docs are unrestricted.
