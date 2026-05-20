@@ -14,7 +14,29 @@ The `requirement_text` field contains the approved requirements. If it is empty 
 
 If `loop_back_reason` is set, this is a loop-back from implementation. Acknowledge why: "I was sent back here from [loop_back_from] because [loop_back_reason]. I'll revise the solution with that in mind."
 
-### 2. Explore the codebase
+### 2. Sync from origin (first call only)
+
+If `loop_back_reason` is NOT set in state, this is the first entry to solution-analysis for this change. Pull the latest from origin before exploring the codebase so the solution is designed against current code:
+
+```
+git fetch origin
+```
+
+If `git fetch` fails:
+- Inspect the error output for the failure category (authentication, network, unknown host, etc.)
+- Check the remote URL is correct: `git remote get-url origin`
+- Attempt to resolve the specific issue (e.g. re-authenticate if credentials expired, check VPN or network if connectivity is the problem)
+- If the issue cannot be resolved, stop and explain to the developer exactly what failed and what they need to do to fix it. Do NOT continue to codebase exploration on potentially stale code.
+
+If `git fetch` succeeds and the current branch is `main`, pull to update it:
+
+```
+git pull origin main
+```
+
+If the current branch is not `main`, skip the pull — the fetch is sufficient to make the remote state visible.
+
+### 3. Explore the codebase
 
 Read all files that will be touched by the change. Build a picture of:
 
@@ -25,7 +47,7 @@ Read all files that will be touched by the change. Build a picture of:
 
 Don't guess — read the actual files.
 
-### 3. Identify solution options
+### 4. Identify solution options
 
 Propose 1–3 concrete approaches. For each, describe:
 
@@ -35,7 +57,7 @@ Propose 1–3 concrete approaches. For each, describe:
 
 If one option is clearly best, say so and explain why. Don't manufacture fake alternatives just to show options.
 
-### 4. Assess non-functional risks
+### 5. Assess non-functional risks
 
 For each solution option under consideration, check the following areas and flag any concerns. For each concern raised, include a concrete mitigation as part of the solution design — not as a future consideration.
 
@@ -72,7 +94,7 @@ If any concern has no clear mitigation, raise it with the developer before proce
 node scripts/workflow-state.mjs loop-back requirement-analysis "Non-functional risk identified that needs a requirement decision: [risk and options]"
 ```
 
-### 5. Ask about unknowns
+### 6. Ask about unknowns
 
 If the solution has open questions the developer needs to decide — naming, UI behaviour, data model shape, whether an existing abstraction should be extended or replaced — ask now, not during implementation.
 
@@ -88,7 +110,7 @@ Then ask the question and end your turn. Do not continue until the developer res
 node scripts/workflow-state.mjs clear-awaiting
 ```
 
-Then either ask the next question (repeating the await-input pattern) or proceed to step 6 if the solution is fully specified.
+Then either ask the next question (repeating the await-input pattern) or proceed to step 7 if the solution is fully specified.
 
 If you discover that the requirements are incomplete or contradictory and that's blocking solution design, loop back:
 
@@ -98,7 +120,7 @@ node scripts/workflow-state.mjs loop-back requirement-analysis "Need clarificati
 
 Then tell the developer what's happening. The Stop hook will route back to `/requirement-analysis` automatically.
 
-### 6. Save the approved solution
+### 7. Save the approved solution
 
 When the developer agrees on the approach, write a concise summary to state — including any non-functional risks and their mitigations:
 
@@ -112,7 +134,7 @@ Then approve to trigger implementation automatically:
 node scripts/workflow-state.mjs approve solution
 ```
 
-### 7. Confirm to the developer
+### 8. Confirm to the developer
 
 Tell the developer: "Solution approved. Starting implementation now."
 
