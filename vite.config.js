@@ -6,7 +6,13 @@ import { join } from 'path'
 
 // In a git worktree .git is a file, not a directory — default to 5174 to
 // avoid clashing with the main repo's dev server on 5173.
-const isWorktree = statSync(join(import.meta.dirname, '.git')).isFile()
+// Gracefully handles missing .git (e.g. unzipped archive without git history).
+let isWorktree = false
+try {
+  isWorktree = statSync(join(import.meta.dirname, '.git')).isFile()
+} catch {
+  isWorktree = false
+}
 const defaultPort = isWorktree ? 5174 : 5173
 
 export default defineConfig({
