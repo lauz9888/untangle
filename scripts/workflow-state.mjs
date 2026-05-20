@@ -31,7 +31,7 @@ const NEXT_STEP = {
   'implementation': 'implementation-analysis',
   'unit-tests':     'e2e-test-analysis',
   'e2e-tests':      'document-analysis',
-  'docs':           'deploy',
+  'docs':           null,
 };
 
 const cmd = process.argv[2];
@@ -79,6 +79,8 @@ if (cmd === 'get') {
   flagMap[step]();
   state.awaiting_input = null;
   state.pending_next_step = NEXT_STEP[step];
+  state.loop_back_from = null;
+  state.loop_back_reason = null;
   writeState(state);
   console.log(`Approved: ${step}. Queued next step: ${NEXT_STEP[step]}`);
 
@@ -128,10 +130,8 @@ if (cmd === 'get') {
 
   state.current_step = next;
   state.pending_next_step = null;
-  if (!loopReason) {
-    state.loop_back_from = null;
-    state.loop_back_reason = null;
-  }
+  state.loop_back_from = null;
+  state.loop_back_reason = null;
   writeState(state);
 
   if (loopReason) {
