@@ -51,7 +51,7 @@ If the developer's initial message already answers most of these, confirm your u
 
 ### 3. Log a bug issue if the requirement is a bug fix
 
-If the requirement involves fixing something — incorrect behaviour, a visual defect, a crash, or anything the user is asking to be fixed or reporting as wrong — create a GitHub issue before proceeding:
+If the requirement describes something currently broken — incorrect behaviour, a visual defect, a crash, or anything the user is reporting as wrong — create a GitHub issue before proceeding:
 
 ```
 node scripts/bug-tracker.mjs create \

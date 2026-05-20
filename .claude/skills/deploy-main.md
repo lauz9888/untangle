@@ -1,13 +1,8 @@
-Merge the branch to main after browser verification, or deploy a doc-only change directly.
+Push the change directly to main and confirm CI passes.
 
-This skill is part of the automated development workflow. It runs in two situations:
+This skill is part of the automated development workflow. It is the default deployment path for small and medium changes. For larger changes where you want browser verification before merging, use `/deploy-branch` instead.
 
-1. **After `/deploy-branch` + human sign-off** — the developer has verified the change in a browser and is ready to merge. This is the normal path for all code changes.
-2. **Doc-only changes** — when `document-analysis` detects no code files were modified (only `.md`, `.txt`, or `reports/` files), it may route here directly without a browser review step.
-
-For any change that touches application code, always go through `/deploy-branch` first. Do not use this skill to bypass browser verification.
-
-Changes are pushed directly to main. GitHub CI runs after the push via the `push: branches: [main]` trigger in `main.yml`. If CI fails, the failure lands on main — fix it with a follow-up commit.
+Changes are pushed directly to main. GitHub CI runs after the push via the `push: branches: [main]` trigger in `ci.yml`. If CI fails, the failure lands on main — fix it with a follow-up commit.
 
 ## Steps
 

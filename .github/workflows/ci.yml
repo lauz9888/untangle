@@ -1,0 +1,142 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        id: unit-tests
+        run: npm test -- --run --reporter=verbose
+        continue-on-error: true
+
+      - name: Create issue for unit test failure
+        if: steps.unit-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Unit tests failing on ${{ github.ref_name }}" \
+            --body "Unit tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`)." \
+            --source "ci-unit-tests"
+
+      - name: Fail if tests failed
+        if: steps.unit-tests.outcome == 'failure'
+        run: exit 1
+
+  e2e-tests:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        id: e2e-tests
+        run: npm run test:e2e
+        continue-on-error: true
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: steps.e2e-tests.outcome == 'failure'
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Create issue for E2E test failure
+        if: steps.e2e-tests.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: E2E tests failing on ${{ github.ref_name }}" \
+            --body "E2E tests failed in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`). Playwright report uploaded as a build artifact." \
+            --source "ci-e2e-tests"
+
+      - name: Fail if tests failed
+        if: steps.e2e-tests.outcome == 'failure'
+        run: exit 1
+
+  coverage:
+    name: Coverage gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run coverage
+        id: coverage
+        run: npm run test:coverage
+        continue-on-error: true
+
+      - name: Create issue for coverage failure
+        if: steps.coverage.outcome == 'failure'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/bug-tracker.mjs create \
+            --title "Bug: Coverage gate failing on ${{ github.ref_name }}" \
+            --body "Coverage fell below threshold in CI run [#${{ github.run_number }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) on commit \`${{ github.sha }}\` (\`${{ github.ref_name }}\`)." \
+            --source "ci-unit-tests"
+
+      - name: Fail if coverage below threshold
+        if: steps.coverage.outcome == 'failure'
+        run: exit 1
+
+  build:
+    name: Build check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build

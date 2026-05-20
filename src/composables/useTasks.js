@@ -15,9 +15,7 @@ function todayString() {
   return `${y}-${m}-${day}`
 }
 const today = ref(todayString())
-setInterval(() => {
-  today.value = todayString()
-}, 60_000)
+setInterval(() => { today.value = todayString() }, 60_000)
 
 function loadFromStorage(key, fallback, { raw = false } = {}) {
   try {
@@ -44,20 +42,16 @@ const rawTasks = loadFromStorage(STORAGE_KEY, [])
 const tasks = ref((Array.isArray(rawTasks) ? rawTasks : []).map(migrateTask))
 const currentEnergy = ref(loadFromStorage(ENERGY_KEY, null, { raw: true }) || null)
 
-watch(
-  tasks,
-  (val) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
-  },
-  { deep: true }
-)
+watch(tasks, (val) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(val))
+}, { deep: true })
 
 watch(currentEnergy, (val) => {
   localStorage.setItem(ENERGY_KEY, val ?? '')
 })
 
 function energyRank(id) {
-  return ENERGY_LEVELS.find((e) => e.id === id)?.rank ?? 0
+  return ENERGY_LEVELS.find(e => e.id === id)?.rank ?? 0
 }
 
 export function useTasks() {
@@ -71,14 +65,10 @@ export function useTasks() {
   }
 
   function tasksForColumn(columnId) {
-    return tasks.value.filter((t) => t.column === columnId && !t.completedAt)
+    return tasks.value.filter(t => t.column === columnId && !t.completedAt)
   }
 
-  function addTask(
-    title,
-    column,
-    { energy = null, dueDate = null, availableFrom = null, subtasks = [] } = {}
-  ) {
+  function addTask(title, column, { energy = null, dueDate = null, availableFrom = null, subtasks = [] } = {}) {
     tasks.value.push({
       id: crypto.randomUUID(),
       title: title.trim(),
@@ -88,22 +78,20 @@ export function useTasks() {
       completedAt: null,
       dueDate: dueDate || null,
       availableFrom: availableFrom || null,
-      subtasks: subtasks
-        .map((s) => ({
-          id: crypto.randomUUID(),
-          title: typeof s === 'string' ? s.trim() : s.title.trim(),
-          done: false,
-        }))
-        .filter((s) => s.title),
+      subtasks: subtasks.map(s => ({
+        id: crypto.randomUUID(),
+        title: typeof s === 'string' ? s.trim() : s.title.trim(),
+        done: false,
+      })).filter(s => s.title),
     })
   }
 
   function deleteTask(id) {
-    tasks.value = tasks.value.filter((t) => t.id !== id)
+    tasks.value = tasks.value.filter(t => t.id !== id)
   }
 
   function completeTask(id) {
-    const task = tasks.value.find((t) => t.id === id)
+    const task = tasks.value.find(t => t.id === id)
     if (task) {
       task.completedAt = Date.now()
       return recordCompletion()
@@ -112,13 +100,13 @@ export function useTasks() {
   }
 
   function updateTask(id, changes) {
-    const task = tasks.value.find((t) => t.id === id)
+    const task = tasks.value.find(t => t.id === id)
     if (task) Object.assign(task, changes)
   }
 
   function moveTask(id, direction) {
-    const columnIds = COLUMNS.map((c) => c.id)
-    const task = tasks.value.find((t) => t.id === id)
+    const columnIds = COLUMNS.map(c => c.id)
+    const task = tasks.value.find(t => t.id === id)
     if (!task) return
     const idx = columnIds.indexOf(task.column)
     const newIdx = idx + direction
@@ -128,14 +116,14 @@ export function useTasks() {
   }
 
   function moveTaskToColumn(id, columnId) {
-    const task = tasks.value.find((t) => t.id === id)
-    if (task && COLUMNS.some((c) => c.id === columnId)) {
+    const task = tasks.value.find(t => t.id === id)
+    if (task && COLUMNS.some(c => c.id === columnId)) {
       task.column = columnId
     }
   }
 
   function addSubtask(taskId, title) {
-    const task = tasks.value.find((t) => t.id === taskId)
+    const task = tasks.value.find(t => t.id === taskId)
     const trimmed = title?.trim()
     if (task && trimmed) {
       task.subtasks.push({ id: crypto.randomUUID(), title: trimmed, done: false })
@@ -143,13 +131,13 @@ export function useTasks() {
   }
 
   function deleteSubtask(taskId, subtaskId) {
-    const task = tasks.value.find((t) => t.id === taskId)
-    if (task) task.subtasks = task.subtasks.filter((s) => s.id !== subtaskId)
+    const task = tasks.value.find(t => t.id === taskId)
+    if (task) task.subtasks = task.subtasks.filter(s => s.id !== subtaskId)
   }
 
   function toggleSubtask(taskId, subtaskId) {
-    const task = tasks.value.find((t) => t.id === taskId)
-    const subtask = task?.subtasks.find((s) => s.id === subtaskId)
+    const task = tasks.value.find(t => t.id === taskId)
+    const subtask = task?.subtasks.find(s => s.id === subtaskId)
     if (subtask) subtask.done = !subtask.done
   }
 
