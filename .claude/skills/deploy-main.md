@@ -134,6 +134,7 @@ if [ -f "${git_dir}/commondir" ]; then
   common=$(cat "${git_dir}/commondir")
   main_root=$(cd "${git_dir}/${common}/.." && pwd)
   cd "$main_root"
+  git push origin --delete "$branch" 2>/dev/null || true
   git worktree remove "$worktree_path" --force
   git branch -d "$branch" 2>/dev/null || git branch -D "$branch"
 fi
