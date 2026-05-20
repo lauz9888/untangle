@@ -98,7 +98,11 @@ gh run watch <run-id>
 
 If CI fails, do not open a duplicate bug issue — `main.yml` already does that automatically. Investigate the failure, push a fix commit (`git push origin HEAD:main` again), then watch the new run.
 
-### 7. Generate the post-deploy report
+### 7. Update the wiki
+
+Run `/wiki-update` to review the change against the wiki and update any pages that are out of date. This runs through the developer's local Claude session.
+
+### 8. Generate the post-deploy report
 
 Once CI passes, run `/post-deploy-report` passing the merge commit SHA or the short commit reference. This generates a markdown report in `reports/` and commits it to main. The report reads `started_at` from current workflow state to compute cycle time, so it must run before the state is reset.
 
@@ -106,22 +110,20 @@ For the PR number field, use the commit SHA short form (e.g. `abc1234`) if there
 
 If report generation fails for any reason, log a warning to the developer but do not treat it as a deploy failure — the push has already completed successfully.
 
-### 8. Reset workflow state
+### 9. Reset workflow state
 
 ```
 node scripts/workflow-state.mjs reset
 ```
 
-### 9. Report to the developer
+### 10. Report to the developer
 
 Tell the developer:
 - That the change has been pushed to main and CI passed
 - The report filename that was committed to `reports/`
 - The full workflow is complete
 
-The wiki-update workflow runs automatically on push to main and will update the GitHub wiki.
-
-### 10. Clean up the local worktree and branch
+### 11. Clean up the local worktree and branch
 
 Capture the current worktree path and branch, then remove them. This is the last action in the session — the directory will be gone afterwards.
 

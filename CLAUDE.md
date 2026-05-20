@@ -140,9 +140,9 @@ This runs the test suite and writes the same approval marker. You are responsibl
 
 ## Wiki updates
 
-The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated automatically on every push to main. The `wiki-update.yml` workflow diffs the change against every wiki page and updates any that are out of date. It requires `ANTHROPIC_API_KEY` to be set as a repository secret.
+The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated as part of the `/deploy-main` workflow. After every push to main, `/wiki-update` runs through the developer's local Claude Code session, diffs the change against every wiki page, and updates any that are out of date.
 
-To trigger the same review manually (e.g. after a direct wiki edit), run `/wiki-update` in Claude Code.
+To trigger a wiki review outside the deploy workflow (e.g. after a direct wiki edit), run `/wiki-update` in Claude Code.
 
 ## Key files
 
