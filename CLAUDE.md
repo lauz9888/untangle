@@ -120,17 +120,17 @@ All changes land via a PR from a feature branch — `main` is protected and dire
 
 CI (`.github/workflows/ci.yml`) runs 9 required jobs on every PR:
 
-| Job                 | Tool                                                                                             |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| Lint                | ESLint (flat config) + Prettier                                                                  |
-| Build               | `vite build`                                                                                     |
-| Unit tests          | `vitest run`                                                                                     |
-| Coverage gate       | `vitest run --coverage` (80% lines/statements/functions, 70% branches)                           |
-| E2E tests           | `playwright test`                                                                                |
-| Accessibility tests | `@axe-core/playwright`                                                                           |
-| Security audit      | `npm audit --omit=dev --audit-level=high` (production deps only — dev tooling isn't shipped)     |
-| PWA validation      | Lighthouse CI (`@lhci/cli`) against the PWA category                                             |
-| Documentation check | `scripts/check-docs.mjs` — fails if `src/` changed without `CLAUDE.md`/`README.md` also changing |
+| Job                 | Tool                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lint                | ESLint (flat config) + Prettier                                                                                                                         |
+| Build               | `vite build`                                                                                                                                            |
+| Unit tests          | `vitest run`                                                                                                                                            |
+| Coverage gate       | `vitest run --coverage` (80% lines/statements/functions, 70% branches)                                                                                  |
+| E2E tests           | `playwright test`                                                                                                                                       |
+| Accessibility tests | `@axe-core/playwright`                                                                                                                                  |
+| Security audit      | `npm audit --omit=dev --audit-level=high` (production deps only — dev tooling isn't shipped)                                                            |
+| PWA validation      | `scripts/check-pwa.mjs` — checks the built manifest, service worker, and `index.html` wiring (Lighthouse's `pwa` category was removed upstream in v10+) |
+| Documentation check | `scripts/check-docs.mjs` — fails if `src/` changed without `CLAUDE.md`/`README.md` also changing                                                        |
 
 The documentation-check job is a nudge, not a wiki editor — it can't run Claude inside GitHub Actions. The wiki itself is synced by `/wiki-update`, run locally as part of `/deploy-main`.
 
