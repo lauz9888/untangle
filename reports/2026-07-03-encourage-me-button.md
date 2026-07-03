@@ -25,8 +25,8 @@ No new dependencies.
 
 ## Bugs raised and resolved
 
-| #                                                     | Category | Detected by       | Summary                                                                                        | Resolution                                                                                                             |
-| ------------------------------------------------------ | -------- | ------------------ | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| #                                                     | Category | Detected by      | Summary                                                                                                                | Resolution                                                                                                                  |
+| ----------------------------------------------------- | -------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | [#88](https://github.com/lauz9888/untangle/issues/88) | `manual` | `manual-testing` | The Low/Medium/High buttons and the new Encourage me button had no visual grouping distinguishing them from each other | Wrapped the energy buttons in a labeled, backgrounded panel; fixed a resulting color-contrast a11y regression along the way |
 
 ## Time taken
