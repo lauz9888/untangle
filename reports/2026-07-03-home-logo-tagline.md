@@ -16,10 +16,10 @@ Existing `tests/unit/smoke.test.js` and `tests/e2e/smoke.spec.js` were extended 
 
 ## Bugs raised and resolved
 
-| # | Category | Detected by | Summary | Resolution |
-|---|----------|-------------|---------|------------|
-| [#77](https://github.com/lauz9888/untangle/issues/77) | `e2e` | `e2e-test-execution` | Homepage rooted content in a `<header>` with no `<main>` landmark — axe-core flagged `landmark-one-main` (moderate) | Wrapped the brand header in `<main>` |
-| [#79](https://github.com/lauz9888/untangle/issues/79) | `ci-docs` | `deploy-branch` CI | `src/App.vue` changed without `CLAUDE.md`/`README.md` also changing, tripping the CI documentation-check job | Added a one-line note to `README.md` describing the new homepage |
+| #                                                     | Category  | Detected by          | Summary                                                                                                             | Resolution                                                       |
+| ----------------------------------------------------- | --------- | -------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [#77](https://github.com/lauz9888/untangle/issues/77) | `e2e`     | `e2e-test-execution` | Homepage rooted content in a `<header>` with no `<main>` landmark — axe-core flagged `landmark-one-main` (moderate) | Wrapped the brand header in `<main>`                             |
+| [#79](https://github.com/lauz9888/untangle/issues/79) | `ci-docs` | `deploy-branch` CI   | `src/App.vue` changed without `CLAUDE.md`/`README.md` also changing, tripping the CI documentation-check job        | Added a one-line note to `README.md` describing the new homepage |
 
 Both were found by the pipeline's own later stages exactly as designed (e2e execution catching an a11y regression the unit-level tests couldn't see; CI catching a missed docs update) and fixed via the `resume_after_fix` loop-back to `solution-implementation` without redoing earlier stages.
 
