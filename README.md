@@ -2,6 +2,8 @@
 
 An energy-based task manager, built as a PWA.
 
+The homepage currently shows the Untangle logo and the tagline "Space to think"; the task manager itself is still being rebuilt.
+
 ## Getting started
 
 ```
