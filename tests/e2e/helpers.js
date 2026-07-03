@@ -5,3 +5,7 @@ export function energyButton(page, label) {
 export function toast(page) {
   return page.getByRole('status')
 }
+
+export function encourageButton(page) {
+  return page.getByRole('button', { name: 'Encourage me', exact: true })
+}

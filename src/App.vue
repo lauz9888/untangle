@@ -1,5 +1,6 @@
 <script setup>
 import EnergySelector from './components/EnergySelector.vue'
+import EncourageButton from './components/EncourageButton.vue'
 import ToastNotification from './components/ToastNotification.vue'
 </script>
 
@@ -27,7 +28,10 @@ import ToastNotification from './components/ToastNotification.vue'
         </div>
         <p class="tagline">Space to think</p>
       </div>
-      <EnergySelector />
+      <div class="header-actions">
+        <EnergySelector />
+        <EncourageButton />
+      </div>
     </header>
     <ToastNotification />
   </main>
@@ -74,5 +78,11 @@ h1 {
   font-size: 0.85rem;
   font-weight: 400;
   color: #767676;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 </style>
