@@ -138,6 +138,10 @@ The documentation-check job is a nudge, not a wiki editor — it can't run Claud
 
 Any job failing blocks the merge and is logged as the matching `ci-*` bug (see the table above), closed once the job passes.
 
+## Deployment
+
+Merges to `main` are built and published to GitHub Pages by `.github/workflows/deploy-pages.yml`, live at [lauz9888.github.io/untangle](https://lauz9888.github.io/untangle/). The build sets `GITHUB_PAGES=true` so `vite.config.js` serves assets under the `/untangle/` base path a GitHub Pages project site needs (local dev/build/preview are unaffected — they default to `/`). This is a separate workflow from `ci.yml`; it doesn't gate PRs, it only runs after a merge lands on `main`.
+
 ## Wiki updates
 
 The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated as part of `/deploy-main`. It's a separate git repository (`untangle.wiki.git`) with no branch protection, pushed to directly.
@@ -157,4 +161,5 @@ To trigger a wiki review outside the deploy workflow (e.g. after a direct wiki e
 | `scripts/post-commit-close-bugs.mjs` | `post-commit` git hook logic (auto-closes bugs via commit trailers)                |
 | `.claude/skills/`                    | The 14 pipeline skills plus `report-bug` and `wiki-update`                         |
 | `.github/workflows/ci.yml`           | The 9-job CI pipeline                                                              |
+| `.github/workflows/deploy-pages.yml` | Builds and publishes `main` to GitHub Pages after merge                            |
 | `reports/`                           | Post-deploy change reports, one markdown file per merged change                    |
