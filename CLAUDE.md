@@ -22,6 +22,8 @@ npm run test:e2e        # end-to-end tests (Playwright, requires dev/build+previ
 
 All task state lives in `src/composables/useTasks.js` — a module-level singleton (Vue reactive refs outside the function). Every component that calls `useTasks()` shares the same state. Follow the same singleton pattern for any other cross-component state.
 
+`src/composables/useEnergyLevel.js` follows the same singleton pattern for the header's energy-level selector (`src/components/EnergySelector.vue`) and its toast notification (`src/components/ToastNotification.vue`): selecting a Low/Medium/High level picks a random encouraging message from a 20-message-per-level pool and shows it as a toast, which auto-dismisses after a few seconds or can be closed manually. Selection is in-memory only and always resets to "none" on reload.
+
 Components are thin: they call composable functions and render results. Business logic stays in composables.
 
 ## Test organisation
@@ -147,6 +149,7 @@ To trigger a wiki review outside the deploy workflow (e.g. after a direct wiki e
 | File                                 | Purpose                                                                            |
 | ------------------------------------ | ---------------------------------------------------------------------------------- |
 | `src/composables/useTasks.js`        | Task logic, energy filtering, localStorage persistence                             |
+| `src/composables/useEnergyLevel.js`  | Header energy-level selection state and toast message pools                        |
 | `scripts/workflow-state.mjs`         | 14-stage pipeline state machine (`start`/`get`/`set`/`approve`/`loopback`/`reset`) |
 | `scripts/bug-tracker.mjs`            | CLI for creating/closing GitHub bug issues, category list                          |
 | `scripts/check-docs.mjs`             | CI documentation-check job                                                         |
