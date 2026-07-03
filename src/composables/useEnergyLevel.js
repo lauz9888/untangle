@@ -69,6 +69,59 @@ export const HIGH_MESSAGES = [
   "You're in a great place to push forward!",
 ]
 
+export const ENCOURAGEMENT_MESSAGES = [
+  'Every bit of progress counts.',
+  "You're doing better than you think.",
+  'One task at a time is still moving forward.',
+  "It's okay to go at your own pace.",
+  'You showed up today, and that matters.',
+  'Small wins add up to big change.',
+  "You've got this.",
+  'Progress, not perfection.',
+  'Be proud of how far you have come.',
+  "You're allowed to take this one step at a time.",
+  'Whatever you get done today is enough.',
+  "Keep going — you're closer than you think.",
+  'Trust the process, one step at a time.',
+  'Your effort today matters, even the quiet parts.',
+  "You're capable of more than you realize.",
+  'Take a breath — you are handling this well.',
+  "There's no wrong way to make progress.",
+  'You are exactly where you need to be right now.',
+  'Give yourself credit for showing up.',
+  'Momentum builds from small steps.',
+  'You are allowed to be a work in progress.',
+  "Today's effort is tomorrow's progress.",
+  'Believe in the process you are building.',
+  "You're doing just fine.",
+  'One task down is still a win.',
+  "It's okay if today looks different than planned.",
+  'You bring more to this than you know.',
+  'Keep chipping away — it adds up.',
+  'You are not behind, you are on your own path.',
+  "Celebrate the small stuff — it's not small.",
+  'This moment of effort counts.',
+  "You're building something, even on quiet days.",
+  'Your best today is good enough.',
+  'Steady effort beats perfect effort.',
+  "You've handled hard days before, and you can handle this one.",
+  'Every step forward is still forward.',
+  'You are doing the work, and that is enough.',
+  "Give yourself the same kindness you'd give a friend.",
+  'This is a good moment to keep going.',
+  "You're allowed to feel good about small progress.",
+  'Trust yourself — you know more than you think.',
+  'You are not alone in finding this hard sometimes.',
+  'Keep your pace — it is the right one for you.',
+  "You're making it happen, one piece at a time.",
+  'This effort is not wasted, even if it feels slow.',
+  'You are worth the same patience you give others.',
+  "Today counts, even if it's a small day.",
+  'You are further along than you were yesterday.',
+  'Nice work getting this far.',
+  "You've got what it takes to keep moving.",
+]
+
 const MESSAGE_POOLS = {
   low: LOW_MESSAGES,
   medium: MEDIUM_MESSAGES,
@@ -79,8 +132,7 @@ const selectedLevel = ref(null)
 const toastMessage = ref(null)
 const toastId = ref(0)
 
-function randomMessage(level) {
-  const pool = MESSAGE_POOLS[level]
+function randomFrom(pool) {
   return pool[Math.floor(Math.random() * pool.length)]
 }
 
@@ -91,7 +143,12 @@ function selectLevel(level) {
   }
 
   selectedLevel.value = level
-  toastMessage.value = randomMessage(level)
+  toastMessage.value = randomFrom(MESSAGE_POOLS[level])
+  toastId.value += 1
+}
+
+function encourageMe() {
+  toastMessage.value = randomFrom(ENCOURAGEMENT_MESSAGES)
   toastId.value += 1
 }
 
@@ -105,6 +162,7 @@ export function useEnergyLevel() {
     toastMessage,
     toastId,
     selectLevel,
+    encourageMe,
     dismissToast,
   }
 }

@@ -116,4 +116,82 @@ describe('useEnergyLevel', () => {
 
     expect(second.selectedLevel.value).toBe('high')
   })
+
+  describe('encourageMe', () => {
+    it('exposes exactly 50 unique, non-empty messages', async () => {
+      const mod = await import(modulePath)
+      expect(mod.ENCOURAGEMENT_MESSAGES).toHaveLength(50)
+      expect(new Set(mod.ENCOURAGEMENT_MESSAGES).size).toBe(50)
+      mod.ENCOURAGEMENT_MESSAGES.forEach((message) => {
+        expect(typeof message).toBe('string')
+        expect(message.length).toBeGreaterThan(0)
+      })
+    })
+
+    it('shows a toast message drawn from the encouragement pool', async () => {
+      const mod = await import(modulePath)
+      const { toastMessage, encourageMe } = mod.useEnergyLevel()
+
+      encourageMe()
+
+      expect(mod.ENCOURAGEMENT_MESSAGES).toContain(toastMessage.value)
+    })
+
+    it('selects a message at random rather than always showing the same one', async () => {
+      const { toastMessage, encourageMe } = await load()
+      const seen = new Set()
+      for (let i = 0; i < 40; i++) {
+        encourageMe()
+        seen.add(toastMessage.value)
+      }
+      expect(seen.size).toBeGreaterThan(1)
+    })
+
+    it('does not select or require any energy level', async () => {
+      const { selectedLevel, encourageMe } = await load()
+
+      encourageMe()
+
+      expect(selectedLevel.value).toBe(null)
+    })
+
+    it('leaves an already-selected energy level untouched', async () => {
+      const { selectedLevel, selectLevel, encourageMe } = await load()
+      selectLevel('medium')
+
+      encourageMe()
+
+      expect(selectedLevel.value).toBe('medium')
+    })
+
+    it('fires a new toast even while a toast is already showing', async () => {
+      const { toastId, encourageMe } = await load()
+      encourageMe()
+      const firstToastId = toastId.value
+
+      encourageMe()
+
+      expect(toastId.value).toBeGreaterThan(firstToastId)
+    })
+
+    it('replaces a currently-showing energy-level toast', async () => {
+      const mod = await import(modulePath)
+      const { toastMessage, selectLevel, encourageMe } = mod.useEnergyLevel()
+      selectLevel('high')
+
+      encourageMe()
+
+      expect(mod.ENCOURAGEMENT_MESSAGES).toContain(toastMessage.value)
+    })
+
+    it('selecting an energy level after encouragement replaces the encouragement toast', async () => {
+      const mod = await import(modulePath)
+      const { toastMessage, selectLevel, encourageMe } = mod.useEnergyLevel()
+      encourageMe()
+
+      selectLevel('low')
+
+      expect(mod.LOW_MESSAGES).toContain(toastMessage.value)
+    })
+  })
 })
