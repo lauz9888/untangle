@@ -89,9 +89,6 @@ h1 {
 @media (max-width: 640px) {
   .brand {
     position: static;
-    top: auto;
-    left: auto;
-    right: auto;
     flex-direction: column;
     align-items: stretch;
     padding: 1.5rem 1.5rem 1rem;
