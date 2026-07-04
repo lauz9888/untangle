@@ -26,6 +26,8 @@ All task state lives in `src/composables/useTasks.js` — a module-level singlet
 
 Components are thin: they call composable functions and render results. Business logic stays in composables.
 
+The header, energy panel, Encourage me button, and toast are mobile-responsive: a `@media (max-width: 640px)` block in each component's scoped `<style>` stacks the header vertically, gives interactive controls a ~44px minimum tap target, and keeps the toast within the viewport with its close button pinned to the right edge (`justify-content: space-between`, since the toast's explicit mobile `width` is usually wider than its content). Follow the same `<=640px` breakpoint and pattern for any new interactive UI.
+
 ## Test organisation
 
 Unit tests in `tests/unit/<feature>/` always come in pairs:

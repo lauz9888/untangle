@@ -81,4 +81,12 @@ const { selectedLevel, selectLevel } = useEnergyLevel()
   border-color: #1a1a1a;
   color: #fff;
 }
+
+@media (max-width: 640px) {
+  .energy-option {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.6rem 1rem;
+  }
+}
 </style>

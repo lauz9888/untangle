@@ -79,4 +79,20 @@ function handleClose() {
   padding: 0;
   flex-shrink: 0;
 }
+
+@media (max-width: 640px) {
+  .toast {
+    width: calc(100% - 2rem);
+    box-sizing: border-box;
+    justify-content: space-between;
+  }
+
+  .toast-close {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
 </style>

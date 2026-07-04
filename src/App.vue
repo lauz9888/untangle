@@ -85,4 +85,19 @@ h1 {
   align-items: center;
   gap: 0.5rem;
 }
+
+@media (max-width: 640px) {
+  .brand {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+  }
+}
 </style>
