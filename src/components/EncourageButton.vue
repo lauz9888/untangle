@@ -27,4 +27,11 @@ const { encourageMe } = useEnergyLevel()
 .encourage-button:hover {
   border-color: #a8a8a8;
 }
+
+@media (max-width: 640px) {
+  .encourage-button {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+  }
+}
 </style>
