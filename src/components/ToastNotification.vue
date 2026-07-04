@@ -84,6 +84,7 @@ function handleClose() {
   .toast {
     width: calc(100% - 2rem);
     box-sizing: border-box;
+    justify-content: space-between;
   }
 
   .toast-close {

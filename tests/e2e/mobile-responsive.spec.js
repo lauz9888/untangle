@@ -48,6 +48,9 @@ test.describe('mobile viewport (375x812)', () => {
     const closeBox = await page.getByRole('button', { name: 'Dismiss' }).boundingBox()
     expect(closeBox.height).toBeGreaterThanOrEqual(44)
     expect(closeBox.width).toBeGreaterThanOrEqual(44)
+
+    const justifyContent = await toast(page).evaluate((el) => getComputedStyle(el).justifyContent)
+    expect(justifyContent).toBe('space-between')
   })
 })
 
