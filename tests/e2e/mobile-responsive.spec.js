@@ -42,8 +42,8 @@ test.describe('mobile viewport (375x812)', () => {
     await expect(toast(page)).toBeVisible()
 
     const toastBox = await toast(page).boundingBox()
-    expect(toastBox.x).toBeGreaterThanOrEqual(0)
-    expect(toastBox.x + toastBox.width).toBeLessThanOrEqual(375)
+    expect(toastBox.x).toBeGreaterThan(8)
+    expect(375 - (toastBox.x + toastBox.width)).toBeGreaterThan(8)
 
     const closeBox = await page.getByRole('button', { name: 'Dismiss' }).boundingBox()
     expect(closeBox.height).toBeGreaterThanOrEqual(44)

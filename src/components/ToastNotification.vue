@@ -83,6 +83,7 @@ function handleClose() {
 @media (max-width: 640px) {
   .toast {
     width: calc(100% - 2rem);
+    box-sizing: border-box;
   }
 
   .toast-close {
