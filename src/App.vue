@@ -1,6 +1,7 @@
 <script setup>
 import EnergySelector from './components/EnergySelector.vue'
 import EncourageButton from './components/EncourageButton.vue'
+import ToughLoveButton from './components/ToughLoveButton.vue'
 import ToastNotification from './components/ToastNotification.vue'
 </script>
 
@@ -31,6 +32,7 @@ import ToastNotification from './components/ToastNotification.vue'
       <div class="header-actions">
         <EnergySelector />
         <EncourageButton />
+        <ToughLoveButton />
       </div>
     </header>
     <ToastNotification />

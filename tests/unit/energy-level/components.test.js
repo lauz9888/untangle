@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { ref } from 'vue'
 import EnergySelector from '../../../src/components/EnergySelector.vue'
 import EncourageButton from '../../../src/components/EncourageButton.vue'
+import ToughLoveButton from '../../../src/components/ToughLoveButton.vue'
 import ToastNotification from '../../../src/components/ToastNotification.vue'
 import App from '../../../src/App.vue'
 
@@ -13,6 +14,7 @@ const state = {
   selectLevel: vi.fn(),
   dismissToast: vi.fn(),
   encourageMe: vi.fn(),
+  toughLove: vi.fn(),
 }
 
 vi.mock('../../../src/composables/useEnergyLevel.js', () => ({
@@ -34,6 +36,7 @@ beforeEach(() => {
   state.selectLevel.mockReset()
   state.dismissToast.mockReset()
   state.encourageMe.mockReset()
+  state.toughLove.mockReset()
 })
 
 afterEach(() => {
@@ -92,6 +95,21 @@ describe('EncourageButton', () => {
     await wrapper.find('button').trigger('click')
 
     expect(state.encourageMe).toHaveBeenCalled()
+  })
+})
+
+describe('ToughLoveButton', () => {
+  it('renders a button labeled "Tough love"', () => {
+    const wrapper = mountTracked(ToughLoveButton)
+    expect(wrapper.find('button').text()).toBe('Tough love')
+  })
+
+  it('calls toughLove when clicked', async () => {
+    const wrapper = mountTracked(ToughLoveButton)
+
+    await wrapper.find('button').trigger('click')
+
+    expect(state.toughLove).toHaveBeenCalled()
   })
 })
 
@@ -175,22 +193,24 @@ describe('ToastNotification', () => {
 })
 
 describe('App', () => {
-  it('renders the energy selector, encourage button, and toast notification alongside the logo and tagline', () => {
+  it('renders the energy selector, encourage button, tough love button, and toast notification alongside the logo and tagline', () => {
     const wrapper = mountTracked(App)
 
     expect(wrapper.findComponent(EnergySelector).exists()).toBe(true)
     expect(wrapper.findComponent(EncourageButton).exists()).toBe(true)
+    expect(wrapper.findComponent(ToughLoveButton).exists()).toBe(true)
     expect(wrapper.findComponent(ToastNotification).exists()).toBe(true)
     expect(wrapper.find('h1').text()).toBe('Untangle')
     expect(wrapper.find('.tagline').text()).toBe('Space to think')
   })
 
-  it('places the encourage button immediately to the right of the energy selector', () => {
+  it('places the encourage button immediately to the right of the energy selector, and the tough love button after that', () => {
     const wrapper = mountTracked(App)
     const actions = wrapper.find('.header-actions')
     const childClasses = Array.from(actions.element.children).map((el) => el.className)
 
     expect(childClasses[0]).toContain('energy-panel')
     expect(childClasses[1]).toContain('encourage-button')
+    expect(childClasses[2]).toContain('tough-love-button')
   })
 })
