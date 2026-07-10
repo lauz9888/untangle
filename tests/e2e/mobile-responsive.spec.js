@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { energyButton, encourageButton, toast } from './helpers.js'
+import { energyButton, encourageButton, toughLoveButton, toast } from './helpers.js'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -23,7 +23,7 @@ test.describe('mobile viewport (375x812)', () => {
     expect(actionsBox.x + actionsBox.width).toBeLessThanOrEqual(375)
   })
 
-  test('gives energy-level buttons and the Encourage me button a 44px minimum tap target', async ({
+  test('gives energy-level buttons, the Encourage me button, and the Tough love button a 44px minimum tap target', async ({
     page,
   }) => {
     for (const label of ['Low', 'Medium', 'High']) {
@@ -33,6 +33,9 @@ test.describe('mobile viewport (375x812)', () => {
 
     const encourageBox = await encourageButton(page).boundingBox()
     expect(encourageBox.height).toBeGreaterThanOrEqual(44)
+
+    const toughLoveBox = await toughLoveButton(page).boundingBox()
+    expect(toughLoveBox.height).toBeGreaterThanOrEqual(44)
   })
 
   test('keeps the toast within the viewport and gives its close button a 44px tap target', async ({

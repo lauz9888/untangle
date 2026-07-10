@@ -9,3 +9,7 @@ export function toast(page) {
 export function encourageButton(page) {
   return page.getByRole('button', { name: 'Encourage me', exact: true })
 }
+
+export function toughLoveButton(page) {
+  return page.getByRole('button', { name: 'Tough love', exact: true })
+}

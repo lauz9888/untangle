@@ -122,6 +122,59 @@ export const ENCOURAGEMENT_MESSAGES = [
   "You've got what it takes to keep moving.",
 ]
 
+export const TOUGH_LOVE_MESSAGES = [
+  'Stop waiting to feel ready. Start anyway.',
+  'You already know what to do. Go do it.',
+  'Excuses are just decisions in disguise. Choose again.',
+  "The task isn't getting smaller by staring at it.",
+  'Perfect conditions are a myth. Move now.',
+  "You've stalled long enough. Pick it up.",
+  "Motivation isn't coming to save you. Discipline is.",
+  'Comfort got you here. It will not get you further.',
+  'Nobody is coming to do this for you.',
+  'Stop negotiating with yourself and just begin.',
+  'One more delay is one more excuse you will regret.',
+  'You are capable of more than this hesitation suggests.',
+  'Feelings are not instructions. Act despite them.',
+  'The version of you tomorrow needs you to move today.',
+  'Quit rehearsing the task and actually start it.',
+  'You do not need permission to get started.',
+  'Every minute spent stalling is a minute wasted.',
+  'Being tired is not the same as being unable.',
+  "This won't finish itself. Get moving.",
+  'You owe yourself better than another day of avoidance.',
+  'Stop scrolling. Start doing.',
+  'The hard part is starting, and you are still not starting.',
+  "You've had enough time to think. Now act.",
+  'Nobody is impressed by intentions. Show results.',
+  'Discomfort is not a stop sign. Push through it.',
+  'You are not stuck, you are stalling.',
+  'Stop waiting for a sign. This is it.',
+  'Cut the excuses and get to work.',
+  "You've survived every hard day before this one. Get on with it.",
+  'Small effort now beats big regret later.',
+  'Enough deliberating. Decide and move.',
+  'You are the only thing standing between you and this task.',
+  'Quit circling the task and land on it.',
+  'This is not the time to be gentle with your excuses.',
+  "You don't feel like it. Do it anyway.",
+  'Waiting for motivation is a losing strategy. Start without it.',
+  'You know the cost of not doing this. Act accordingly.',
+  'Stop planning to start and actually start.',
+  'The task is not going to get easier by delaying it.',
+  'You have what it takes. Use it now.',
+  'Nobody remembers your reasons, only your results.',
+  'You are better than this pattern of putting it off.',
+  'Get uncomfortable. That is where progress lives.',
+  'You keep saying later. Make it now.',
+  'This hesitation is costing you more than the task would.',
+  'Stand up and do the thing you are avoiding.',
+  'Your future self is watching what you choose right now.',
+  'Enough with the warm-up. Get to the real work.',
+  'You do not need more time, you need to start.',
+  'Move first, feel better second. That is the order.',
+]
+
 const MESSAGE_POOLS = {
   low: LOW_MESSAGES,
   medium: MEDIUM_MESSAGES,
@@ -152,6 +205,11 @@ function encourageMe() {
   toastId.value += 1
 }
 
+function toughLove() {
+  toastMessage.value = randomFrom(TOUGH_LOVE_MESSAGES)
+  toastId.value += 1
+}
+
 function dismissToast() {
   toastMessage.value = null
 }
@@ -163,6 +221,7 @@ export function useEnergyLevel() {
     toastId,
     selectLevel,
     encourageMe,
+    toughLove,
     dismissToast,
   }
 }
