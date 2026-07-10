@@ -152,16 +152,16 @@ To trigger a wiki review outside the deploy workflow (e.g. after a direct wiki e
 
 ## Key files
 
-| File                                 | Purpose                                                                            |
-| ------------------------------------ | ---------------------------------------------------------------------------------- |
-| `src/composables/useTasks.js`        | Task logic, energy filtering, localStorage persistence                             |
+| File                                 | Purpose                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `src/composables/useTasks.js`        | Task logic, energy filtering, localStorage persistence                                     |
 | `src/composables/useEnergyLevel.js`  | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools |
-| `scripts/workflow-state.mjs`         | 14-stage pipeline state machine (`start`/`get`/`set`/`approve`/`loopback`/`reset`) |
-| `scripts/bug-tracker.mjs`            | CLI for creating/closing GitHub bug issues, category list                          |
-| `scripts/check-docs.mjs`             | CI documentation-check job                                                         |
-| `scripts/pre-push-check.mjs`         | `pre-push` git hook logic (blocks direct `main` pushes, checks sign-off)           |
-| `scripts/post-commit-close-bugs.mjs` | `post-commit` git hook logic (auto-closes bugs via commit trailers)                |
-| `.claude/skills/`                    | The 14 pipeline skills plus `report-bug` and `wiki-update`                         |
-| `.github/workflows/ci.yml`           | The 9-job CI pipeline                                                              |
-| `.github/workflows/deploy-pages.yml` | Builds and publishes `main` to GitHub Pages after merge                            |
-| `reports/`                           | Post-deploy change reports, one markdown file per merged change                    |
+| `scripts/workflow-state.mjs`         | 14-stage pipeline state machine (`start`/`get`/`set`/`approve`/`loopback`/`reset`)         |
+| `scripts/bug-tracker.mjs`            | CLI for creating/closing GitHub bug issues, category list                                  |
+| `scripts/check-docs.mjs`             | CI documentation-check job                                                                 |
+| `scripts/pre-push-check.mjs`         | `pre-push` git hook logic (blocks direct `main` pushes, checks sign-off)                   |
+| `scripts/post-commit-close-bugs.mjs` | `post-commit` git hook logic (auto-closes bugs via commit trailers)                        |
+| `.claude/skills/`                    | The 14 pipeline skills plus `report-bug` and `wiki-update`                                 |
+| `.github/workflows/ci.yml`           | The 9-job CI pipeline                                                                      |
+| `.github/workflows/deploy-pages.yml` | Builds and publishes `main` to GitHub Pages after merge                                    |
+| `reports/`                           | Post-deploy change reports, one markdown file per merged change                            |
