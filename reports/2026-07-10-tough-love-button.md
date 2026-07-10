@@ -23,8 +23,8 @@ No new dependencies.
 
 ## Bugs raised and resolved
 
-| # | Category | Detected by | Summary | Resolution |
-| --- | --- | --- | --- | --- |
+| #                                                     | Category  | Detected by     | Summary                                                                                                                      | Resolution                                                                                               |
+| ----------------------------------------------------- | --------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | [#96](https://github.com/lauz9888/untangle/issues/96) | `ci-lint` | `deploy-branch` | The `CLAUDE.md` table row documenting the new key file wasn't Prettier-formatted, failing the Lint job's `format:check` step | Ran `prettier --write CLAUDE.md`, committed the fix, and re-pushed; all 9 CI jobs passed on the next run |
 
 ## Time taken
