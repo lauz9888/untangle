@@ -53,7 +53,7 @@ Bugs are filed as GitHub issues by whichever pipeline stage or CI job first find
 
 Every change — feature, fix, or refactor — runs through the `/ship-feature` pipeline (`.claude/skills/ship-feature/SKILL.md`) rather than being made ad hoc. It's a single orchestrator skill that drives 11 specialized subagents via the `Agent` tool; the orchestrator handles all git/gh/file work and all direct user interaction, subagents read/write files and hand back a `STATUS:` line.
 
-Invoke with the change request as the argument: `/ship-feature add a dark mode toggle to settings`.
+Invoke with the change request as the argument: `/ship-feature add a dark mode toggle to settings`. See the [wiki](https://github.com/lauz9888/untangle/wiki) for a narrative walkthrough of the full pipeline; the table below and `.claude/skills/ship-feature/SKILL.md`/`.claude/agents/*.md` are this file's own (more mechanical) reference.
 
 | Step  | What happens                                                                                                                                                                                           |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
