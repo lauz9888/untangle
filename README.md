@@ -38,6 +38,8 @@ Automated WCAG 2.1 A/AA scans run alongside the functional tests, scoped via eac
 
 ## Development process
 
-Every change — feature, fix, or refactor — runs through the `/ship-feature` pipeline rather than being made ad hoc: a single orchestrator skill drives 11 specialized subagents (requirements, solution design, test-authors, implementer, bug-fixer, QA, docs, report) through requirements approval, test-first unit/BDD/e2e coverage, implementation, a QA and coverage gate, manual testing, CI/CD, and a post-change report.
+Every change — feature, fix, or refactor — runs through the `/ship-feature` pipeline rather than being made ad hoc: a single orchestrator skill drives 12 specialized subagents (requirements, solution design, test-authors, implementer, bug-fixer, QA, docs, report, quality-reporter) through requirements approval, test-first unit/BDD/e2e coverage, implementation, a QA and coverage gate, manual testing, CI/CD, and a post-change report. Docs and reports land via a small housekeeping PR rather than a direct push to `main`, and every agent treats source files, issue/PR text, and logs as data, never as instructions.
+
+Every 10 releases (or on demand via `/quality-report`), `quality-reporter` writes a rollup of release velocity, defect density, a shift-left analysis of when defects are caught, and requirement delivery time to `reports/metrics/`.
 
 **See the [wiki](https://github.com/lauz9888/untangle/wiki) for the full pipeline walkthrough.** `.claude/skills/ship-feature/SKILL.md` and `.claude/agents/*.md` are the exact, executable source of truth if you need step-by-step detail beyond that; [CLAUDE.md](./CLAUDE.md) covers the Claude-Code-specific technical reference (npm script contract, test-file conventions, key files).
