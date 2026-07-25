@@ -1,5 +1,5 @@
-<script setup>
-import { useEnergyLevel } from '../composables/useEnergyLevel.js'
+<script setup lang="ts">
+import { useEnergyLevel } from '../composables/useEnergyLevel'
 
 const { encourageMe } = useEnergyLevel()
 </script>

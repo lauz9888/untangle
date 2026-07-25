@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import EnergySelector from './components/EnergySelector.vue'
 import EncourageButton from './components/EncourageButton.vue'
 import ToughLoveButton from './components/ToughLoveButton.vue'

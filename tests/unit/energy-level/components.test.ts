@@ -1,15 +1,30 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, type VueWrapper } from '@vue/test-utils'
 import { ref } from 'vue'
+import { axe } from 'jest-axe'
 import EnergySelector from '../../../src/components/EnergySelector.vue'
 import EncourageButton from '../../../src/components/EncourageButton.vue'
 import ToughLoveButton from '../../../src/components/ToughLoveButton.vue'
 import ToastNotification from '../../../src/components/ToastNotification.vue'
 import App from '../../../src/App.vue'
 
+// toHaveNoViolations matcher is registered globally in vitest.setup.ts.
+// Mirrors .claude/STANDARDS.md's WCAG conformance scope.
+const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
+
+// jsdom has no real rendering engine to evaluate color-contrast against;
+// that check is covered at the e2e layer (tests/e2e/a11y.spec.ts) instead.
+async function expectNoAxeViolations(root: Element) {
+  const results = await axe(root, {
+    runOnly: { type: 'tag', values: WCAG_TAGS },
+    rules: { 'color-contrast': { enabled: false } },
+  })
+  expect(results).toHaveNoViolations()
+}
+
 const state = {
-  selectedLevel: ref(null),
-  toastMessage: ref(null),
+  selectedLevel: ref<'low' | 'medium' | 'high' | null>(null),
+  toastMessage: ref<string | null>(null),
   toastId: ref(0),
   selectLevel: vi.fn(),
   dismissToast: vi.fn(),
@@ -17,14 +32,14 @@ const state = {
   toughLove: vi.fn(),
 }
 
-vi.mock('../../../src/composables/useEnergyLevel.js', () => ({
+vi.mock('../../../src/composables/useEnergyLevel', () => ({
   useEnergyLevel: () => state,
 }))
 
-let mountedWrappers = []
+let mountedWrappers: VueWrapper[] = []
 
-function mountTracked(component) {
-  const wrapper = mount(component)
+function mountTracked(component: Parameters<typeof mount>[0]) {
+  const wrapper = mount(component, { attachTo: document.body })
   mountedWrappers.push(wrapper)
   return wrapper
 }
@@ -55,13 +70,13 @@ describe('EnergySelector', () => {
     const wrapper = mountTracked(EnergySelector)
     const buttons = wrapper.findAll('button')
 
-    await buttons[0].trigger('click')
+    await buttons[0]!.trigger('click')
     expect(state.selectLevel).toHaveBeenCalledWith('low')
 
-    await buttons[1].trigger('click')
+    await buttons[1]!.trigger('click')
     expect(state.selectLevel).toHaveBeenCalledWith('medium')
 
-    await buttons[2].trigger('click')
+    await buttons[2]!.trigger('click')
     expect(state.selectLevel).toHaveBeenCalledWith('high')
   })
 
@@ -70,9 +85,9 @@ describe('EnergySelector', () => {
     const wrapper = mountTracked(EnergySelector)
     const buttons = wrapper.findAll('button')
 
-    expect(buttons[0].attributes('aria-pressed')).toBe('false')
-    expect(buttons[1].attributes('aria-pressed')).toBe('true')
-    expect(buttons[2].attributes('aria-pressed')).toBe('false')
+    expect(buttons[0]!.attributes('aria-pressed')).toBe('false')
+    expect(buttons[1]!.attributes('aria-pressed')).toBe('true')
+    expect(buttons[2]!.attributes('aria-pressed')).toBe('false')
   })
 
   it('leaves every option unpressed when no level is selected', () => {
@@ -80,6 +95,15 @@ describe('EnergySelector', () => {
     wrapper.findAll('button').forEach((button) => {
       expect(button.attributes('aria-pressed')).toBe('false')
     })
+  })
+
+  it('has no accessibility violations, unselected or with a level selected', async () => {
+    const unselected = mountTracked(EnergySelector)
+    await expectNoAxeViolations(unselected.element)
+
+    state.selectedLevel.value = 'medium'
+    const selected = mountTracked(EnergySelector)
+    await expectNoAxeViolations(selected.element)
   })
 })
 
@@ -96,6 +120,11 @@ describe('EncourageButton', () => {
 
     expect(state.encourageMe).toHaveBeenCalled()
   })
+
+  it('has no accessibility violations', async () => {
+    const wrapper = mountTracked(EncourageButton)
+    await expectNoAxeViolations(wrapper.element)
+  })
 })
 
 describe('ToughLoveButton', () => {
@@ -110,6 +139,11 @@ describe('ToughLoveButton', () => {
     await wrapper.find('button').trigger('click')
 
     expect(state.toughLove).toHaveBeenCalled()
+  })
+
+  it('has no accessibility violations', async () => {
+    const wrapper = mountTracked(ToughLoveButton)
+    await expectNoAxeViolations(wrapper.element)
   })
 })
 
@@ -136,6 +170,12 @@ describe('ToastNotification', () => {
     await wrapper.find('button').trigger('click')
 
     expect(state.dismissToast).toHaveBeenCalled()
+  })
+
+  it('has no accessibility violations when shown', async () => {
+    state.toastMessage.value = 'You are doing just fine.'
+    const wrapper = mountTracked(ToastNotification)
+    await expectNoAxeViolations(wrapper.element)
   })
 
   describe('auto-dismiss timer', () => {
@@ -212,5 +252,10 @@ describe('App', () => {
     expect(childClasses[0]).toContain('energy-panel')
     expect(childClasses[1]).toContain('encourage-button')
     expect(childClasses[2]).toContain('tough-love-button')
+  })
+
+  it('has no accessibility violations', async () => {
+    const wrapper = mountTracked(App)
+    await expectNoAxeViolations(wrapper.element)
   })
 })

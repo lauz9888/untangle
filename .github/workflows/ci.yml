@@ -1,11 +1,39 @@
 name: CI
 
+# Runs on every push/PR so the ship-feature workflow can watch it via `gh pr checks --watch`.
+
 on:
+  push:
+    branches-ignore: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 jobs:
+  build:
+    name: Install & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -17,23 +45,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm run format:check
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
 
   unit-tests:
     name: Unit tests
@@ -45,10 +56,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm test -- run
+      - run: npm run test:unit
 
-  coverage:
-    name: Coverage gate
+  bdd-tests:
+    name: BDD tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,10 +68,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run test:coverage
+      - run: npm run test:bdd
 
-  e2e:
-    name: E2E tests
+  format:
+    name: Format check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -69,24 +80,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test tests/e2e
+      - run: npm run format:check
 
-  a11y:
-    name: Accessibility tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test tests/e2e/a11y.spec.js
-
-  security:
-    name: Security audit
+  audit:
+    name: Dependency audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,8 +94,8 @@ jobs:
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
 
-  pwa:
-    name: PWA validation
+  e2e-tests:
+    name: E2E tests (local build/preview)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,21 +104,38 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - run: node scripts/check-pwa.mjs
+      - run: npm run test:e2e
+      # No BASE_URL set: playwright.config.ts's webServer block builds and
+      # previews the app locally (port 4173) instead of hitting a live
+      # deployment. `pretest:e2e` (package.json) installs the Chromium
+      # browser automatically before this runs.
 
-  docs:
-    name: Documentation check
+  coverage-merge:
+    name: Combined coverage (>=90%, see .claude/STANDARDS.md)
     runs-on: ubuntu-latest
+    env:
+      # Mirrors the threshold documented in .claude/STANDARDS.md — update
+      # both together if this ever changes.
+      COVERAGE_THRESHOLD: 90
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: node scripts/check-docs.mjs
-        env:
-          GITHUB_BASE_REF: ${{ github.base_ref }}
+      # scripts/merge-coverage.mjs invokes `npx playwright test` directly
+      # (not via `npm run test:e2e`), which bypasses the `pretest:e2e` npm
+      # lifecycle hook — the browser must be installed explicitly here.
+      - run: npx playwright install --with-deps chromium
+      - name: Run combined coverage and enforce threshold
+        run: |
+          npm run test:coverage:merge | tee coverage-output.txt
+          pct=$(grep -oE 'Combined coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+')
+          if [ -z "$pct" ]; then
+            echo "Could not parse combined coverage percentage from test:coverage:merge output"
+            exit 1
+          fi
+          echo "Combined coverage: ${pct}% (threshold: ${COVERAGE_THRESHOLD}%)"
+          awk -v pct="$pct" -v threshold="$COVERAGE_THRESHOLD" \
+            'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'

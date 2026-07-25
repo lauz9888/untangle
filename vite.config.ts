@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -26,21 +26,22 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // Sourcemaps are only needed when tests/e2e/coverage-fixture.ts converts
+    // V8 coverage to Istanbul format for scripts/merge-coverage.mjs's e2e leg.
+    sourcemap: process.env.COVERAGE === 'true',
+  },
   test: {
     environment: 'jsdom',
     globals: true,
-    include: ['tests/unit/**/*.test.js'],
+    include: ['tests/unit/**/*.test.ts'],
+    setupFiles: ['./vitest.setup.ts'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html'],
-      include: ['src/**/*.{js,vue}'],
-      exclude: ['src/main.js'],
-      thresholds: {
-        lines: 80,
-        statements: 80,
-        functions: 80,
-        branches: 70,
-      },
+      reporter: ['json', 'text-summary', 'html'],
+      reportsDirectory: 'coverage/unit',
+      include: ['src/**/*.{ts,vue}'],
+      exclude: ['src/main.ts'],
     },
   },
 })

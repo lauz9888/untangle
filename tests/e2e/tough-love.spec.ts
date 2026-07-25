@@ -1,16 +1,16 @@
-import { test, expect } from '@playwright/test'
-import { energyButton, encourageButton, toast } from './helpers.js'
+import { test, expect } from './coverage-fixture'
+import { energyButton, toughLoveButton, toast } from './helpers'
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('./')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
 })
 
-test('shows an encouraging toast when clicked with no energy level selected', async ({ page }) => {
+test('shows a tough-love toast when clicked with no energy level selected', async ({ page }) => {
   await expect(toast(page)).toHaveCount(0)
 
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
 
   await expect(toast(page)).toBeVisible()
   await expect(toast(page)).not.toBeEmpty()
@@ -23,7 +23,7 @@ test('does not change the currently selected energy level', async ({ page }) => 
   await energyButton(page, 'Medium').click()
   await expect(energyButton(page, 'Medium')).toHaveAttribute('aria-pressed', 'true')
 
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
 
   await expect(energyButton(page, 'Medium')).toHaveAttribute('aria-pressed', 'true')
   await expect(toast(page)).toBeVisible()
@@ -33,14 +33,14 @@ test('replaces a currently-showing energy-level toast', async ({ page }) => {
   await energyButton(page, 'High').click()
   await expect(toast(page)).toBeVisible()
 
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
 
   await expect(toast(page)).toBeVisible()
   await expect(toast(page)).not.toBeEmpty()
 })
 
-test('selecting an energy level afterwards replaces the encouragement toast', async ({ page }) => {
-  await encourageButton(page).click()
+test('selecting an energy level afterwards replaces the tough-love toast', async ({ page }) => {
+  await toughLoveButton(page).click()
   await expect(toast(page)).toBeVisible()
 
   await energyButton(page, 'Low').click()
@@ -50,7 +50,7 @@ test('selecting an energy level afterwards replaces the encouragement toast', as
 })
 
 test('the toast can be dismissed manually', async ({ page }) => {
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
   await expect(toast(page)).toBeVisible()
 
   await page.getByRole('button', { name: 'Dismiss' }).click()
@@ -59,17 +59,17 @@ test('the toast can be dismissed manually', async ({ page }) => {
 })
 
 test('the toast disappears on its own after a few seconds', async ({ page }) => {
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
   await expect(toast(page)).toBeVisible()
 
   await expect(toast(page)).toHaveCount(0, { timeout: 8000 })
 })
 
 test('clicking again while a toast is showing keeps the toast visible', async ({ page }) => {
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
   await expect(toast(page)).toBeVisible()
 
-  await encourageButton(page).click()
+  await toughLoveButton(page).click()
 
   await expect(toast(page)).toBeVisible()
   await expect(toast(page)).not.toBeEmpty()

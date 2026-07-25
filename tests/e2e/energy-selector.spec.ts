@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test'
-import { energyButton, toast } from './helpers.js'
+import { test, expect } from './coverage-fixture'
+import { energyButton, toast } from './helpers'
 
 test.beforeEach(async ({ page }) => {
-  await page.goto('/')
+  await page.goto('./')
   await page.evaluate(() => localStorage.clear())
   await page.reload()
 })
@@ -32,7 +32,7 @@ test('clicking the selected level again deselects it and shows no new toast', as
   await expect(energyButton(page, 'Medium')).toHaveAttribute('aria-pressed', 'false')
   const stillShowing = await toast(page).count()
   if (stillShowing) {
-    await expect(toast(page)).toContainText(firstMessage)
+    await expect(toast(page)).toContainText(firstMessage ?? '')
   }
 })
 

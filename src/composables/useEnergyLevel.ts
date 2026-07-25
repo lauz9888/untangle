@@ -1,4 +1,6 @@
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
+
+export type EnergyLevel = 'low' | 'medium' | 'high'
 
 export const LOW_MESSAGES = [
   "It's okay to take this slow today.",
@@ -175,21 +177,21 @@ export const TOUGH_LOVE_MESSAGES = [
   'Move first, feel better second. That is the order.',
 ]
 
-const MESSAGE_POOLS = {
+const MESSAGE_POOLS: Record<EnergyLevel, string[]> = {
   low: LOW_MESSAGES,
   medium: MEDIUM_MESSAGES,
   high: HIGH_MESSAGES,
 }
 
-const selectedLevel = ref(null)
-const toastMessage = ref(null)
+const selectedLevel: Ref<EnergyLevel | null> = ref(null)
+const toastMessage: Ref<string | null> = ref(null)
 const toastId = ref(0)
 
-function randomFrom(pool) {
-  return pool[Math.floor(Math.random() * pool.length)]
+function randomFrom(pool: string[]): string {
+  return pool[Math.floor(Math.random() * pool.length)]!
 }
 
-function selectLevel(level) {
+function selectLevel(level: EnergyLevel) {
   if (selectedLevel.value === level) {
     selectedLevel.value = null
     return

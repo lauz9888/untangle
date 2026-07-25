@@ -55,25 +55,25 @@ Every change — feature, fix, or refactor — runs through the `/ship-feature` 
 
 Invoke with the change request as the argument: `/ship-feature add a dark mode toggle to settings`.
 
-| Step  | What happens                                                                                                                    |
-| ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Intake — the request itself                                                                                                       |
-| 2     | **Requirements** (human gate) — `requirements-analyst` drafts `requirements.md`; loops on your questions/feedback until you approve; opens the tracking issue |
+| Step  | What happens                                                                                                                                                                                           |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1     | Intake — the request itself                                                                                                                                                                            |
+| 2     | **Requirements** (human gate) — `requirements-analyst` drafts `requirements.md`; loops on your questions/feedback until you approve; opens the tracking issue                                          |
 | 3     | **Solution design + review loop** — `solution-designer` drafts `design.md`, `solution-reviewer` checks it against requirements/codebase/testability/accessibility/ADR triggers, looping until approved |
-| 4     | **Branch** — `feature/<slug>` off `main`                                                                                          |
-| 5–7   | **Unit / BDD / e2e tests (red)** — each test-author agent writes tests first and confirms they fail for the right reason         |
-| 8     | **Implementation** — `implementer` makes the scoped tests green                                                                  |
-| 9–11  | **Full unit / BDD / e2e suites + bug-fix loop** — any failure is filed as an issue, `bug-fixer` resolves it, loop until green    |
-| 12    | **QA review + coverage gate** — `qa-reviewer` checks quality/security/accessibility and combined coverage (`.claude/STANDARDS.md` threshold), routing gaps back to the right stage |
-| 13    | **Base-path smoke check** — full e2e suite re-run against a local build using the production `GITHUB_PAGES=true` base path, to catch CD-only path bugs before merge |
-| 14    | **Manual test gate** (human gate) — local URL, your sign-off; any bug you report loops back to implementation                    |
-| 15    | **Merge to main** — PR opened, pushed, triggering CI                                                                              |
-| 16–17 | **CI / CD** — watched via `gh pr checks --watch`                                                                                  |
-| 18    | **CI bug-fix loop** — any failing job filed + fixed, capped at 5 cycles; merges once green (`gh pr merge --squash --delete-branch`) |
-| 19    | **CD failure logging** — logged, not auto-fixed (per pipeline spec)                                                               |
-| 20    | **Documentation update** — `docs-updater` reconciles `CLAUDE.md`/`README.md`/wiki, committed straight to `main`                  |
-| 21    | **Post-change report** — `report-generator` writes `reports/<YYYY-MM-DD>-<slug>.md`                                              |
-| 22    | **Cleanup** — branch deletion confirmed/completed                                                                                 |
+| 4     | **Branch** — `feature/<slug>` off `main`                                                                                                                                                               |
+| 5–7   | **Unit / BDD / e2e tests (red)** — each test-author agent writes tests first and confirms they fail for the right reason                                                                               |
+| 8     | **Implementation** — `implementer` makes the scoped tests green                                                                                                                                        |
+| 9–11  | **Full unit / BDD / e2e suites + bug-fix loop** — any failure is filed as an issue, `bug-fixer` resolves it, loop until green                                                                          |
+| 12    | **QA review + coverage gate** — `qa-reviewer` checks quality/security/accessibility and combined coverage (`.claude/STANDARDS.md` threshold), routing gaps back to the right stage                     |
+| 13    | **Base-path smoke check** — full e2e suite re-run against a local build using the production `GITHUB_PAGES=true` base path, to catch CD-only path bugs before merge                                    |
+| 14    | **Manual test gate** (human gate) — local URL, your sign-off; any bug you report loops back to implementation                                                                                          |
+| 15    | **Merge to main** — PR opened, pushed, triggering CI                                                                                                                                                   |
+| 16–17 | **CI / CD** — watched via `gh pr checks --watch`                                                                                                                                                       |
+| 18    | **CI bug-fix loop** — any failing job filed + fixed, capped at 5 cycles; merges once green (`gh pr merge --squash --delete-branch`)                                                                    |
+| 19    | **CD failure logging** — logged, not auto-fixed (per pipeline spec)                                                                                                                                    |
+| 20    | **Documentation update** — `docs-updater` reconciles `CLAUDE.md`/`README.md`/wiki, committed straight to `main`                                                                                        |
+| 21    | **Post-change report** — `report-generator` writes `reports/<YYYY-MM-DD>-<slug>.md`                                                                                                                    |
+| 22    | **Cleanup** — branch deletion confirmed/completed                                                                                                                                                      |
 
 **Retry caps.** Every loop (design review, per-layer red/green, QA, manual-test, CI) is capped at 5 iterations; past that, the orchestrator asks you how to proceed rather than looping forever.
 
@@ -85,17 +85,17 @@ Each subagent can also be inspected or driven directly via the `Agent`/`SendMess
 
 All changes land via a PR from a feature branch — `main` is protected on GitHub (branch protection, not a local hook). CI (`.github/workflows/ci.yml`) runs 9 required jobs on every PR:
 
-| Job               | Tool                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------- |
-| Install & build    | `vite build`                                                                       |
-| Type check         | `vue-tsc --noEmit`                                                                 |
-| Lint               | ESLint (flat config)                                                               |
-| Unit tests         | `vitest run`                                                                        |
-| BDD tests          | `cucumber-js`                                                                       |
-| Format check       | Prettier                                                                            |
-| Dependency audit   | `npm audit --omit=dev --audit-level=high` (production deps only)                   |
-| E2E tests          | `playwright test` (local build/preview)                                            |
-| Combined coverage  | `scripts/merge-coverage.mjs`, gated at the threshold in `.claude/STANDARDS.md`     |
+| Job               | Tool                                                                           |
+| ----------------- | ------------------------------------------------------------------------------ |
+| Install & build   | `vite build`                                                                   |
+| Type check        | `vue-tsc --noEmit`                                                             |
+| Lint              | ESLint (flat config)                                                           |
+| Unit tests        | `vitest run`                                                                   |
+| BDD tests         | `cucumber-js`                                                                  |
+| Format check      | Prettier                                                                       |
+| Dependency audit  | `npm audit --omit=dev --audit-level=high` (production deps only)               |
+| E2E tests         | `playwright test` (local build/preview)                                        |
+| Combined coverage | `scripts/merge-coverage.mjs`, gated at the threshold in `.claude/STANDARDS.md` |
 
 Any job failing blocks the merge and is logged as the matching `ci` bug (see "Bug tracking" above), closed once the job passes.
 
@@ -109,15 +109,15 @@ The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is a separate git r
 
 ## Key files
 
-| File                                    | Purpose                                                                                                                |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `src/composables/useTasks.js`            | Task logic, energy filtering, localStorage persistence                                                                |
-| `src/composables/useEnergyLevel.ts`      | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools                           |
-| `.claude/skills/ship-feature/SKILL.md`   | The 22-step pipeline orchestrator                                                                                     |
-| `.claude/agents/`                        | The 11 subagents the orchestrator drives (requirements, design, test-authors, implementer, bug-fixer, QA, docs, report) |
-| `.claude/STANDARDS.md`                   | Shared cross-cutting values: WCAG scope, coverage threshold, Node version, security checklist                         |
-| `scripts/merge-coverage.mjs`             | Combines unit + BDD + e2e coverage into one percentage                                                                |
-| `docs/adr/`                              | Architecture Decision Records, added by `solution-designer` when a design introduces one                              |
-| `.github/workflows/ci.yml`               | The 9-job CI pipeline                                                                                                  |
-| `.github/workflows/cd.yml`               | Builds and publishes `main` to GitHub Pages after merge, then smoke/PWA/live-e2e checks                               |
-| `reports/`                               | Post-change reports, one dated markdown file per merged change                                                        |
+| File                                   | Purpose                                                                                                                 |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `src/composables/useTasks.js`          | Task logic, energy filtering, localStorage persistence                                                                  |
+| `src/composables/useEnergyLevel.ts`    | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools                              |
+| `.claude/skills/ship-feature/SKILL.md` | The 22-step pipeline orchestrator                                                                                       |
+| `.claude/agents/`                      | The 11 subagents the orchestrator drives (requirements, design, test-authors, implementer, bug-fixer, QA, docs, report) |
+| `.claude/STANDARDS.md`                 | Shared cross-cutting values: WCAG scope, coverage threshold, Node version, security checklist                           |
+| `scripts/merge-coverage.mjs`           | Combines unit + BDD + e2e coverage into one percentage                                                                  |
+| `docs/adr/`                            | Architecture Decision Records, added by `solution-designer` when a design introduces one                                |
+| `.github/workflows/ci.yml`             | The 9-job CI pipeline                                                                                                   |
+| `.github/workflows/cd.yml`             | Builds and publishes `main` to GitHub Pages after merge, then smoke/PWA/live-e2e checks                                 |
+| `reports/`                             | Post-change reports, one dated markdown file per merged change                                                          |

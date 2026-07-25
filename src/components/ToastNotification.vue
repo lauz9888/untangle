@@ -1,12 +1,12 @@
-<script setup>
+<script setup lang="ts">
 import { watch, onUnmounted } from 'vue'
-import { useEnergyLevel } from '../composables/useEnergyLevel.js'
+import { useEnergyLevel } from '../composables/useEnergyLevel'
 
 const AUTO_DISMISS_MS = 4500
 
 const { toastMessage, toastId, dismissToast } = useEnergyLevel()
 
-let timeoutId = null
+let timeoutId: ReturnType<typeof setTimeout> | null = null
 
 function clearPendingDismiss() {
   if (timeoutId !== null) {

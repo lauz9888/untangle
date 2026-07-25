@@ -1,11 +1,21 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
+import tseslint from 'typescript-eslint'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
-export default [
+export default tseslint.config(
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
   eslintConfigPrettier,
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+    },
+  },
   {
     languageOptions: {
       ecmaVersion: 2022,
@@ -20,7 +30,7 @@ export default [
     },
   },
   {
-    files: ['tests/**/*.js'],
+    files: ['tests/**/*.{js,ts}', 'features/**/*.ts'],
     languageOptions: {
       globals: {
         describe: 'readonly',
@@ -34,12 +44,15 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*.mjs', '*.config.js'],
+    files: ['scripts/**/*.mjs', '*.config.{js,ts}', 'cucumber.cjs'],
     languageOptions: {
       globals: {
         process: 'readonly',
         console: 'readonly',
         __dirname: 'readonly',
+        module: 'writable',
+        require: 'readonly',
+        exports: 'writable',
       },
     },
   },
@@ -51,6 +64,8 @@ export default [
       'playwright-report/',
       'test-results/',
       'dev-dist/',
+      '.workflow/',
+      '.nyc_output/',
     ],
-  },
-]
+  }
+)

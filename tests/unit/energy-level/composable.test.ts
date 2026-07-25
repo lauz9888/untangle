@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-const modulePath = '../../../src/composables/useEnergyLevel.js'
+const modulePath = '../../../src/composables/useEnergyLevel'
 
 async function load() {
   const mod = await import(modulePath)
@@ -26,10 +26,10 @@ describe('useEnergyLevel', () => {
     'exposes exactly 20 unique messages for the %s level',
     async (level) => {
       const mod = await import(modulePath)
-      const pool = mod[`${level.toUpperCase()}_MESSAGES`]
+      const pool: string[] = mod[`${level.toUpperCase()}_MESSAGES`]
       expect(pool).toHaveLength(20)
       expect(new Set(pool).size).toBe(20)
-      pool.forEach((message) => {
+      pool.forEach((message: string) => {
         expect(typeof message).toBe('string')
         expect(message.length).toBeGreaterThan(0)
       })
@@ -122,7 +122,7 @@ describe('useEnergyLevel', () => {
       const mod = await import(modulePath)
       expect(mod.ENCOURAGEMENT_MESSAGES).toHaveLength(50)
       expect(new Set(mod.ENCOURAGEMENT_MESSAGES).size).toBe(50)
-      mod.ENCOURAGEMENT_MESSAGES.forEach((message) => {
+      mod.ENCOURAGEMENT_MESSAGES.forEach((message: string) => {
         expect(typeof message).toBe('string')
         expect(message.length).toBeGreaterThan(0)
       })
@@ -200,7 +200,7 @@ describe('useEnergyLevel', () => {
       const mod = await import(modulePath)
       expect(mod.TOUGH_LOVE_MESSAGES).toHaveLength(50)
       expect(new Set(mod.TOUGH_LOVE_MESSAGES).size).toBe(50)
-      mod.TOUGH_LOVE_MESSAGES.forEach((message) => {
+      mod.TOUGH_LOVE_MESSAGES.forEach((message: string) => {
         expect(typeof message).toBe('string')
         expect(message.length).toBeGreaterThan(0)
       })

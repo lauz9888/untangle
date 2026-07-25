@@ -16,7 +16,7 @@ layer) must be scoped to exactly these tags:
 As an array literal (the shape both tools' APIs expect):
 
 ```js
-['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+;['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 ```
 
 ## Combined coverage threshold
