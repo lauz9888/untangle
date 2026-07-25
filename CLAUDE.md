@@ -11,157 +11,113 @@ Opens at `http://localhost:5173`. Vite's HMR reloads the browser on every save. 
 ## Tests
 
 ```
-npm test                # unit tests (Vitest, watch mode)
-npm run test:coverage   # unit tests with v8 coverage report + threshold gate
-npm run test:e2e        # end-to-end tests (Playwright, requires dev/build+preview server)
+npm run test:unit           # unit tests (Vitest)
+npm run test:bdd            # BDD tests (Cucumber.js)
+npm run test:e2e            # end-to-end tests (Playwright, requires dev/build+preview server)
+npm run test:coverage:merge # combined coverage % across all three layers (threshold in .claude/STANDARDS.md)
 ```
 
-`playwright.config.js` builds and serves the app itself (`npm run build && npm run preview`) before running e2e tests, so you don't need a separate server running.
+`playwright.config.ts` builds and serves the app itself (`npm run build && npm run preview`) before running e2e tests, so you don't need a separate server running.
 
 ## Architecture in brief
 
 All task state lives in `src/composables/useTasks.js` — a module-level singleton (Vue reactive refs outside the function). Every component that calls `useTasks()` shares the same state. Follow the same singleton pattern for any other cross-component state.
 
-`src/composables/useEnergyLevel.js` follows the same singleton pattern for the header's energy-level selector (`src/components/EnergySelector.vue`, grouped in its own labeled panel), the standalone "Encourage me" and "Tough love" buttons (`src/components/EncourageButton.vue`, `src/components/ToughLoveButton.vue`), and their shared toast notification (`src/components/ToastNotification.vue`): selecting a Low/Medium/High level picks a random encouraging message from a 20-message-per-level pool, the "Encourage me" button picks one from a separate 50-message general pool, and the "Tough love" button picks one from its own separate 50-message pool of firmer, more pressing (but not harsh or shaming) messages — either way showing it as a toast that auto-dismisses after a few seconds or can be closed manually. Selection is in-memory only and always resets to "none" on reload.
+`src/composables/useEnergyLevel.ts` follows the same singleton pattern for the header's energy-level selector (`src/components/EnergySelector.vue`, grouped in its own labeled panel), the standalone "Encourage me" and "Tough love" buttons (`src/components/EncourageButton.vue`, `src/components/ToughLoveButton.vue`), and their shared toast notification (`src/components/ToastNotification.vue`): selecting a Low/Medium/High level picks a random encouraging message from a 20-message-per-level pool, the "Encourage me" button picks one from a separate 50-message general pool, and the "Tough love" button picks one from its own separate 50-message pool of firmer, more pressing (but not harsh or shaming) messages — either way showing it as a toast that auto-dismisses after a few seconds or can be closed manually. Selection is in-memory only and always resets to "none" on reload.
 
 Components are thin: they call composable functions and render results. Business logic stays in composables.
 
 The header, energy panel, Encourage me button, Tough love button, and toast are mobile-responsive: a `@media (max-width: 640px)` block in each component's scoped `<style>` stacks the header vertically, gives interactive controls a ~44px minimum tap target, and keeps the toast within the viewport with its close button pinned to the right edge (`justify-content: space-between`, since the toast's explicit mobile `width` is usually wider than its content). Follow the same `<=640px` breakpoint and pattern for any new interactive UI.
 
+The codebase is TypeScript (`<script setup lang="ts">` in `.vue` files, `.ts` for composables/scripts). Type-check with `npm run typecheck` (`vue-tsc`, not plain `tsc` — bare `tsc` doesn't understand `.vue` SFCs).
+
 ## Test organisation
 
-Unit tests in `tests/unit/<feature>/` always come in pairs:
+Three layers, each covering behavior at a different grain:
 
-- `composable.test.js` — resets the module between tests (`vi.resetModules()`) for fresh state
-- `components.test.js` — mocks the composable entirely (`vi.mock(...)`) to isolate rendering
+- **Unit** (`tests/unit/<feature>/`) always comes in pairs:
+  - `composable.test.ts` — resets the module between tests (`vi.resetModules()`) for fresh state
+  - `components.test.ts` — mocks the composable entirely (`vi.mock(...)`) to isolate rendering, mounted with `@vue/test-utils`
+  - Don't mix the two styles in the same file — they're incompatible.
+  - `jest-axe` (registered in `vitest.setup.ts`) scans each meaningfully distinct DOM state of any new/changed component, scoped to the WCAG tags in `.claude/STANDARDS.md`, with `color-contrast` disabled (jsdom can't evaluate it).
+- **BDD** (`features/**/*.feature`, step definitions in `features/step_definitions/`, shared setup in `features/support/`) describes user-observable behavior in Gherkin at a coarser grain than unit tests — typically driving a composable or mounted component through a scenario without a full browser.
+- **E2e** (`tests/e2e/`) clears `localStorage` and reloads before every test so they're fully independent. Shared helpers live in `tests/e2e/helpers.js`. `@axe-core/playwright` (`tests/e2e/a11y.spec.ts`) covers color-contrast and other checks that need a real browser, scoped to the same WCAG tags.
 
-Don't mix the two styles in the same file — they're incompatible.
-
-E2E tests in `tests/e2e/` clear `localStorage` and reload before every test so they're fully independent. Shared helpers live in `tests/e2e/helpers.js`.
+`scripts/merge-coverage.mjs` (`npm run test:coverage:merge`) combines all three layers' coverage into one statement-coverage percentage — this is the number gated in CI and by `qa-reviewer` (threshold in `.claude/STANDARDS.md`, currently 90%).
 
 ## Bug tracking
 
-Bugs are tracked as GitHub issues whenever they are identified, wherever in the pipeline they're found. Every issue records which stage detected it — in the issue body (`**Detected by:**`) and as a GitHub label — so issues can be filtered by detection source.
-
-Run `node scripts/bug-tracker.mjs create <category> "<title>" "<body>"` to log one; pipeline skills do this automatically. `node scripts/bug-tracker.mjs close <number> "<resolution>"` closes it, or include `Fixes #N` / `Closes #N` / `Resolves #N` in a commit message — the `post-commit` hook closes it automatically.
-
-| Category                                                                                                       | Where it's raised                                                                                                |
-| -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `requirement`                                                                                                  | User disagrees with a proposed requirement (`requirement-analysis`)                                              |
-| `design`                                                                                                       | Solution review finds a gap (`solution-review`)                                                                  |
-| `unit-test`                                                                                                    | Unit test review finds a coverage gap, or a red-phase test unexpectedly passes (`unit-test-review`)              |
-| `implementation`                                                                                               | Nontrivial issue found while implementing (`solution-implementation`)                                            |
-| `refactor`                                                                                                     | Refactor breaks a passing test (`solution-refactor`)                                                             |
-| `e2e-test`                                                                                                     | E2E test review finds a coverage gap (`e2e-test-review`)                                                         |
-| `e2e`                                                                                                          | The real e2e suite fails (`e2e-test-execution`)                                                                  |
-| `manual`                                                                                                       | User finds a bug during manual testing (`manual-testing`), or any bug found outside the pipeline (`/report-bug`) |
-| `ci-lint`, `ci-build`, `ci-unit-tests`, `ci-coverage`, `ci-e2e`, `ci-a11y`, `ci-security`, `ci-pwa`, `ci-docs` | The matching CI job fails on the PR (`deploy-branch`)                                                            |
-
-The core script is `scripts/bug-tracker.mjs` — it handles deduplication (won't create a second issue if one with the same title is already open).
+Bugs are filed as GitHub issues by whichever pipeline stage or CI job first finds them. `.claude/skills/ship-feature/SKILL.md`'s "Bug tracking" convention is the source of truth: `gh issue create --label <label> --title "<slug>: <short summary>" --body "<detail>\n\nRelated to #<tracking-issue>"`, closed with `gh issue close <n> --comment "<what fixed it>"` once the matching check is green again. Labels in use: `requirement`, `design`, `unit-test`, `bdd-test`, `e2e-test`, `qa`, `manual-test`, `deploy-path`, `ci`, `accessibility`, `security`.
 
 ## Developer workflow
 
-Every code change follows a 14-stage, test-driven pipeline. Skills live in `.claude/skills/` and are available to all developers who clone the repo. State is tracked in `.claude/workflow/state.json` via `scripts/workflow-state.mjs`.
+Every change — feature, fix, or refactor — runs through the `/ship-feature` pipeline (`.claude/skills/ship-feature/SKILL.md`) rather than being made ad hoc. It's a single orchestrator skill that drives 11 specialized subagents via the `Agent` tool; the orchestrator handles all git/gh/file work and all direct user interaction, subagents read/write files and hand back a `STATUS:` line.
 
-### With Claude (automated)
+Invoke with the change request as the argument: `/ship-feature add a dark mode toggle to settings`.
 
-A change request kicks the pipeline off automatically at step 1 and each step chains to the next via the Skill tool:
+| Step  | What happens                                                                                                                    |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Intake — the request itself                                                                                                       |
+| 2     | **Requirements** (human gate) — `requirements-analyst` drafts `requirements.md`; loops on your questions/feedback until you approve; opens the tracking issue |
+| 3     | **Solution design + review loop** — `solution-designer` drafts `design.md`, `solution-reviewer` checks it against requirements/codebase/testability/accessibility/ADR triggers, looping until approved |
+| 4     | **Branch** — `feature/<slug>` off `main`                                                                                          |
+| 5–7   | **Unit / BDD / e2e tests (red)** — each test-author agent writes tests first and confirms they fail for the right reason         |
+| 8     | **Implementation** — `implementer` makes the scoped tests green                                                                  |
+| 9–11  | **Full unit / BDD / e2e suites + bug-fix loop** — any failure is filed as an issue, `bug-fixer` resolves it, loop until green    |
+| 12    | **QA review + coverage gate** — `qa-reviewer` checks quality/security/accessibility and combined coverage (`.claude/STANDARDS.md` threshold), routing gaps back to the right stage |
+| 13    | **Base-path smoke check** — full e2e suite re-run against a local build using the production `GITHUB_PAGES=true` base path, to catch CD-only path bugs before merge |
+| 14    | **Manual test gate** (human gate) — local URL, your sign-off; any bug you report loops back to implementation                    |
+| 15    | **Merge to main** — PR opened, pushed, triggering CI                                                                              |
+| 16–17 | **CI / CD** — watched via `gh pr checks --watch`                                                                                  |
+| 18    | **CI bug-fix loop** — any failing job filed + fixed, capped at 5 cycles; merges once green (`gh pr merge --squash --delete-branch`) |
+| 19    | **CD failure logging** — logged, not auto-fixed (per pipeline spec)                                                               |
+| 20    | **Documentation update** — `docs-updater` reconciles `CLAUDE.md`/`README.md`/wiki, committed straight to `main`                  |
+| 21    | **Post-change report** — `report-generator` writes `reports/<YYYY-MM-DD>-<slug>.md`                                              |
+| 22    | **Cleanup** — branch deletion confirmed/completed                                                                                 |
 
-| #   | Skill                      | What it does                                                                                                                         |
-| --- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | `/requirement-analysis`    | Turns the request into a clear requirement; loops with the user until they explicitly approve it                                     |
-| 2   | `/solution-design`         | Designs the implementation approach                                                                                                  |
-| 3   | `/solution-review`         | Reviews the design against requirements, codebase fit, best practice, testability, OSS-only deps; loops back to 2 until satisfied    |
-| 4   | `/unit-test-analysis`      | Writes/updates unit tests for the requirement + design (TDD red phase — no implementation yet)                                       |
-| 5   | `/unit-test-review`        | Checks test coverage, signs off, then runs the tests expecting them to fail                                                          |
-| 6   | `/solution-implementation` | Branches off `main`, implements the design, iterates until unit tests pass                                                           |
-| 7   | `/solution-refactor`       | Cleans up for coding standards, reruns tests; loops back to 6 if refactoring breaks anything                                         |
-| 8   | `/e2e-test-analysis`       | Writes/updates Playwright specs for the change                                                                                       |
-| 9   | `/e2e-test-review`         | Checks e2e coverage, signs off, then runs the specs expecting them to fail                                                           |
-| 10  | `/e2e-test-execution`      | Runs the full e2e suite for real; loops back to 6 on failure                                                                         |
-| 11  | `/manual-testing`          | Gives the user a local URL to test; loops back to 6 on a reported bug, otherwise continues once confirmed complete (or not required) |
-| 12  | `/deploy-branch`           | Pushes the branch, opens a PR, waits for all 9 CI jobs; loops back to 6 on any failing job                                           |
-| 13  | `/deploy-main`             | Merges the PR, runs `/wiki-update`, deletes the branch/worktree                                                                      |
-| 14  | `/post-deploy-report`      | Writes `reports/<change>.md`: requirements, solution, all bugs raised/resolved, time taken                                           |
+**Retry caps.** Every loop (design review, per-layer red/green, QA, manual-test, CI) is capped at 5 iterations; past that, the orchestrator asks you how to proceed rather than looping forever.
 
-**Loop-backs** all land back in `solution-implementation`, which checks `fields.resume_after_fix` in the workflow state to know which stage to resume once the fix is in, rather than restarting the whole downstream chain.
+**State & resuming.** Everything for one run lives in gitignored `.workflow/<slug>/` (`requirements.md`, `design.md`, `state.md`, `meta.json`) — plain markdown/JSON, not a script-managed state machine. Invoking `/ship-feature` with no clear new request looks for an incomplete run under `.workflow/*/state.md` and resumes it from its recorded step.
 
-Each skill can also be run manually at any time by typing `/skill-name`.
-
-**Resuming an interrupted workflow**: `node scripts/workflow-state.mjs get` shows the current stage; the next session picks up from there.
-
-**Resetting the workflow**: `node scripts/workflow-state.mjs reset`.
-
-### Without Claude (manual)
-
-Run each step yourself:
-
-```
-node scripts/workflow-state.mjs start
-node scripts/workflow-state.mjs set requirement_text "..."
-node scripts/workflow-state.mjs approve requirement
-node scripts/workflow-state.mjs set solution_text "..."
-node scripts/workflow-state.mjs approve solution_design
-node scripts/workflow-state.mjs approve solution_review
-node scripts/workflow-state.mjs approve unit_test_write
-node scripts/workflow-state.mjs approve unit_test_review
-node scripts/workflow-state.mjs approve implementation
-node scripts/workflow-state.mjs approve refactor
-node scripts/workflow-state.mjs approve e2e_test_write
-node scripts/workflow-state.mjs approve e2e_test_review
-node scripts/workflow-state.mjs approve e2e_execution
-node scripts/workflow-state.mjs approve manual_testing
-node scripts/workflow-state.mjs approve deploy_branch
-node scripts/workflow-state.mjs approve deploy_main
-node scripts/workflow-state.mjs reset
-```
-
-To loop back a stage: `node scripts/workflow-state.mjs loopback <stage> "<reason>"`.
+Each subagent can also be inspected or driven directly via the `Agent`/`SendMessage` tools if you need to intervene mid-run — see `.claude/agents/*.md` for each one's exact contract.
 
 ## Pull requests and CI
 
-All changes land via a PR from a feature branch — `main` is protected and direct pushes are blocked by the `pre-push` hook (see `scripts/pre-push-check.mjs`). The same hook checks that unit tests, e2e tests, and manual testing are all signed off in the workflow state before a feature branch can be pushed.
+All changes land via a PR from a feature branch — `main` is protected on GitHub (branch protection, not a local hook). CI (`.github/workflows/ci.yml`) runs 9 required jobs on every PR:
 
-CI (`.github/workflows/ci.yml`) runs 9 required jobs on every PR:
+| Job               | Tool                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| Install & build    | `vite build`                                                                       |
+| Type check         | `vue-tsc --noEmit`                                                                 |
+| Lint               | ESLint (flat config)                                                               |
+| Unit tests         | `vitest run`                                                                        |
+| BDD tests          | `cucumber-js`                                                                       |
+| Format check       | Prettier                                                                            |
+| Dependency audit   | `npm audit --omit=dev --audit-level=high` (production deps only)                   |
+| E2E tests          | `playwright test` (local build/preview)                                            |
+| Combined coverage  | `scripts/merge-coverage.mjs`, gated at the threshold in `.claude/STANDARDS.md`     |
 
-| Job                 | Tool                                                                                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Lint                | ESLint (flat config) + Prettier                                                                                                                         |
-| Build               | `vite build`                                                                                                                                            |
-| Unit tests          | `vitest run`                                                                                                                                            |
-| Coverage gate       | `vitest run --coverage` (80% lines/statements/functions, 70% branches)                                                                                  |
-| E2E tests           | `playwright test`                                                                                                                                       |
-| Accessibility tests | `@axe-core/playwright`                                                                                                                                  |
-| Security audit      | `npm audit --omit=dev --audit-level=high` (production deps only — dev tooling isn't shipped)                                                            |
-| PWA validation      | `scripts/check-pwa.mjs` — checks the built manifest, service worker, and `index.html` wiring (Lighthouse's `pwa` category was removed upstream in v10+) |
-| Documentation check | `scripts/check-docs.mjs` — fails if `src/` changed without `CLAUDE.md`/`README.md` also changing                                                        |
-
-The documentation-check job is a nudge, not a wiki editor — it can't run Claude inside GitHub Actions. The wiki itself is synced by `/wiki-update`, run locally as part of `/deploy-main`.
-
-Any job failing blocks the merge and is logged as the matching `ci-*` bug (see the table above), closed once the job passes.
+Any job failing blocks the merge and is logged as the matching `ci` bug (see "Bug tracking" above), closed once the job passes.
 
 ## Deployment
 
-Merges to `main` are built and published to GitHub Pages by `.github/workflows/deploy-pages.yml`, live at [lauz9888.github.io/untangle](https://lauz9888.github.io/untangle/). The build sets `GITHUB_PAGES=true` so `vite.config.js` serves assets under the `/untangle/` base path a GitHub Pages project site needs (local dev/build/preview are unaffected — they default to `/`). This is a separate workflow from `ci.yml`; it doesn't gate PRs, it only runs after a merge lands on `main`.
+Merges to `main` are built and published to GitHub Pages by `.github/workflows/cd.yml`, live at [lauz9888.github.io/untangle](https://lauz9888.github.io/untangle/). The build sets `GITHUB_PAGES=true` so `vite.config.ts` serves assets under the `/untangle/` base path a GitHub Pages project site needs (local dev/build/preview are unaffected — they default to `/`). After deploy, `cd.yml` runs a post-deploy smoke check (site responds 200), a PWA validation check (manifest + service worker are served), and the full e2e suite against the live URL (`e2e-live`, reusing `test:e2e` with `BASE_URL` set). This is a separate workflow from `ci.yml`; it doesn't gate PRs, it only runs after a merge lands on `main`.
 
 ## Wiki updates
 
-The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is updated as part of `/deploy-main`. It's a separate git repository (`untangle.wiki.git`) with no branch protection, pushed to directly.
-
-To trigger a wiki review outside the deploy workflow (e.g. after a direct wiki edit), run `/wiki-update`.
+The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is a separate git repository (`untangle.wiki.git`) with no branch protection, reconciled by the `docs-updater` subagent as pipeline Step 20. To trigger a wiki review outside a pipeline run (e.g. after a direct wiki edit), invoke `Agent(subagent_type="docs-updater")` directly with the diff/context you want reconciled.
 
 ## Key files
 
-| File                                 | Purpose                                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `src/composables/useTasks.js`        | Task logic, energy filtering, localStorage persistence                                     |
-| `src/composables/useEnergyLevel.js`  | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools |
-| `scripts/workflow-state.mjs`         | 14-stage pipeline state machine (`start`/`get`/`set`/`approve`/`loopback`/`reset`)         |
-| `scripts/bug-tracker.mjs`            | CLI for creating/closing GitHub bug issues, category list                                  |
-| `scripts/check-docs.mjs`             | CI documentation-check job                                                                 |
-| `scripts/pre-push-check.mjs`         | `pre-push` git hook logic (blocks direct `main` pushes, checks sign-off)                   |
-| `scripts/post-commit-close-bugs.mjs` | `post-commit` git hook logic (auto-closes bugs via commit trailers)                        |
-| `.claude/skills/`                    | The 14 pipeline skills plus `report-bug` and `wiki-update`                                 |
-| `.github/workflows/ci.yml`           | The 9-job CI pipeline                                                                      |
-| `.github/workflows/deploy-pages.yml` | Builds and publishes `main` to GitHub Pages after merge                                    |
-| `reports/`                           | Post-deploy change reports, one markdown file per merged change                            |
+| File                                    | Purpose                                                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `src/composables/useTasks.js`            | Task logic, energy filtering, localStorage persistence                                                                |
+| `src/composables/useEnergyLevel.ts`      | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools                           |
+| `.claude/skills/ship-feature/SKILL.md`   | The 22-step pipeline orchestrator                                                                                     |
+| `.claude/agents/`                        | The 11 subagents the orchestrator drives (requirements, design, test-authors, implementer, bug-fixer, QA, docs, report) |
+| `.claude/STANDARDS.md`                   | Shared cross-cutting values: WCAG scope, coverage threshold, Node version, security checklist                         |
+| `scripts/merge-coverage.mjs`             | Combines unit + BDD + e2e coverage into one percentage                                                                |
+| `docs/adr/`                              | Architecture Decision Records, added by `solution-designer` when a design introduces one                              |
+| `.github/workflows/ci.yml`               | The 9-job CI pipeline                                                                                                  |
+| `.github/workflows/cd.yml`               | Builds and publishes `main` to GitHub Pages after merge, then smoke/PWA/live-e2e checks                               |
+| `reports/`                               | Post-change reports, one dated markdown file per merged change                                                        |

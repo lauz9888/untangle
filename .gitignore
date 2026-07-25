@@ -2,12 +2,12 @@ node_modules/
 dist/
 dev-dist/
 coverage/
+.nyc_output/
 playwright-report/
 test-results/
 .env
 .env.local
 *.log
 .claude/worktrees/
-.claude/workflow/
-.claude/wiki-scratch/
 .claude/settings.local.json
+.workflow/
