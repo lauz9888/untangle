@@ -123,14 +123,14 @@ describe('CollapsibleSection', () => {
     expect(section.attributes('aria-labelledby')).toBe(heading.attributes('id'))
   })
 
-  it('shows "Collapse {label}" as the button text when expanded', () => {
+  it('sets the button\'s aria-label to "Collapse {label}" when expanded', () => {
     const wrapper = mountTracked(CollapsibleSection, { ...baseProps, expanded: true })
-    expect(wrapper.find('button').text()).toContain('Collapse Now')
+    expect(wrapper.find('.section-toggle').attributes('aria-label')).toBe('Collapse Now')
   })
 
-  it('shows "Expand {label}" as the button text when collapsed', () => {
+  it('sets the button\'s aria-label to "Expand {label}" when collapsed', () => {
     const wrapper = mountTracked(CollapsibleSection, { ...baseProps, expanded: false })
-    expect(wrapper.find('button').text()).toContain('Expand Now')
+    expect(wrapper.find('.section-toggle').attributes('aria-label')).toBe('Expand Now')
   })
 
   it('sets aria-expanded to match the expanded prop', () => {

@@ -23,10 +23,10 @@ const contentId = computed(() => `section-${props.sectionKey}-content`)
         class="section-toggle"
         :aria-expanded="expanded"
         :aria-controls="contentId"
+        :aria-label="expanded ? `Collapse ${label}` : `Expand ${label}`"
         @click="$emit('toggle')"
       >
-        {{ expanded ? `Collapse ${label}` : `Expand ${label}` }}
-        <span class="chevron" aria-hidden="true">▾</span>
+        <span class="chevron" :class="{ 'chevron--expanded': expanded }" aria-hidden="true">▾</span>
       </button>
     </div>
     <div :id="contentId" class="section-content" :hidden="!expanded"></div>
@@ -60,6 +60,7 @@ const contentId = computed(() => `section-${props.sectionKey}-content`)
      that breakpoint — see the design's "Accessibility" section for the full explanation. */
   display: none; /* desktop-first: no control at all above 640px, Requirement 3 */
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   font-size: 0.85rem;
   font-weight: 500;
@@ -69,6 +70,19 @@ const contentId = computed(() => `section-${props.sectionKey}-content`)
   background: #fff;
   color: #1a1a1a;
   cursor: pointer;
+}
+.chevron {
+  /* Amended 2026-09-06, issue #105: the chevron is now the button's only visible content, so its
+     rotation is the sole visual cue for expanded/collapsed state that visible text used to carry.
+     Glyph color inherits from .section-toggle's `color: #1a1a1a` (already contrast-audited,
+     Requirement 15); no new color introduced. */
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+.chevron--expanded {
+  /* ▾ (points down, "expand" affordance) rotates to point up when the section is expanded,
+     i.e. "click to collapse upward" */
+  transform: rotate(180deg);
 }
 .section-content {
   padding: 0 1.1rem 1rem;

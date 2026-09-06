@@ -62,9 +62,13 @@ test.describe('mobile viewport (375x812)', () => {
     await expect(sectionToggle(page, 'Next')).toBeVisible()
     await expect(sectionToggle(page, 'Later')).toBeVisible()
 
-    await expect(sectionToggle(page, 'Now')).toContainText('Collapse Now')
-    await expect(sectionToggle(page, 'Next')).toContainText('Collapse Next')
-    await expect(sectionToggle(page, 'Later')).toContainText('Collapse Later')
+    await expect(sectionToggle(page, 'Now')).toHaveAttribute('aria-label', 'Collapse Now')
+    await expect(sectionToggle(page, 'Next')).toHaveAttribute('aria-label', 'Collapse Next')
+    await expect(sectionToggle(page, 'Later')).toHaveAttribute('aria-label', 'Collapse Later')
+
+    // Icon-only button: the visible rendered text is the chevron glyph only, not the old wording.
+    // aria-hidden only removes the chevron from the accessibility tree, not from innerText.
+    expect(await sectionToggle(page, 'Now').innerText()).toBe('▾')
   })
 
   test('gives the section toggle a 44px minimum tap target', async ({ page }) => {
@@ -90,12 +94,12 @@ test.describe('mobile viewport (375x812)', () => {
     const toggle = sectionToggle(page, 'Now')
 
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    await expect(toggle).toContainText('Collapse Now')
+    await expect(toggle).toHaveAttribute('aria-label', 'Collapse Now')
 
     await toggle.click()
 
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    await expect(toggle).toContainText('Expand Now')
+    await expect(toggle).toHaveAttribute('aria-label', 'Expand Now')
   })
 
   test('has aria-controls on the toggle referencing the content region id', async ({ page }) => {
