@@ -3,6 +3,7 @@ import EnergySelector from './components/EnergySelector.vue'
 import EncourageButton from './components/EncourageButton.vue'
 import ToughLoveButton from './components/ToughLoveButton.vue'
 import ToastNotification from './components/ToastNotification.vue'
+import NowNextLaterBoard from './components/NowNextLaterBoard.vue'
 </script>
 
 <template>
@@ -35,6 +36,7 @@ import ToastNotification from './components/ToastNotification.vue'
         <ToughLoveButton />
       </div>
     </header>
+    <NowNextLaterBoard />
     <ToastNotification />
   </main>
 </template>
