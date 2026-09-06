@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from './coverage-fixture'
-import { energyButton, encourageButton, toughLoveButton, toast } from './helpers'
+import { energyButton, encourageButton, toughLoveButton, toast, sectionToggle } from './helpers'
 
 // Scope to actual WCAG 2.1 A/AA success criteria, not axe-core's broader
 // "best-practice" rule set. Mirrors .claude/STANDARDS.md's WCAG conformance scope.
@@ -13,6 +13,9 @@ test.beforeEach(async ({ page }) => {
 })
 
 test('home page has no detectable accessibility violations', async ({ page }) => {
+  // Also covers the Now/Next/Later board's default desktop viewport, full-page,
+  // all-expanded state (Requirement 15) — no separate test needed since the board
+  // renders unconditionally as part of the home page.
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(results.violations).toEqual([])
 })
@@ -39,4 +42,15 @@ test('has no violations with the Tough love toast showing', async ({ page }) => 
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(results.violations).toEqual([])
+})
+
+test.describe('Now/Next/Later sections at mobile viewport (375x812)', () => {
+  test.use({ viewport: { width: 375, height: 812 } })
+
+  test('has no violations with a section collapsed', async ({ page }) => {
+    await sectionToggle(page, 'Now').click()
+
+    const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+    expect(results.violations).toEqual([])
+  })
 })

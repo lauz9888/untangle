@@ -15,3 +15,11 @@ export function encourageButton(page: Page) {
 export function toughLoveButton(page: Page) {
   return page.getByRole('button', { name: 'Tough love', exact: true })
 }
+
+export function sectionToggle(page: Page, label: string) {
+  return page.getByRole('button', { name: new RegExp(`^(Collapse|Expand) ${label}$`) })
+}
+
+export function sectionContent(page: Page, key: string) {
+  return page.locator(`#section-${key}-content`)
+}
