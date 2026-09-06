@@ -30,7 +30,7 @@ write it. Two options were considered:
 
 Implement `useSectionCollapse()` as a plain factory function (option 2), called once inside
 `NowNextLaterBoard.vue`'s `<script setup>`. It is a composable — business logic still lives outside
-the component, per this codebase's "components stay thin" convention — but it is deliberately *not*
+the component, per this codebase's "components stay thin" convention — but it is deliberately _not_
 a module-level singleton.
 
 ## Consequences

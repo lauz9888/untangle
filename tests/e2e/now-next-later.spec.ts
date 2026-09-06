@@ -152,7 +152,7 @@ test.describe('cross-breakpoint persistence (Requirement 7)', () => {
     // and no toggle button is exposed to the accessibility tree.
     await expect(sectionContent(page, 'now')).toBeVisible()
     await expect(
-      page.getByRole('button', { name: /^(Collapse|Expand) (Now|Next|Later)$/ }),
+      page.getByRole('button', { name: /^(Collapse|Expand) (Now|Next|Later)$/ })
     ).toHaveCount(0)
 
     await page.setViewportSize({ width: 375, height: 812 })

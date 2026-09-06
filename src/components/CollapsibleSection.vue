@@ -26,9 +26,7 @@ const contentId = computed(() => `section-${props.sectionKey}-content`)
         @click="$emit('toggle')"
       >
         {{ expanded ? `Collapse ${label}` : `Expand ${label}` }}
-        <span class="chevron" :class="{ 'chevron--collapsed': !expanded }" aria-hidden="true"
-          >▾</span
-        >
+        <span class="chevron" aria-hidden="true">▾</span>
       </button>
     </div>
     <div :id="contentId" class="section-content" :hidden="!expanded"></div>
