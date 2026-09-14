@@ -1,0 +1,15 @@
+#!/bin/sh
+# Auto-formats staged files with Prettier before each commit, so formatting
+# issues are fixed locally instead of failing CI's "Format check" job.
+# Installed via `npm install` (see package.json's "prepare" script).
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+echo "$staged" | while IFS= read -r file; do
+  [ -f "$file" ] && npx prettier --write --ignore-unknown "$file"
+done
+
+echo "$staged" | while IFS= read -r file; do
+  [ -f "$file" ] && git add "$file"
+done

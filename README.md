@@ -13,6 +13,8 @@ npm run dev
 
 Opens at `http://localhost:5173`.
 
+`npm install` also points Git at `.githooks` (via the `prepare` script), so every commit runs a pre-commit hook that auto-formats staged files with Prettier — this keeps CI's format check from failing on formatting drift.
+
 ## Scripts
 
 | Command                       | Purpose                                                   |
