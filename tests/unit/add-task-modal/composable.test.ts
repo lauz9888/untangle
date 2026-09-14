@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import type { useAddTaskModal } from '../../../src/composables/useAddTaskModal'
 
 const modulePath = '../../../src/composables/useAddTaskModal'
 
-async function load() {
+type AddTaskModalState = ReturnType<typeof useAddTaskModal>
+
+async function load(): Promise<AddTaskModalState> {
   const mod = await import(modulePath)
   return mod.useAddTaskModal()
 }
@@ -87,7 +90,7 @@ describe('useAddTaskModal', () => {
       expect(isConfirmOpen.value).toBe(false)
     })
 
-    type Case = [string, (state: any) => void]
+    type Case = [string, (state: AddTaskModalState) => void]
 
     const hasValueCases: Case[] = [
       ['Task name set', (s) => (s.taskName.value = 'Buy milk')],
@@ -164,7 +167,7 @@ describe('useAddTaskModal', () => {
       'strips non-digit characters for the %s sub-field',
       async (field) => {
         const state = await load()
-        const refByField: Record<string, any> = {
+        const refByField: Record<'days' | 'hours' | 'minutes', AddTaskModalState['estimateDays']> = {
           days: state.estimateDays,
           hours: state.estimateHours,
           minutes: state.estimateMinutes,
@@ -454,7 +457,7 @@ describe('useAddTaskModal', () => {
       state.subTaskDraft.value = 'Third'
       state.saveSubTaskDraft()
 
-      const secondId = state.subTasks.value[1].id
+      const secondId = state.subTasks.value[1]!.id
       state.removeSubTask(secondId)
 
       expect(state.subTasks.value.map((t: { text: string }) => t.text)).toEqual(['First', 'Third'])
@@ -469,7 +472,7 @@ describe('useAddTaskModal', () => {
       }
       add('A')
       add('B')
-      const idA = state.subTasks.value[0].id
+      const idA = state.subTasks.value[0]!.id
       state.removeSubTask(idA)
       add('C')
 
