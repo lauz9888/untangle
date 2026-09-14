@@ -216,7 +216,7 @@ Then('no close confirmation should be showing', function (this: EnergyWorld) {
 })
 
 Then(
-  'the Now/Next/Later selection should be {string}',
+  'the Now\\/Next\\/Later selection should be {string}',
   function (this: EnergyWorld, label: string) {
     assert.equal(this.addTaskModal.nowNextLater.value, keyForLabel(label))
   }
