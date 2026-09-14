@@ -23,3 +23,15 @@ export function sectionToggle(page: Page, label: string) {
 export function sectionContent(page: Page, key: string) {
   return page.locator(`#section-${key}-content`)
 }
+
+export function addTaskButton(page: Page) {
+  return page.getByRole('button', { name: 'Add task', exact: true })
+}
+
+export function addTaskModal(page: Page) {
+  return page.getByRole('dialog', { name: 'Add Task' })
+}
+
+export function closeConfirmDialog(page: Page) {
+  return page.getByRole('alertdialog', { name: 'Close without saving?' })
+}
