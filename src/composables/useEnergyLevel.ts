@@ -2,6 +2,12 @@ import { ref, type Ref } from 'vue'
 
 export type EnergyLevel = 'low' | 'medium' | 'high'
 
+export const ENERGY_LEVEL_OPTIONS: { value: EnergyLevel; label: string }[] = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+]
+
 export const LOW_MESSAGES = [
   "It's okay to take this slow today.",
   'Small steps count just as much as big ones.',

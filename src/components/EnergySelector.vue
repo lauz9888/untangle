@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { useEnergyLevel, type EnergyLevel } from '../composables/useEnergyLevel'
+import { useEnergyLevel, ENERGY_LEVEL_OPTIONS } from '../composables/useEnergyLevel'
 
-const LEVELS: { value: EnergyLevel; label: string }[] = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-]
+const LEVELS = ENERGY_LEVEL_OPTIONS
 
 const { selectedLevel, selectLevel } = useEnergyLevel()
 </script>

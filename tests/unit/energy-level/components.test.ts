@@ -34,6 +34,11 @@ const state = {
 
 vi.mock('../../../src/composables/useEnergyLevel', () => ({
   useEnergyLevel: () => state,
+  ENERGY_LEVEL_OPTIONS: [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+  ],
 }))
 
 let mountedWrappers: VueWrapper[] = []

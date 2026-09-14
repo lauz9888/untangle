@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright'
 import { test, expect } from './coverage-fixture'
-import { energyButton, encourageButton, toughLoveButton, toast, sectionToggle } from './helpers'
+import {
+  energyButton,
+  encourageButton,
+  toughLoveButton,
+  toast,
+  sectionToggle,
+  addTaskButton,
+  addTaskModal,
+  closeConfirmDialog,
+} from './helpers'
 
 // Scope to actual WCAG 2.1 A/AA success criteria, not axe-core's broader
 // "best-practice" rule set. Mirrors .claude/STANDARDS.md's WCAG conformance scope.
@@ -44,11 +53,40 @@ test('has no violations with the Tough love toast showing', async ({ page }) => 
   expect(results.violations).toEqual([])
 })
 
+test('has no violations with the Add Task modal open (default state)', async ({ page }) => {
+  await addTaskButton(page).click()
+  await expect(addTaskModal(page)).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the close-without-saving confirmation dialog open', async ({
+  page,
+}) => {
+  await addTaskButton(page).click()
+  const modal = addTaskModal(page)
+  await modal.getByLabel('Task name', { exact: true }).fill('Write report')
+  await page.keyboard.press('Escape')
+  await expect(closeConfirmDialog(page)).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
 test.describe('Now/Next/Later sections at mobile viewport (375x812)', () => {
   test.use({ viewport: { width: 375, height: 812 } })
 
   test('has no violations with a section collapsed', async ({ page }) => {
     await sectionToggle(page, 'Now').click()
+
+    const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+    expect(results.violations).toEqual([])
+  })
+
+  test('has no violations with the Add Task modal open', async ({ page }) => {
+    await addTaskButton(page).click()
+    await expect(addTaskModal(page)).toBeVisible()
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
     expect(results.violations).toEqual([])

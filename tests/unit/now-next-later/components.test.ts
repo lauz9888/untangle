@@ -46,6 +46,11 @@ const energyState = {
 
 vi.mock('../../../src/composables/useEnergyLevel', () => ({
   useEnergyLevel: () => energyState,
+  ENERGY_LEVEL_OPTIONS: [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+  ],
 }))
 
 let mountedWrappers: VueWrapper[] = []
@@ -183,13 +188,15 @@ describe('App', () => {
 
     expect(board.exists()).toBe(true)
 
-    const main = wrapper.find('main')
-    const children = Array.from(main.element.children)
-    const headerIndex = children.findIndex((el) => el.tagName.toLowerCase() === 'header')
-    const boardIndex = children.indexOf(board.element as Element)
+    // Uses document order (not direct-children indices) since the Add Task modal's
+    // background-hiding wrapper (App.vue's `.app-background`, a non-visual `display: contents`
+    // grouping element) now sits between <main> and <header> — an incidental nesting-depth change,
+    // not a change to the header/board's relative order this test actually cares about.
+    const header = wrapper.find('header')
+    expect(header.exists()).toBe(true)
+    const position = header.element.compareDocumentPosition(board.element as Element)
 
-    expect(headerIndex).toBeGreaterThanOrEqual(0)
-    expect(boardIndex).toBeGreaterThan(headerIndex)
+    expect(Boolean(position & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
   })
 
   it('has no accessibility violations', async () => {

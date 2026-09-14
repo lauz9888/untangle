@@ -4,44 +4,61 @@ import EncourageButton from './components/EncourageButton.vue'
 import ToughLoveButton from './components/ToughLoveButton.vue'
 import ToastNotification from './components/ToastNotification.vue'
 import NowNextLaterBoard from './components/NowNextLaterBoard.vue'
+import AddTaskButton from './components/AddTaskButton.vue'
+import AddTaskModal from './components/AddTaskModal.vue'
+import { useAddTaskModal } from './composables/useAddTaskModal'
+
+const { isOpen: isAddTaskModalOpen } = useAddTaskModal()
 </script>
 
 <template>
   <main>
-    <header class="brand">
-      <div class="brand-text">
-        <div class="logo">
-          <svg class="logo-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-            <path
-              d="M4 16c0-2.5 2-4.5 4.5-4.5S13 13.5 13 16s-2 4.5-4.5 4.5S4 18.5 4 16z"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            />
-            <path
-              d="M13 16h15"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          <h1>Untangle</h1>
+    <div
+      class="app-background"
+      :inert="isAddTaskModalOpen ? true : undefined"
+      :aria-hidden="isAddTaskModalOpen ? 'true' : undefined"
+    >
+      <header class="brand">
+        <div class="brand-text">
+          <div class="logo">
+            <svg class="logo-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path
+                d="M4 16c0-2.5 2-4.5 4.5-4.5S13 13.5 13 16s-2 4.5-4.5 4.5S4 18.5 4 16z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M13 16h15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <h1>Untangle</h1>
+            <AddTaskButton />
+          </div>
+          <p class="tagline">Space to think</p>
         </div>
-        <p class="tagline">Space to think</p>
-      </div>
-      <div class="header-actions">
-        <EnergySelector />
-        <EncourageButton />
-        <ToughLoveButton />
-      </div>
-    </header>
-    <NowNextLaterBoard />
-    <ToastNotification />
+        <div class="header-actions">
+          <EnergySelector />
+          <EncourageButton />
+          <ToughLoveButton />
+        </div>
+      </header>
+      <NowNextLaterBoard />
+      <ToastNotification />
+    </div>
+    <AddTaskModal v-if="isAddTaskModalOpen" />
   </main>
 </template>
 
 <style scoped>
+.app-background {
+  display: contents;
+}
+
 .brand {
   position: absolute;
   top: 1.5rem;
