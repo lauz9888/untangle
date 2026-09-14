@@ -44,7 +44,7 @@ Two options were considered:
 
 1. Native `<dialog>` + `.showModal()`, with jsdom-only fallback shims to keep unit tests running.
 2. A custom overlay: a `position: fixed` backdrop `<div>` wrapping a content `<div role="dialog"
-   aria-modal="true">`, with hand-rolled Tab-cycling, an `@keydown.esc` handler, and `@click.self`
+aria-modal="true">`, with hand-rolled Tab-cycling, an `@keydown.esc` handler, and `@click.self`
    for backdrop-click detection — all plain DOM/Vue mechanisms that behave identically under jsdom
    and a real browser.
 

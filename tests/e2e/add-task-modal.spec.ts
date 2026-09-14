@@ -263,14 +263,18 @@ test('Estimate row stays a single, non-wrapping line at desktop and mobile width
   const desktopTops = await Promise.all(
     [days, hours, minutes].map(async (input) => (await input.boundingBox())?.y)
   )
-  expect(Math.max(...(desktopTops as number[])) - Math.min(...(desktopTops as number[]))).toBeLessThanOrEqual(1)
+  expect(
+    Math.max(...(desktopTops as number[])) - Math.min(...(desktopTops as number[]))
+  ).toBeLessThanOrEqual(1)
 
   await page.setViewportSize({ width: 375, height: 812 })
 
   const mobileTops = await Promise.all(
     [days, hours, minutes].map(async (input) => (await input.boundingBox())?.y)
   )
-  expect(Math.max(...(mobileTops as number[])) - Math.min(...(mobileTops as number[]))).toBeLessThanOrEqual(1)
+  expect(
+    Math.max(...(mobileTops as number[])) - Math.min(...(mobileTops as number[]))
+  ).toBeLessThanOrEqual(1)
 
   const mobileHeights = await Promise.all(
     [days, hours, minutes].map(async (input) => (await input.boundingBox())?.height)
@@ -299,7 +303,9 @@ test('typing above the Hours/Minutes max clamps the displayed value; Days stays 
   await expect(days).toHaveValue('999')
 })
 
-test('Estimate Hours/Minutes inputs carry the max attribute; Days has none (#121)', async ({ page }) => {
+test('Estimate Hours/Minutes inputs carry the max attribute; Days has none (#121)', async ({
+  page,
+}) => {
   await addTaskButton(page).click()
   const modal = addTaskModal(page)
 

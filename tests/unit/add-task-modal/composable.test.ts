@@ -184,11 +184,12 @@ describe('useAddTaskModal', () => {
       'strips non-digit characters (and clamps hours/minutes) for the %s sub-field',
       async (field) => {
         const state = await load()
-        const refByField: Record<'days' | 'hours' | 'minutes', AddTaskModalState['estimateDays']> = {
-          days: state.estimateDays,
-          hours: state.estimateHours,
-          minutes: state.estimateMinutes,
-        }
+        const refByField: Record<'days' | 'hours' | 'minutes', AddTaskModalState['estimateDays']> =
+          {
+            days: state.estimateDays,
+            hours: state.estimateHours,
+            minutes: state.estimateMinutes,
+          }
 
         adversarialCases.forEach(([raw, sanitized]) => {
           state.setEstimateField(field, raw)
