@@ -2,7 +2,7 @@
 
 An energy-based task manager, built as a PWA.
 
-The homepage currently shows the Untangle logo and the tagline "Space to think", plus a Now/Next/Later layout scaffold (three fixed, empty, collapsible sections — columns on desktop, independently-collapsible rows on mobile); the task manager itself (task creation, content, and persistence) is still being rebuilt.
+The homepage currently shows the Untangle logo and the tagline "Space to think", a plus-sign "Add task" button beside the logo that opens an Add Task modal (task name, Now/Next/Later, description, energy level, estimate, available-from/due-by dates, and sub-tasks — UI only, not yet wired to any persistence), plus a Now/Next/Later layout scaffold (three fixed, empty, collapsible sections — columns on desktop, independently-collapsible rows on mobile); the task manager itself (task creation, content, and persistence) is still being rebuilt.
 
 ## Getting started
 
