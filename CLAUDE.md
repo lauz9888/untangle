@@ -120,24 +120,24 @@ The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is a separate git r
 
 ## Key files
 
-| File                                     | Purpose                                                                                                                                   |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/composables/useTasks.js`            | Task logic, energy filtering, localStorage persistence                                                                                    |
-| `src/composables/useEnergyLevel.ts`      | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools                                                |
-| `src/composables/useSectionCollapse.ts`  | Non-singleton per-instance collapse state for the Now/Next/Later board (see ADR 0001)                                                     |
-| `src/components/NowNextLaterBoard.vue`   | Renders the three fixed Now/Next/Later sections (layout scaffold, no task content yet)                                                    |
-| `src/components/CollapsibleSection.vue`  | Reusable disclosure section used by `NowNextLaterBoard.vue`                                                                               |
-| `src/composables/useAddTaskModal.ts`     | Singleton composable for the Add Task modal's open/closed state, all field values, validation, and sub-tasks (UI-only, no persistence)     |
+| File                                     | Purpose                                                                                                                                        |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/composables/useTasks.js`            | Task logic, energy filtering, localStorage persistence                                                                                         |
+| `src/composables/useEnergyLevel.ts`      | Header energy-level selection state, "Encourage me"/"Tough love" toasts, and message pools                                                     |
+| `src/composables/useSectionCollapse.ts`  | Non-singleton per-instance collapse state for the Now/Next/Later board (see ADR 0001)                                                          |
+| `src/components/NowNextLaterBoard.vue`   | Renders the three fixed Now/Next/Later sections (layout scaffold, no task content yet)                                                         |
+| `src/components/CollapsibleSection.vue`  | Reusable disclosure section used by `NowNextLaterBoard.vue`                                                                                    |
+| `src/composables/useAddTaskModal.ts`     | Singleton composable for the Add Task modal's open/closed state, all field values, validation, and sub-tasks (UI-only, no persistence)         |
 | `src/composables/useFocusTrap.ts`        | Non-singleton per-instance factory providing Tab-cycling focus containment, used by `AddTaskModal.vue`/`CloseConfirmDialog.vue` (see ADR 0002) |
-| `src/components/AddTaskButton.vue`       | Header plus-sign trigger that opens the Add Task modal                                                                                    |
-| `src/components/AddTaskModal.vue`        | The Add Task modal itself: Task name, Now/Next/Later, Description, Energy level, Estimate, Available from/Due by, and Sub-tasks fields    |
-| `src/components/CloseConfirmDialog.vue`  | Nested "Close without saving?" confirmation shown when closing the Add Task modal with any field populated                                |
-| `.claude/skills/ship-feature/SKILL.md`   | The 22-step pipeline orchestrator (plus the out-of-band Step 21a)                                                                         |
-| `.claude/skills/quality-report/SKILL.md` | On-demand trigger for `quality-reporter`'s rollup reports                                                                                 |
-| `.claude/agents/`                        | The 12 subagents the orchestrator drives (requirements, design, test-authors, implementer, bug-fixer, QA, docs, report, quality-reporter) |
-| `.claude/STANDARDS.md`                   | Shared cross-cutting values: trust boundary, WCAG scope, coverage threshold, Node version, release cadence, security checklist            |
-| `scripts/merge-coverage.mjs`             | Combines unit + BDD + e2e coverage into one percentage                                                                                    |
-| `docs/adr/`                              | Architecture Decision Records, added by `solution-designer` when a design introduces one                                                  |
-| `.github/workflows/ci.yml`               | The 9-job CI pipeline                                                                                                                     |
-| `.github/workflows/cd.yml`               | Builds and publishes `main` to GitHub Pages after merge, then smoke/PWA/live-e2e checks                                                   |
-| `reports/`                               | Post-change reports (one dated file per merged change), `reports/.release-count`, and `reports/metrics/` (periodic rollups)               |
+| `src/components/AddTaskButton.vue`       | Header plus-sign trigger that opens the Add Task modal                                                                                         |
+| `src/components/AddTaskModal.vue`        | The Add Task modal itself: Task name, Now/Next/Later, Description, Energy level, Estimate, Available from/Due by, and Sub-tasks fields         |
+| `src/components/CloseConfirmDialog.vue`  | Nested "Close without saving?" confirmation shown when closing the Add Task modal with any field populated                                     |
+| `.claude/skills/ship-feature/SKILL.md`   | The 22-step pipeline orchestrator (plus the out-of-band Step 21a)                                                                              |
+| `.claude/skills/quality-report/SKILL.md` | On-demand trigger for `quality-reporter`'s rollup reports                                                                                      |
+| `.claude/agents/`                        | The 12 subagents the orchestrator drives (requirements, design, test-authors, implementer, bug-fixer, QA, docs, report, quality-reporter)      |
+| `.claude/STANDARDS.md`                   | Shared cross-cutting values: trust boundary, WCAG scope, coverage threshold, Node version, release cadence, security checklist                 |
+| `scripts/merge-coverage.mjs`             | Combines unit + BDD + e2e coverage into one percentage                                                                                         |
+| `docs/adr/`                              | Architecture Decision Records, added by `solution-designer` when a design introduces one                                                       |
+| `.github/workflows/ci.yml`               | The 9-job CI pipeline                                                                                                                          |
+| `.github/workflows/cd.yml`               | Builds and publishes `main` to GitHub Pages after merge, then smoke/PWA/live-e2e checks                                                        |
+| `reports/`                               | Post-change reports (one dated file per merged change), `reports/.release-count`, and `reports/metrics/` (periodic rollups)                    |
