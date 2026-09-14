@@ -8,6 +8,19 @@ Given('a fresh session', function (this: EnergyWorld) {
     this.energy.selectLevel(this.energy.selectedLevel.value)
   }
   this.energy.dismissToast()
+
+  // `addTaskModal` is a true module-level singleton (like `energy`, unlike
+  // `sections`), so state otherwise leaks across scenarios within the same
+  // Cucumber process. `openModal()` unconditionally resets every field
+  // (Requirement 34), and `confirmDiscard()` resets fields again and closes
+  // both dialogs — running both, regardless of the modal's current state,
+  // guarantees a fully closed, fully reset composable at the start of every
+  // scenario without needing an unexported `resetFields()` action.
+  if (this.addTaskModal.isConfirmOpen.value) {
+    this.addTaskModal.cancelDiscard()
+  }
+  this.addTaskModal.openModal()
+  this.addTaskModal.confirmDiscard()
 })
 
 Given(
