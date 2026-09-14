@@ -241,11 +241,41 @@ test('typing invalid characters into Estimate sub-fields is filtered as the user
   await addTaskButton(page).click()
   const modal = addTaskModal(page)
 
-  const days = modal.getByLabel('Estimate: days', { exact: true })
+  const days = modal.getByLabel('Days', { exact: true })
   await days.pressSequentially('-5')
   await expect(days).toHaveValue('5')
 
-  const hours = modal.getByLabel('Estimate: hours', { exact: true })
+  const hours = modal.getByLabel('Hrs', { exact: true })
   await hours.pressSequentially('1.5')
   await expect(hours).toHaveValue('15')
+})
+
+test('Estimate row stays a single, non-wrapping line at desktop and mobile widths (#120)', async ({
+  page,
+}) => {
+  await addTaskButton(page).click()
+  const modal = addTaskModal(page)
+
+  const days = modal.getByLabel('Days', { exact: true })
+  const hours = modal.getByLabel('Hrs', { exact: true })
+  const minutes = modal.getByLabel('Min', { exact: true })
+
+  const desktopTops = await Promise.all(
+    [days, hours, minutes].map(async (input) => (await input.boundingBox())?.y)
+  )
+  expect(Math.max(...(desktopTops as number[])) - Math.min(...(desktopTops as number[]))).toBeLessThanOrEqual(1)
+
+  await page.setViewportSize({ width: 375, height: 812 })
+
+  const mobileTops = await Promise.all(
+    [days, hours, minutes].map(async (input) => (await input.boundingBox())?.y)
+  )
+  expect(Math.max(...(mobileTops as number[])) - Math.min(...(mobileTops as number[]))).toBeLessThanOrEqual(1)
+
+  const mobileHeights = await Promise.all(
+    [days, hours, minutes].map(async (input) => (await input.boundingBox())?.height)
+  )
+  for (const height of mobileHeights) {
+    expect(height).toBeGreaterThanOrEqual(44)
+  }
 })

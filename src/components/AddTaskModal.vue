@@ -172,41 +172,44 @@ function handleEstimateInput(field: 'days' | 'hours' | 'minutes', event: Event) 
         </div>
       </div>
 
-      <div class="field">
+      <div class="field field-estimate">
         <span id="task-estimate-label" class="group-label">Estimate</span>
         <div class="estimate-group" role="group" aria-labelledby="task-estimate-label">
           <div class="estimate-field">
-            <label for="task-estimate-days">Estimate: days</label>
+            <label for="task-estimate-days">Days</label>
             <input
               id="task-estimate-days"
               type="number"
               min="0"
               step="1"
               inputmode="numeric"
+              class="estimate-input"
               :value="estimateDays"
               @input="handleEstimateInput('days', $event)"
             />
           </div>
           <div class="estimate-field">
-            <label for="task-estimate-hours">Estimate: hours</label>
+            <label for="task-estimate-hours">Hrs</label>
             <input
               id="task-estimate-hours"
               type="number"
               min="0"
               step="1"
               inputmode="numeric"
+              class="estimate-input"
               :value="estimateHours"
               @input="handleEstimateInput('hours', $event)"
             />
           </div>
           <div class="estimate-field">
-            <label for="task-estimate-minutes">Estimate: minutes</label>
+            <label for="task-estimate-minutes">Min</label>
             <input
               id="task-estimate-minutes"
               type="number"
               min="0"
               step="1"
               inputmode="numeric"
+              class="estimate-input"
               :value="estimateMinutes"
               @input="handleEstimateInput('minutes', $event)"
             />
@@ -396,22 +399,40 @@ function handleEstimateInput(field: 'days' | 'hours' | 'minutes', event: Event) 
   color: #fff;
 }
 
+.field-estimate {
+  margin-bottom: 0.7rem;
+  gap: 0.3rem;
+}
+
 .estimate-group {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .estimate-field {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 0.3rem;
-  flex: 1;
+  flex: 0 0 auto;
 }
 
 .estimate-field label {
   font-size: 0.8rem;
   font-weight: 600;
   color: #595959;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.estimate-input {
+  width: 3.25rem;
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 0.35rem 0.3rem;
 }
 
 .sub-tasks-header {
@@ -559,6 +580,19 @@ function handleEstimateInput(field: 'days' | 'hours' | 'minutes', event: Event) 
 
   .sub-task-save-button,
   .sub-task-close-button {
+    min-height: 44px;
+  }
+
+  .estimate-group {
+    gap: 0.4rem;
+  }
+
+  .estimate-field {
+    gap: 0.25rem;
+  }
+
+  .estimate-input {
+    width: 3rem;
     min-height: 44px;
   }
 }

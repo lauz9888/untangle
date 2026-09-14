@@ -322,6 +322,34 @@ describe('AddTaskModal', () => {
     expect(state.setEstimateField).toHaveBeenCalledWith('minutes', '007')
   })
 
+  it('Estimate labels use the shortened "Days"/"Hrs"/"Min" text, each programmatically associated with its input (#120)', () => {
+    state.isOpen.value = true
+    const wrapper = mountTracked(AddTaskModal)
+
+    const days = wrapper.find('#task-estimate-days')
+    const hours = wrapper.find('#task-estimate-hours')
+    const minutes = wrapper.find('#task-estimate-minutes')
+
+    const daysLabel = wrapper.find('label[for="task-estimate-days"]')
+    const hoursLabel = wrapper.find('label[for="task-estimate-hours"]')
+    const minutesLabel = wrapper.find('label[for="task-estimate-minutes"]')
+
+    expect(days.exists()).toBe(true)
+    expect(hours.exists()).toBe(true)
+    expect(minutes.exists()).toBe(true)
+
+    expect(daysLabel.exists()).toBe(true)
+    expect(daysLabel.text()).toBe('Days')
+    expect(hoursLabel.exists()).toBe(true)
+    expect(hoursLabel.text()).toBe('Hrs')
+    expect(minutesLabel.exists()).toBe(true)
+    expect(minutesLabel.text()).toBe('Min')
+
+    const group = wrapper.find('[aria-labelledby="task-estimate-label"]')
+    expect(group.exists()).toBe(true)
+    expect(group.attributes('role')).toBe('group')
+  })
+
   it('shows the Due by error with aria-invalid/aria-describedby only when dueByInvalid is true', () => {
     state.isOpen.value = true
     state.dueByInvalid.value = false
