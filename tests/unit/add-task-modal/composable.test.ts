@@ -154,6 +154,9 @@ describe('useAddTaskModal', () => {
   })
 
   describe('setEstimateField (Req 15 sanitization)', () => {
+    // Second element is the expected value for the uncapped 'days' field (plain
+    // sanitizeDigitsOnly output). Hours/minutes additionally clamp to 23/59 (issue #121), so
+    // those two fields' expectations are derived below rather than reusing this value verbatim.
     const adversarialCases: [string, string][] = [
       ['-5', '5'],
       ['1.5', '15'],
@@ -163,8 +166,22 @@ describe('useAddTaskModal', () => {
       ['42', '42'],
     ]
 
+    const maxByField: Record<'days' | 'hours' | 'minutes', number | null> = {
+      days: null,
+      hours: 23,
+      minutes: 59,
+    }
+
+    function expectedFor(field: 'days' | 'hours' | 'minutes', sanitized: string): string {
+      const max = maxByField[field]
+      if (max === null || sanitized === '') {
+        return sanitized
+      }
+      return Number(sanitized) > max ? String(max) : sanitized
+    }
+
     it.each(['days', 'hours', 'minutes'] as const)(
-      'strips non-digit characters for the %s sub-field',
+      'strips non-digit characters (and clamps hours/minutes) for the %s sub-field',
       async (field) => {
         const state = await load()
         const refByField: Record<'days' | 'hours' | 'minutes', AddTaskModalState['estimateDays']> = {
@@ -173,9 +190,9 @@ describe('useAddTaskModal', () => {
           minutes: state.estimateMinutes,
         }
 
-        adversarialCases.forEach(([raw, expected]) => {
+        adversarialCases.forEach(([raw, sanitized]) => {
           state.setEstimateField(field, raw)
-          expect(refByField[field].value).toBe(expected)
+          expect(refByField[field].value).toBe(expectedFor(field, sanitized))
         })
       }
     )
@@ -193,6 +210,21 @@ describe('useAddTaskModal', () => {
       })
     })
 
+    it('never leaves hours above 23 or minutes above 59, however adversarial the input', async () => {
+      const state = await load()
+
+      adversarialCases.forEach(([raw]) => {
+        state.setEstimateField('hours', raw)
+        if (state.estimateHours.value !== '') {
+          expect(Number(state.estimateHours.value)).toBeLessThanOrEqual(23)
+        }
+        state.setEstimateField('minutes', raw)
+        if (state.estimateMinutes.value !== '') {
+          expect(Number(state.estimateMinutes.value)).toBeLessThanOrEqual(59)
+        }
+      })
+    })
+
     it('is the only path that changes the Estimate refs; resetFields clears whatever it set', async () => {
       const state = await load()
       state.setEstimateField('days', '-5')
@@ -207,6 +239,81 @@ describe('useAddTaskModal', () => {
       expect(state.estimateDays.value).toBe('')
       expect(state.estimateHours.value).toBe('')
       expect(state.estimateMinutes.value).toBe('')
+    })
+  })
+
+  describe('setEstimateField upper-bound clamping (Req 15 amendment, issue #121)', () => {
+    it('clamps Hours above 23 down to 23', async () => {
+      const state = await load()
+      state.setEstimateField('hours', '99')
+      expect(state.estimateHours.value).toBe('23')
+    })
+
+    it('clamps Minutes above 59 down to 59', async () => {
+      const state = await load()
+      state.setEstimateField('minutes', '60')
+      expect(state.estimateMinutes.value).toBe('59')
+    })
+
+    it('preserves the Hours boundary value 23 exactly', async () => {
+      const state = await load()
+      state.setEstimateField('hours', '23')
+      expect(state.estimateHours.value).toBe('23')
+    })
+
+    it('preserves the Minutes boundary value 59 exactly', async () => {
+      const state = await load()
+      state.setEstimateField('minutes', '59')
+      expect(state.estimateMinutes.value).toBe('59')
+    })
+
+    it('clamps Hours just over the boundary (24) down to 23', async () => {
+      const state = await load()
+      state.setEstimateField('hours', '24')
+      expect(state.estimateHours.value).toBe('23')
+    })
+
+    it('clamps Minutes just over the boundary (60) down to 59', async () => {
+      const state = await load()
+      state.setEstimateField('minutes', '60')
+      expect(state.estimateMinutes.value).toBe('59')
+    })
+
+    it('clamps across a keystroke-by-keystroke sequence, the exact scenario issue #121 reported', async () => {
+      const state = await load()
+      state.setEstimateField('hours', '9')
+      expect(state.estimateHours.value).toBe('9')
+
+      // Simulates the second keystroke: the real <input>'s target.value is already the full
+      // concatenated string ('99'), not just the newly typed character.
+      state.setEstimateField('hours', '99')
+      expect(state.estimateHours.value).toBe('23')
+    })
+
+    it('clamps adversarial input after sanitization: Hours', async () => {
+      const state = await load()
+      state.setEstimateField('hours', '-99')
+      expect(state.estimateHours.value).toBe('23')
+    })
+
+    it('clamps adversarial input after sanitization: Minutes', async () => {
+      const state = await load()
+      state.setEstimateField('minutes', '1.5e3')
+      expect(state.estimateMinutes.value).toBe('59')
+    })
+
+    it('leaves blank Hours/Minutes blank rather than clamping to "0"', async () => {
+      const state = await load()
+      state.setEstimateField('hours', '')
+      expect(state.estimateHours.value).toBe('')
+      state.setEstimateField('minutes', '')
+      expect(state.estimateMinutes.value).toBe('')
+    })
+
+    it('leaves Days uncapped, even far past what Hours/Minutes would allow', async () => {
+      const state = await load()
+      state.setEstimateField('days', '999')
+      expect(state.estimateDays.value).toBe('999')
     })
   })
 

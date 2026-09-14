@@ -87,6 +87,28 @@ Feature: Add Task modal
     When I set the estimate hours field to "1.5"
     Then the estimate hours field should read "15"
 
+  Scenario: Entering an hours value above 23 clamps it down to 23 (issue #121)
+    Given I have opened the Add Task modal
+    When I set the estimate hours field to "99"
+    Then the estimate hours field should read "23"
+
+  Scenario: Entering a minutes value above 59 clamps it down to 59 (issue #121)
+    Given I have opened the Add Task modal
+    When I set the estimate minutes field to "60"
+    Then the estimate minutes field should read "59"
+
+  Scenario: Entering exactly the hours/minutes boundary values leaves them unchanged (issue #121)
+    Given I have opened the Add Task modal
+    When I set the estimate hours field to "23"
+    And I set the estimate minutes field to "59"
+    Then the estimate hours field should read "23"
+    And the estimate minutes field should read "59"
+
+  Scenario: Entering a large days value is never clamped, unlike hours/minutes (issue #121)
+    Given I have opened the Add Task modal
+    When I set the estimate days field to "999"
+    Then the estimate days field should read "999"
+
   Scenario: Confirming discard via Yes closes the modal and clears every field
     Given I have opened the Add Task modal
     And I have entered "Buy groceries" as the task name

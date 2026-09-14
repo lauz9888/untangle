@@ -34,6 +34,13 @@ function sanitizeDigitsOnly(raw: string): string {
   return raw.replace(/[^0-9]/g, '')
 }
 
+function clampToMax(digitsOnly: string, max: number): string {
+  if (digitsOnly === '') {
+    return digitsOnly
+  }
+  return Number(digitsOnly) > max ? String(max) : digitsOnly
+}
+
 function estimateFieldHasValue(value: string): boolean {
   return Number(value) > 0
 }
@@ -150,9 +157,9 @@ function setEstimateField(field: EstimateField, rawValue: string): void {
   if (field === 'days') {
     estimateDays.value = sanitized
   } else if (field === 'hours') {
-    estimateHours.value = sanitized
+    estimateHours.value = clampToMax(sanitized, 23)
   } else {
-    estimateMinutes.value = sanitized
+    estimateMinutes.value = clampToMax(sanitized, 59)
   }
 }
 

@@ -320,6 +320,21 @@ describe('AddTaskModal', () => {
 
     await inputs[2]!.setValue('007')
     expect(state.setEstimateField).toHaveBeenCalledWith('minutes', '007')
+
+    // The component never pre-clamps before calling setEstimateField (issue #121) — clamping
+    // happens entirely inside the mocked-out composable, so this only proves the raw,
+    // over-max value reaches it unmodified.
+    await inputs[1]!.setValue('99')
+    expect(state.setEstimateField).toHaveBeenCalledWith('hours', '99')
+  })
+
+  it('Estimate Hours/Minutes inputs carry max="23"/max="59" (issue #121); Days has no max attribute', () => {
+    state.isOpen.value = true
+    const wrapper = mountTracked(AddTaskModal)
+
+    expect(wrapper.find('#task-estimate-days').attributes('max')).toBeUndefined()
+    expect(wrapper.find('#task-estimate-hours').attributes('max')).toBe('23')
+    expect(wrapper.find('#task-estimate-minutes').attributes('max')).toBe('59')
   })
 
   it('Estimate labels use the shortened "Days"/"Hrs"/"Min" text, each programmatically associated with its input (#120)', () => {

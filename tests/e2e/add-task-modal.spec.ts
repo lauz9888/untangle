@@ -279,3 +279,35 @@ test('Estimate row stays a single, non-wrapping line at desktop and mobile width
     expect(height).toBeGreaterThanOrEqual(44)
   }
 })
+
+test('typing above the Hours/Minutes max clamps the displayed value; Days stays uncapped (#121)', async ({
+  page,
+}) => {
+  await addTaskButton(page).click()
+  const modal = addTaskModal(page)
+
+  const hours = modal.getByLabel('Hrs', { exact: true })
+  await hours.pressSequentially('99')
+  await expect(hours).toHaveValue('23')
+
+  const minutes = modal.getByLabel('Min', { exact: true })
+  await minutes.pressSequentially('60')
+  await expect(minutes).toHaveValue('59')
+
+  const days = modal.getByLabel('Days', { exact: true })
+  await days.pressSequentially('999')
+  await expect(days).toHaveValue('999')
+})
+
+test('Estimate Hours/Minutes inputs carry the max attribute; Days has none (#121)', async ({ page }) => {
+  await addTaskButton(page).click()
+  const modal = addTaskModal(page)
+
+  const days = modal.getByLabel('Days', { exact: true })
+  const hours = modal.getByLabel('Hrs', { exact: true })
+  const minutes = modal.getByLabel('Min', { exact: true })
+
+  await expect(hours).toHaveAttribute('max', '23')
+  await expect(minutes).toHaveAttribute('max', '59')
+  expect(await days.getAttribute('max')).toBeNull()
+})
