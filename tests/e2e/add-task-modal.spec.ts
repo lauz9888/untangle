@@ -330,7 +330,11 @@ test('saving a valid task closes the modal and shows the task in its selected se
 
   await expect(modal).toBeHidden()
   await expect(taskList(page, 'next')).toContainText('Plan trip')
-  await expect(taskList(page, 'now')).not.toContainText('Plan trip')
+  // The "Now" section has zero tasks in this scenario, and an empty section renders no
+  // <ul> at all (see NowNextLaterBoard.vue / its unit tests), so `taskList` resolves to
+  // zero elements here — assert that directly rather than via `not.toContainText`, which
+  // times out waiting for a locator that may never exist instead of passing trivially.
+  await expect(taskList(page, 'now')).toHaveCount(0)
 })
 
 test('saving with an empty task name leaves the modal open, shows the inline error, and adds nothing to any section', async ({
@@ -351,5 +355,10 @@ test('saving with an empty task name leaves the modal open, shows the inline err
 
   await expect(modal).toBeVisible()
   await expect(modal.getByRole('alert')).toBeVisible()
-  await expect(page.getByRole('listitem')).toHaveCount(1)
+  // App.vue marks the background `aria-hidden`/`inert` while the modal is open (ADR 0002),
+  // which removes the previously-saved task's <li> from the accessibility tree. A plain
+  // `getByRole('listitem')` would therefore find 0, not 1, regardless of whether the failed
+  // save added anything. Pass `includeHidden: true` so the role query isn't filtered by the
+  // background's aria-hidden state, and the count still reflects "nothing was added".
+  await expect(page.getByRole('listitem', { includeHidden: true })).toHaveCount(1)
 })
