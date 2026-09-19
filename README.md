@@ -2,7 +2,7 @@
 
 An energy-based task manager, built as a PWA.
 
-The homepage currently shows the Untangle logo and the tagline "Space to think", a plus-sign "Add task" button beside the logo that opens an Add Task modal (task name, Now/Next/Later, description, energy level, estimate, available-from/due-by dates, and sub-tasks — UI only, not yet wired to any persistence), plus a Now/Next/Later layout scaffold (three fixed, empty, collapsible sections — columns on desktop, independently-collapsible rows on mobile); the task manager itself (task creation, content, and persistence) is still being rebuilt.
+The homepage currently shows the Untangle logo and the tagline "Space to think", a plus-sign "Add task" button beside the logo that opens an Add Task modal (task name, Now/Next/Later, description, energy level, estimate, available-from/due-by dates, and sub-tasks), and a Now/Next/Later board (three fixed, collapsible sections — columns on desktop, independently-collapsible rows on mobile) that renders real, persisted tasks. Saving the modal creates a task (name + section, at minimum) that's immediately visible in its section and survives a reload via `localStorage`; each task has a done-toggle checkbox with a visual completed state. Editing/deleting a task, and richer task detail (sub-tasks, description, energy level, estimate, dates) on the board itself, are still being built.
 
 ## Getting started
 
