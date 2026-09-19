@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import type * as UseTasksModule from '../../../src/composables/useTasks'
 
 const modulePath = '../../../src/composables/useTasks'
+
+type TasksStore = ReturnType<typeof UseTasksModule.useTasks>
 
 // jsdom persists localStorage across module re-imports within the same test file
 // (dynamic import() re-evaluates the module, but window.localStorage is a single
@@ -14,8 +17,8 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-async function load() {
-  const mod = await import(modulePath)
+async function load(): Promise<{ mod: typeof UseTasksModule; store: TasksStore }> {
+  const mod: typeof UseTasksModule = await import(modulePath)
   return { mod, store: mod.useTasks() }
 }
 

@@ -108,8 +108,11 @@ const tasksBySection = computed<Record<SectionKey, Task[]>>(() => {
     min-height: 44px;
   }
   .task-done-checkbox {
-    width: 1.5rem;
-    height: 1.5rem;
+    /* ~44px minimum tap target convention (see AddTaskModal.vue's .close-button etc.) —
+       1.5rem (24px) alone is too small a hit area for the actual interactive control,
+       even though the surrounding .task-item row is already 44px tall. */
+    width: 44px;
+    height: 44px;
   }
 }
 </style>
