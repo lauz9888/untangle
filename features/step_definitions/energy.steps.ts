@@ -21,6 +21,16 @@ Given('a fresh session', function (this: EnergyWorld) {
   }
   this.addTaskModal.openModal()
   this.addTaskModal.confirmDiscard()
+
+  // `tasks` is also a true module-level singleton (like `energy`/
+  // `addTaskModal`), so its state otherwise leaks across scenarios within the
+  // same Cucumber process. There's no dedicated reset-all export, so this
+  // uses the store's own already-public `removeTask` API against a snapshot
+  // of the current list (mutating `tasks.value` while iterating it directly
+  // would skip entries).
+  for (const task of [...this.tasks.tasks.value]) {
+    this.tasks.removeTask(task.id)
+  }
 })
 
 Given(
