@@ -1,6 +1,7 @@
 import { ref, computed, watch, type Ref } from 'vue'
 import type { SectionKey } from './useSectionCollapse'
 import type { EnergyLevel } from './useEnergyLevel'
+import { useTasks } from './useTasks'
 
 export interface SubTask {
   id: number
@@ -171,6 +172,30 @@ function save(): boolean {
   if (dueByInvalid.value) {
     return false
   }
+
+  const { addTask } = useTasks()
+  const created = addTask({
+    name: taskName.value,
+    section: nowNextLater.value,
+    description: description.value,
+    energyLevel: energyLevel.value,
+    estimate: {
+      days: Number(estimateDays.value) || 0,
+      hours: Number(estimateHours.value) || 0,
+      minutes: Number(estimateMinutes.value) || 0,
+    },
+    availableFrom: availableFrom.value || null,
+    dueBy: dueBy.value || null,
+    subTasks: subTasks.value.map((subTask) => ({ text: subTask.text })),
+  })
+  if (!created) {
+    // Defensive/unreachable in practice: save()'s own checks above already
+    // enforce the same two rules addTask() re-validates (Requirement 6).
+    // Guards against future divergence between the two validation rules
+    // without leaving the modal in an inconsistent state.
+    return false
+  }
+
   isOpen.value = false
   return true
 }

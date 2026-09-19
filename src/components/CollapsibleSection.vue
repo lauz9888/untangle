@@ -29,7 +29,9 @@ const contentId = computed(() => `section-${props.sectionKey}-content`)
         <span class="chevron" :class="{ 'chevron--expanded': expanded }" aria-hidden="true">▾</span>
       </button>
     </div>
-    <div :id="contentId" class="section-content" :hidden="!expanded"></div>
+    <div :id="contentId" class="section-content" :hidden="!expanded">
+      <slot />
+    </div>
   </section>
 </template>
 
