@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import type { useAddTaskModal } from '../../../src/composables/useAddTaskModal'
 
 const modulePath = '../../../src/composables/useAddTaskModal'
+const tasksModulePath = '../../../src/composables/useTasks'
 
 type AddTaskModalState = ReturnType<typeof useAddTaskModal>
 
@@ -13,6 +14,9 @@ async function load(): Promise<AddTaskModalState> {
 describe('useAddTaskModal', () => {
   beforeEach(() => {
     vi.resetModules()
+    // save() now has a real side effect on useTasks.ts's singleton/persisted state
+    // (design.md, Risks item 7) — must start each test from a clean store.
+    localStorage.clear()
   })
 
   describe('default state', () => {
@@ -585,6 +589,86 @@ describe('useAddTaskModal', () => {
       add('C')
 
       expect(state.subTasks.value.map((t: { text: string }) => t.text)).toEqual(['B', 'C'])
+    })
+  })
+
+  describe('save() persisting to the task store', () => {
+    // Both modules must be re-imported fresh after vi.resetModules(), mirroring load() above —
+    // a stale reference to either module from a prior test would not reflect the instance
+    // save() actually calls (design.md, Risks item 7).
+    async function loadBoth() {
+      const modalMod = await import(modulePath)
+      const tasksMod = await import(tasksModulePath)
+      return { modal: modalMod.useAddTaskModal(), tasks: tasksMod.useTasks() }
+    }
+
+    it('appends exactly one task with the expected mapped fields on a successful save', async () => {
+      const { modal, tasks } = await loadBoth()
+      modal.openModal()
+      modal.taskName.value = 'Buy milk'
+      modal.selectSection('next')
+      modal.description.value = 'Get 2% milk'
+      modal.selectEnergyLevel('medium')
+      modal.setEstimateField('days', '2')
+      modal.setEstimateField('hours', '3')
+      modal.setEstimateField('minutes', '15')
+      modal.availableFrom.value = '2026-01-01'
+      modal.dueBy.value = '2026-01-05'
+      modal.openSubTaskInput()
+      modal.subTaskDraft.value = 'Step 1'
+      modal.saveSubTaskDraft()
+
+      const result = modal.save()
+
+      expect(result).toBe(true)
+      expect(tasks.tasks.value).toHaveLength(1)
+      const created = tasks.tasks.value[0]!
+      expect(created.name).toBe('Buy milk')
+      expect(created.section).toBe('next')
+      expect(created.description).toBe('Get 2% milk')
+      expect(created.energyLevel).toBe('medium')
+      expect(created.estimate).toEqual({ days: 2, hours: 3, minutes: 15 })
+      expect(created.availableFrom).toBe('2026-01-01')
+      expect(created.dueBy).toBe('2026-01-05')
+      expect(created.subTasks).toEqual([{ id: expect.any(Number), text: 'Step 1', done: false }])
+      expect(created.done).toBe(false)
+    })
+
+    it('defaults empty sanitized estimate strings to 0 and empty date strings to null', async () => {
+      const { modal, tasks } = await loadBoth()
+      modal.openModal()
+      modal.taskName.value = 'Buy milk'
+
+      modal.save()
+
+      const created = tasks.tasks.value[0]!
+      expect(created.estimate).toEqual({ days: 0, hours: 0, minutes: 0 })
+      expect(created.availableFrom).toBe(null)
+      expect(created.dueBy).toBe(null)
+      expect(created.subTasks).toEqual([])
+    })
+
+    it('appends nothing to the store on a failed save (empty task name)', async () => {
+      const { modal, tasks } = await loadBoth()
+      modal.openModal()
+
+      const result = modal.save()
+
+      expect(result).toBe(false)
+      expect(tasks.tasks.value).toHaveLength(0)
+    })
+
+    it('appends nothing to the store on a failed save (invalid due-by range)', async () => {
+      const { modal, tasks } = await loadBoth()
+      modal.openModal()
+      modal.taskName.value = 'Buy milk'
+      modal.availableFrom.value = '2026-02-10'
+      modal.dueBy.value = '2026-02-01'
+
+      const result = modal.save()
+
+      expect(result).toBe(false)
+      expect(tasks.tasks.value).toHaveLength(0)
     })
   })
 
