@@ -15,6 +15,28 @@ import {
 // "best-practice" rule set. Mirrors .claude/STANDARDS.md's WCAG conformance scope.
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
+const TASKS_STORAGE_KEY = 'untangle:tasks'
+
+// Local fixture builder mirroring design.md's Task shape (docs/adr/0003) — seeded directly into
+// localStorage since the real useTasks.ts store doesn't exist yet.
+function makeTask(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 1,
+    name: 'Read a book',
+    section: 'now',
+    description: '',
+    energyLevel: null,
+    estimate: { days: 0, hours: 0, minutes: 0 },
+    availableFrom: null,
+    dueBy: null,
+    subTasks: [],
+    done: false,
+    createdAt: 1000,
+    updatedAt: 1000,
+    ...overrides,
+  }
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('./')
   await page.evaluate(() => localStorage.clear())
@@ -69,6 +91,32 @@ test('has no violations with the close-without-saving confirmation dialog open',
   await modal.getByLabel('Task name', { exact: true }).fill('Write report')
   await page.keyboard.press('Escape')
   await expect(closeConfirmDialog(page)).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with an incomplete task rendered on the board', async ({ page }) => {
+  await page.evaluate(({ key, task }) => localStorage.setItem(key, JSON.stringify([task])), {
+    key: TASKS_STORAGE_KEY,
+    task: makeTask({ done: false }),
+  })
+  await page.reload()
+  await expect(page.getByRole('listitem')).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with a completed (done: true) task rendered on the board', async ({
+  page,
+}) => {
+  await page.evaluate(({ key, task }) => localStorage.setItem(key, JSON.stringify([task])), {
+    key: TASKS_STORAGE_KEY,
+    task: makeTask({ done: true }),
+  })
+  await page.reload()
+  await expect(page.getByRole('listitem')).toBeVisible()
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(results.violations).toEqual([])

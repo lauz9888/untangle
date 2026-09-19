@@ -1,5 +1,5 @@
 import { test, expect } from './coverage-fixture'
-import { addTaskButton, addTaskModal, closeConfirmDialog } from './helpers'
+import { addTaskButton, addTaskModal, closeConfirmDialog, taskList } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./')
@@ -316,4 +316,40 @@ test('Estimate Hours/Minutes inputs carry the max attribute; Days has none (#121
   await expect(hours).toHaveAttribute('max', '23')
   await expect(minutes).toHaveAttribute('max', '59')
   expect(await days.getAttribute('max')).toBeNull()
+})
+
+test('saving a valid task closes the modal and shows the task in its selected section on the board', async ({
+  page,
+}) => {
+  await addTaskButton(page).click()
+  const modal = addTaskModal(page)
+  await modal.getByLabel('Task name', { exact: true }).fill('Plan trip')
+  await modal.getByRole('button', { name: 'Next', exact: true }).click()
+
+  await modal.getByRole('button', { name: 'Save', exact: true }).click()
+
+  await expect(modal).toBeHidden()
+  await expect(taskList(page, 'next')).toContainText('Plan trip')
+  await expect(taskList(page, 'now')).not.toContainText('Plan trip')
+})
+
+test('saving with an empty task name leaves the modal open, shows the inline error, and adds nothing to any section', async ({
+  page,
+}) => {
+  // Seed one already-saved task first, so the assertion below can distinguish "nothing was
+  // added" from "nothing has ever been added" (the latter is trivially true before this
+  // feature exists and wouldn't catch a regression).
+  await addTaskButton(page).click()
+  let modal = addTaskModal(page)
+  await modal.getByLabel('Task name', { exact: true }).fill('Existing task')
+  await modal.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(modal).toBeHidden()
+
+  await addTaskButton(page).click()
+  modal = addTaskModal(page)
+  await modal.getByRole('button', { name: 'Save', exact: true }).click()
+
+  await expect(modal).toBeVisible()
+  await expect(modal.getByRole('alert')).toBeVisible()
+  await expect(page.getByRole('listitem')).toHaveCount(1)
 })

@@ -35,3 +35,15 @@ export function addTaskModal(page: Page) {
 export function closeConfirmDialog(page: Page) {
   return page.getByRole('alertdialog', { name: 'Close without saving?' })
 }
+
+export function taskList(page: Page, key: string) {
+  return sectionContent(page, key).getByRole('list')
+}
+
+export function taskDoneToggle(page: Page, name: string) {
+  return page.getByRole('checkbox', { name, exact: true })
+}
+
+export function taskItem(page: Page, name: string) {
+  return page.getByRole('listitem').filter({ hasText: name })
+}
