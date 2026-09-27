@@ -22,7 +22,14 @@ export default defineConfig({
       reporter: ['json', 'text-summary'],
       reportsDirectory: 'coverage/storybook',
       include: ['src/**/*.{ts,vue}'],
-      exclude: ['src/main.ts'],
+      // Unlike the unit layer (whose test files live under tests/unit/, never
+      // overlapping this include glob), ADR 0004 co-locates .stories.ts next
+      // to the component it documents, inside src/components/ — so without
+      // this exclusion, each story file's own module-body statements (mock
+      // setup, story objects) get swept in as "source" and instrumented, but
+      // no test ever covers a story file's own code, so they report as 0%
+      // and needlessly dilute the combined percentage.
+      exclude: ['src/main.ts', 'src/**/*.stories.ts'],
     },
   },
 })

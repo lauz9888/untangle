@@ -41,7 +41,12 @@ export default defineConfig({
       reporter: ['json', 'text-summary', 'html'],
       reportsDirectory: 'coverage/unit',
       include: ['src/**/*.{ts,vue}'],
-      exclude: ['src/main.ts'],
+      // .stories.ts files are co-located under src/components/ (ADR 0004) but
+      // belong to the separate Storybook test layer (vitest.storybook.config.ts),
+      // not this one — no unit test ever imports them, so without this
+      // exclusion v8's include-glob walk reports each one as untouched (0%),
+      // needlessly diluting this layer's (and the combined) percentage.
+      exclude: ['src/main.ts', 'src/**/*.stories.ts'],
     },
   },
 })
