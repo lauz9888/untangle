@@ -2,6 +2,7 @@ import type { StorybookConfig } from '@storybook/vue3-vite'
 import type { PluginOption } from 'vite'
 import { mergeConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath } from 'node:url'
 
 const config: StorybookConfig = {
   stories: ['../src/components/**/*.stories.ts'],
@@ -53,7 +54,74 @@ const config: StorybookConfig = {
 
     const filteredPlugins = stripDuplicatedPlugins(viteConfig.plugins ?? [])
 
-    return mergeConfig({ ...viteConfig, plugins: filteredPlugins }, { plugins: [vue()] })
+    // Bug #141: every `.stories.ts` file imports `vi`/`expect` from 'vitest'
+    // (design.md §6's canonical template) — and two files also import `page`
+    // from 'vitest/browser' — so the same source works under both this
+    // interactive dev/build path and `test:storybook`'s real Vitest process.
+    // Under this path alone, resolving the real `vitest` package crashes
+    // every story with "Cannot read properties of undefined (reading
+    // 'customEqualityTesters')", and resolving the real `vitest/browser`
+    // package (a stub that unconditionally throws outside real Vitest
+    // browser mode) breaks the entire containing `.stories.ts` module —
+    // see .storybook/vitest-interactive-stub.ts and
+    // .storybook/vitest-browser-interactive-stub.ts for the full root-cause
+    // traces.
+    //
+    // This `viteFinal` result is NOT exclusive to `npm run storybook`/
+    // `npm run build-storybook`: `@storybook/addon-vitest`'s vitest-plugin
+    // (used by `vitest.storybook.config.ts`) also calls it and merges the
+    // ENTIRE returned config (not just `.plugins` — confirmed against the
+    // installed package's `config$1 = mergeConfig(baseConfig,
+    // viteConfigFromStorybook)`) into the real Vitest browser-mode config.
+    // A first attempt that aliased 'vitest'/'vitest/browser' unconditionally
+    // here broke `test:storybook` itself (Vitest's own runtime needs the
+    // real packages) — it didn't fail loudly, it hung indefinitely
+    // (reproduced: 0 progress for 45+ minutes, vs. a clean ~12s 23/23 pass
+    // once this guard was added). `process.env.VITEST` is set to `'true'` by
+    // Vitest's own CLI before it resolves plugin config (including this
+    // `viteFinal` callback, invoked from inside addon-vitest's Vite plugin),
+    // and is never set for the plain `storybook dev`/`storybook build`
+    // process — so gating on it keeps `test:storybook` resolving the real
+    // `vitest`/`vitest/browser` packages untouched, while still fixing the
+    // interactive dev/build crash.
+    const isRealVitestProcess = process.env.VITEST === 'true'
+
+    return mergeConfig(
+      { ...viteConfig, plugins: filteredPlugins },
+      {
+        plugins: [vue()],
+        ...(isRealVitestProcess
+          ? {}
+          : {
+              resolve: {
+                // Array form with anchored regexes, not the plain
+                // object-key form: Vite's object-key aliases match by
+                // *prefix*, not exact string, so a bare `vitest` key also
+                // matches (and, in iteration order, wins over) the
+                // `vitest/browser` specifier below — confirmed by
+                // reproduction (the object-key form left every
+                // `import { page } from 'vitest/browser'` unresolved:
+                // "Failed to resolve import 'vitest/browser'"). Anchoring
+                // each pattern keeps the two stubs independent regardless
+                // of key order.
+                alias: [
+                  {
+                    find: /^vitest$/,
+                    replacement: fileURLToPath(
+                      new URL('./vitest-interactive-stub.ts', import.meta.url)
+                    ),
+                  },
+                  {
+                    find: /^vitest\/browser$/,
+                    replacement: fileURLToPath(
+                      new URL('./vitest-browser-interactive-stub.ts', import.meta.url)
+                    ),
+                  },
+                ],
+              },
+            }),
+      }
+    )
   },
 }
 
