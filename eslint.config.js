@@ -44,7 +44,13 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**/*.mjs', '*.config.{js,ts}', 'cucumber.cjs'],
+    files: [
+      'scripts/**/*.mjs',
+      '*.config.{js,ts}',
+      'cucumber.cjs',
+      '.storybook/**/*.ts',
+      'vitest.storybook.config.ts',
+    ],
     languageOptions: {
       globals: {
         process: 'readonly',
@@ -66,6 +72,7 @@ export default tseslint.config(
       'dev-dist/',
       '.workflow/',
       '.nyc_output/',
+      'storybook-static/',
     ],
   }
 )

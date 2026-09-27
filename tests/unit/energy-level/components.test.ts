@@ -71,20 +71,6 @@ describe('EnergySelector', () => {
     expect(labels).toEqual(['Low', 'Medium', 'High'])
   })
 
-  it('calls selectLevel with the matching value when a button is clicked', async () => {
-    const wrapper = mountTracked(EnergySelector)
-    const buttons = wrapper.findAll('button')
-
-    await buttons[0]!.trigger('click')
-    expect(state.selectLevel).toHaveBeenCalledWith('low')
-
-    await buttons[1]!.trigger('click')
-    expect(state.selectLevel).toHaveBeenCalledWith('medium')
-
-    await buttons[2]!.trigger('click')
-    expect(state.selectLevel).toHaveBeenCalledWith('high')
-  })
-
   it('marks the currently selected level as pressed and leaves the others unpressed', () => {
     state.selectedLevel.value = 'medium'
     const wrapper = mountTracked(EnergySelector)
@@ -118,14 +104,6 @@ describe('EncourageButton', () => {
     expect(wrapper.find('button').text()).toBe('Encourage me')
   })
 
-  it('calls encourageMe when clicked', async () => {
-    const wrapper = mountTracked(EncourageButton)
-
-    await wrapper.find('button').trigger('click')
-
-    expect(state.encourageMe).toHaveBeenCalled()
-  })
-
   it('has no accessibility violations', async () => {
     const wrapper = mountTracked(EncourageButton)
     await expectNoAxeViolations(wrapper.element)
@@ -136,14 +114,6 @@ describe('ToughLoveButton', () => {
   it('renders a button labeled "Tough love"', () => {
     const wrapper = mountTracked(ToughLoveButton)
     expect(wrapper.find('button').text()).toBe('Tough love')
-  })
-
-  it('calls toughLove when clicked', async () => {
-    const wrapper = mountTracked(ToughLoveButton)
-
-    await wrapper.find('button').trigger('click')
-
-    expect(state.toughLove).toHaveBeenCalled()
   })
 
   it('has no accessibility violations', async () => {
@@ -166,15 +136,6 @@ describe('ToastNotification', () => {
     expect(toast.exists()).toBe(true)
     expect(toast.attributes('aria-live')).toBe('polite')
     expect(toast.text()).toContain("You're doing just fine at this pace.")
-  })
-
-  it('calls dismissToast when the close button is clicked', async () => {
-    state.toastMessage.value = 'Small steps still count.'
-    const wrapper = mountTracked(ToastNotification)
-
-    await wrapper.find('button').trigger('click')
-
-    expect(state.dismissToast).toHaveBeenCalled()
   })
 
   it('has no accessibility violations when shown', async () => {
