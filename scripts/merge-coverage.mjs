@@ -1,10 +1,12 @@
 // Coverage-merge pipeline for `npm run test:coverage:merge`. Combines Vitest's
-// native v8 coverage (unit), Cucumber's nyc/ts-node Istanbul instrumentation
-// (BDD), and Playwright's Chromium `page.coverage` (converted via
-// v8-to-istanbul, see `tests/e2e/coverage-fixture.ts`) into a single combined
-// statement-coverage percentage. See `.claude/STANDARDS.md` for the gating
-// threshold, and note why `.nyc_output/` must be reset between the BDD and
-// e2e phases below.
+// native v8 coverage (unit), Storybook's stories/interaction tests under
+// @storybook/addon-vitest (also v8, via vitest.storybook.config.ts — see step
+// 2b below), Cucumber's nyc/ts-node Istanbul instrumentation (BDD), and
+// Playwright's Chromium `page.coverage` (converted via v8-to-istanbul, see
+// `tests/e2e/coverage-fixture.ts`) into a single combined statement-coverage
+// percentage across all four layers. See `.claude/STANDARDS.md` for the
+// gating threshold, and note why `.nyc_output/` must be reset between the BDD
+// and e2e phases below.
 
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -86,6 +88,13 @@ rm(nycOutputDir)
 // vite.config.ts's `test.coverage` block).
 run('npx', ['vitest', 'run', '--coverage'])
 
+// 2b. Storybook stories/interaction tests with coverage (writes
+// coverage/storybook/coverage-final.json per vitest.storybook.config.ts's
+// `test.coverage` block). Runs before the BDD/nyc step below since it
+// never touches .nyc_output/ — order relative to BDD/e2e doesn't matter,
+// grouped here next to the unit step because both are Vitest runs.
+run('npx', ['vitest', 'run', '--config', 'vitest.storybook.config.ts', '--coverage'])
+
 // 3. BDD tests under Istanbul instrumentation (nyc's require-hook
 // instruments src/**/*.ts as Cucumber's Node process requires it via
 // ts-node/register). Writes coverage/bdd/coverage-final.json.
@@ -103,9 +112,9 @@ rm(nycOutputDir)
 // .nyc_output/ again).
 run('npx', ['playwright', 'test'], { env: { ...process.env, COVERAGE: 'true' } })
 
-// 6. Merge all three layer-pure coverage-final.json files into one map.
+// 6. Merge all four layer-pure coverage-final.json files into one map.
 const map = createCoverageMap({})
-const layers = ['unit', 'bdd', 'e2e']
+const layers = ['unit', 'storybook', 'bdd', 'e2e']
 let mergedAny = false
 
 for (const layer of layers) {

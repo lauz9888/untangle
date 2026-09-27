@@ -157,14 +157,6 @@ describe('AddTaskButton', () => {
     expect(wrapper.find('button').attributes('type')).toBe('button')
   })
 
-  it('calls openModal when clicked', async () => {
-    const wrapper = mountTracked(AddTaskButton)
-
-    await wrapper.find('button').trigger('click')
-
-    expect(state.openModal).toHaveBeenCalledTimes(1)
-  })
-
   it('refocuses itself when isOpen transitions from true to false', async () => {
     state.isOpen.value = true
     const wrapper = mountTracked(AddTaskButton)
@@ -426,18 +418,6 @@ describe('AddTaskModal', () => {
       expect(filledSaveButtons[0]!.attributes('disabled')).toBeUndefined()
     })
 
-    it('sub-task Save button calls saveSubTaskDraft when enabled', async () => {
-      state.isOpen.value = true
-      state.isSubTaskInputOpen.value = true
-      state.canSaveSubTaskDraft.value = true
-      const wrapper = mountTracked(AddTaskModal)
-
-      const saveButtons = wrapper.findAll('button').filter((b) => b.text().trim() === 'Save')
-      await saveButtons[0]!.trigger('click')
-
-      expect(state.saveSubTaskDraft).toHaveBeenCalledTimes(1)
-    })
-
     it('sub-task draft Close button calls closeSubTaskInput and is distinct from the modal X button (#115)', async () => {
       state.isOpen.value = true
       state.isSubTaskInputOpen.value = true
@@ -491,37 +471,6 @@ describe('AddTaskModal', () => {
       const items = wrapper.findAll('li')
       expect(items[0]!.text()).toContain('First')
       expect(items[1]!.text()).toContain('Second')
-    })
-  })
-
-  describe('close wiring', () => {
-    it('calls requestClose when the X button is clicked', async () => {
-      state.isOpen.value = true
-      const wrapper = mountTracked(AddTaskModal)
-
-      await wrapper.find('button[aria-label="Close"]').trigger('click')
-
-      expect(state.requestClose).toHaveBeenCalledTimes(1)
-    })
-
-    it('calls requestClose on Escape', async () => {
-      state.isOpen.value = true
-      const wrapper = mountTracked(AddTaskModal)
-
-      await wrapper.find('.add-task-overlay').trigger('keydown', { key: 'Escape' })
-
-      expect(state.requestClose).toHaveBeenCalledTimes(1)
-    })
-
-    it('calls requestClose on a backdrop click, but not on a click inside the dialog content', async () => {
-      state.isOpen.value = true
-      const wrapper = mountTracked(AddTaskModal)
-
-      await wrapper.find('.add-task-content').trigger('click')
-      expect(state.requestClose).not.toHaveBeenCalled()
-
-      await wrapper.find('.add-task-overlay').trigger('click')
-      expect(state.requestClose).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -633,29 +582,6 @@ describe('CloseConfirmDialog', () => {
     const labelledbyId = dialog.attributes('aria-labelledby')
     expect(labelledbyId).toBeTruthy()
     expect(wrapper.find(`#${labelledbyId}`).text()).toBe('Close without saving?')
-  })
-
-  it('Yes calls confirmDiscard and No calls cancelDiscard', async () => {
-    state.isConfirmOpen.value = true
-    const wrapper = mountTracked(CloseConfirmDialog)
-    const buttons = wrapper.findAll('button')
-    const yesButton = buttons.find((b) => b.text().trim() === 'Yes')!
-    const noButton = buttons.find((b) => b.text().trim() === 'No')!
-
-    await yesButton.trigger('click')
-    expect(state.confirmDiscard).toHaveBeenCalledTimes(1)
-
-    await noButton.trigger('click')
-    expect(state.cancelDiscard).toHaveBeenCalledTimes(1)
-  })
-
-  it('calls cancelDiscard on Escape', async () => {
-    state.isConfirmOpen.value = true
-    const wrapper = mountTracked(CloseConfirmDialog)
-
-    await wrapper.find('.close-confirm-overlay').trigger('keydown', { key: 'Escape' })
-
-    expect(state.cancelDiscard).toHaveBeenCalledTimes(1)
   })
 
   it('moves focus to the No button on first mount, via onMounted rather than a watcher (#117)', async () => {

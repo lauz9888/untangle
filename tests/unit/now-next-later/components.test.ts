@@ -110,20 +110,6 @@ describe('NowNextLaterBoard', () => {
     expect(sections.map((section) => section.props('label'))).toEqual(['Now', 'Next', 'Later'])
   })
 
-  it.each([
-    ['Now', 'now'],
-    ['Next', 'next'],
-    ['Later', 'later'],
-  ])('clicking the %s toggle button calls toggle with its key', async (_label, key) => {
-    const wrapper = mountTracked(NowNextLaterBoard)
-    const sections = wrapper.findAllComponents(CollapsibleSection)
-    const target = sections.find((section) => section.props('sectionKey') === key)!
-
-    await target.find('button').trigger('click')
-
-    expect(sectionState.toggle).toHaveBeenCalledWith(key)
-  })
-
   it('has no accessibility violations in the default all-expanded state', async () => {
     const wrapper = mountTracked(NowNextLaterBoard)
     await expectNoAxeViolations(wrapper.element)
@@ -175,17 +161,6 @@ describe('NowNextLaterBoard', () => {
 
       expect((incomplete.element as HTMLInputElement).checked).toBe(false)
       expect((complete.element as HTMLInputElement).checked).toBe(true)
-    })
-
-    it("clicking/toggling a task's checkbox calls toggleTaskDone(id) with the correct id", async () => {
-      tasksState.tasks.value = [
-        { id: 7, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
-      ]
-      const wrapper = mountTracked(NowNextLaterBoard)
-
-      await wrapper.find('#task-7-done').setValue(true)
-
-      expect(tasksState.toggleTaskDone).toHaveBeenCalledWith(7)
     })
 
     it("renders tasks sorted by ascending createdAt regardless of the mocked array's input order", () => {
@@ -282,14 +257,6 @@ describe('CollapsibleSection', () => {
 
     const collapsedWrapper = mountTracked(CollapsibleSection, { ...baseProps, expanded: false })
     expect(collapsedWrapper.find('.section-content').attributes('hidden')).toBeDefined()
-  })
-
-  it('emits toggle when the button is clicked', async () => {
-    const wrapper = mountTracked(CollapsibleSection, baseProps)
-
-    await wrapper.find('button').trigger('click')
-
-    expect(wrapper.emitted('toggle')).toHaveLength(1)
   })
 
   it('has no accessibility violations when expanded', async () => {
