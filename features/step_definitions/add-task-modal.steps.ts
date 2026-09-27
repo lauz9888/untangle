@@ -6,7 +6,7 @@ import { SECTION_DEFS, type SectionKey } from '../../src/composables/useSectionC
 // Drives useAddTaskModal() directly — the same singleton instance the
 // AddTaskButton/AddTaskModal/CloseConfirmDialog components share — rather
 // than reaching into implementation details, matching the convention
-// established by energy.steps.ts/section-collapse.steps.ts. Scenarios cover
+// established by energy.steps.ts/task-store.steps.ts. Scenarios cover
 // only the behaviors design.md assigns to the BDD layer; per-field exhaustive
 // sanitization/validation coverage lives in tests/unit/add-task-modal/.
 
