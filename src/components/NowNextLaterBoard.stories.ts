@@ -1,6 +1,6 @@
 import { vi, expect } from 'vitest'
 import { within, userEvent } from 'storybook/test'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { reactive, ref } from 'vue'
 import NowNextLaterBoard from './NowNextLaterBoard.vue'

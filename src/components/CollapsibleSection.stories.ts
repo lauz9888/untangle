@@ -1,5 +1,5 @@
 import { fn, within, userEvent, expect } from 'storybook/test'
-import { page } from '@vitest/browser/context'
+import { page } from 'vitest/browser'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import CollapsibleSection from './CollapsibleSection.vue'
 

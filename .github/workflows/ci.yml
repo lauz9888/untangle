@@ -110,6 +110,23 @@ jobs:
       # deployment. `pretest:e2e` (package.json) installs the Chromium
       # browser automatically before this runs.
 
+  storybook-tests:
+    name: Storybook tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build-storybook
+      - run: npm run test:storybook
+      # pretest:storybook (package.json) installs the Chromium browser
+      # automatically before test:storybook runs, mirroring pretest:e2e —
+      # same pinned browser version as e2e-tests/coverage-merge, so no
+      # redundant download.
+
   coverage-merge:
     name: Combined coverage (>=90%, see .claude/STANDARDS.md)
     runs-on: ubuntu-latest
@@ -127,6 +144,10 @@ jobs:
       # scripts/merge-coverage.mjs invokes `npx playwright test` directly
       # (not via `npm run test:e2e`), which bypasses the `pretest:e2e` npm
       # lifecycle hook — the browser must be installed explicitly here.
+      # This same install also covers the storybook leg's browser-mode
+      # requirement (one shared Chromium install satisfies both `npx
+      # playwright test` and `npx vitest run --config
+      # vitest.storybook.config.ts`).
       - run: npx playwright install --with-deps chromium
       - name: Run combined coverage and enforce threshold
         run: |

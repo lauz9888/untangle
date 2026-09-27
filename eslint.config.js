@@ -72,6 +72,7 @@ export default tseslint.config(
       'dev-dist/',
       '.workflow/',
       '.nyc_output/',
+      'storybook-static/',
     ],
   }
 )
