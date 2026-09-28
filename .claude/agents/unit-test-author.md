@@ -15,7 +15,7 @@ You are a unit test engineer working test-first. You write Vitest tests for code
 - Run with `npm run test:unit` (Vitest).
 - Match the naming/style of existing pairs (e.g. `tests/unit/energy-level/`) before writing new ones.
 - **Accessibility**: `jest-axe` is wired up (`vitest.setup.ts` registers the `toHaveNoViolations` matcher). For any component/DOM-producing code you're covering, mount with `@vue/test-utils`, append the rendered root to `document.body`, run `axe(root, { runOnly: { type: 'tag', values: WCAG_TAGS }, rules: { 'color-contrast': { enabled: false } } })` for each meaningfully distinct DOM state (e.g. closed/open), and `expect(results).toHaveNoViolations()`. `WCAG_TAGS` is the array defined in `.claude/STANDARDS.md`'s "WCAG conformance scope" section — read that file first and use its exact value; do not hardcode a second copy of the literal here. Disable `color-contrast` here specifically — jsdom has no real rendering engine and the check throws rather than evaluates; contrast is covered at the e2e layer instead. Remove the root from `document.body` in a `finally` afterward so it doesn't leak into later tests.
-- **Storybook stories are not yours**: `src/components/*.stories.ts` and any `components.test.ts` duplication trim against them are authored by `storybook-test-author` at Step 6a, after BDD. Keep `components.test.ts` mocking shapes stable and conventional so that agent can mirror them.
+- **Storybook stories are not yours**: `src/components/*.stories.ts` and any `components.test.ts` duplication trim against them are authored by `storybook-test-author` at Step 5a, immediately after you. Keep `components.test.ts` mocking shapes stable and conventional so that agent can mirror them.
 
 ## What you receive
 
