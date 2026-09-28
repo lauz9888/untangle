@@ -1,11 +1,11 @@
 ---
 name: ship-feature
-description: Runs the full untangle change pipeline end-to-end — requirements, solution design/review, branch, test-first unit/BDD/e2e, implementation, bug-fix loops, QA + coverage gate, manual test gate, merge, CI/CD, docs, and a post-change report. Invoke with the change request as the argument, e.g. `/ship-feature add a dark mode toggle to settings`.
+description: Runs the full untangle change pipeline end-to-end — requirements, solution design/review, branch, test-first unit/BDD/Storybook/e2e, implementation, bug-fix loops, QA + coverage gate, manual test gate, merge, CI/CD, docs, and a post-change report. Invoke with the change request as the argument, e.g. `/ship-feature add a dark mode toggle to settings`.
 ---
 
 You are driving a multi-step, largely-autonomous development pipeline for the untangle repo. You run in the main conversation and orchestrate specialized subagents via the `Agent` tool — you do all git/gh/file work and all direct user interaction yourself; subagents never talk to the user, they read/write files and return a `STATUS:` line you act on.
 
-Read this whole file before acting. Follow the steps in order — they mirror the pipeline spec 1:1 (22 steps, after Step 13's base-path smoke check was added, plus the out-of-band Step 11a for the full Storybook suite/bug loop and Step 21a for periodic quality reporting), so don't skip or reorder one even if it looks safe to shortcut.
+Read this whole file before acting. Follow the steps in order — they mirror the pipeline spec 1:1 (22 steps, after Step 13's base-path smoke check was added, plus the lettered Storybook steps — Step 6a (stories red) and Step 10a (full Storybook suite/bug loop), each slotted between the BDD and e2e steps — and Step 21a for periodic quality reporting), so don't skip or reorder one even if it looks safe to shortcut.
 
 ## Pre-authorization (read this before Step 4)
 
@@ -16,7 +16,7 @@ The user has explicitly pre-authorized this workflow to create branches, merge t
 **Artifacts & state.** Everything for one run lives in `.workflow/<slug>/` (gitignored — local scratch, not part of the PR):
 
 - `requirements.md`, `design.md` — the documents subagents read and write.
-- `state.md` — plain markdown, updated immediately after every step completes: current step number, branch name, tracking issue number, per-layer test file lists (recorded at Steps 5/6/7), `coverage-percent` (Step 12), open/closed bug issue numbers, and — recorded rather than re-derived later, so nothing downstream has to guess "the latest" — `previous-main-sha`/`merge-sha` (Step 18), `cd-run-id`/`cd-outcome` (Step 19), `housekeeping-branch`/`housekeeping-pr` (Step 21a), and any `preview-server-pid`/`dev-server-pid` from a background server started at Steps 13/14 (cleared once stopped). This is what makes a run resumable.
+- `state.md` — plain markdown, updated immediately after every step completes: current step number, branch name, tracking issue number, per-layer test file lists (recorded at Steps 5/6/6a/7), `coverage-percent` (Step 12), open/closed bug issue numbers, and — recorded rather than re-derived later, so nothing downstream has to guess "the latest" — `previous-main-sha`/`merge-sha` (Step 18), `cd-run-id`/`cd-outcome` (Step 19), `housekeeping-branch`/`housekeeping-pr` (Step 21a), and any `preview-server-pid`/`dev-server-pid` from a background server started at Steps 13/14 (cleared once stopped). This is what makes a run resumable.
 - `meta.json` — `{"slug": ..., "started_at": ISO timestamp}`, written at Step 2 kickoff; feeds the Step 21 duration metric.
 
 **Resuming.** If invoked with no clear new change request, look for `.workflow/*/state.md`. Exactly one incomplete → tell the user you're resuming it, pick up at its recorded step. More than one → `AskUserQuestion`. None → treat input as a new request.
@@ -31,13 +31,13 @@ The user has explicitly pre-authorized this workflow to create branches, merge t
 
 **Bug tracking.** File discrepancies/failures as GitHub issues: `gh issue create --label <label> --title "<slug>: <short summary>" --body "<detail>\n\nRelated to #<tracking-issue>"`. Create labels once if missing (`gh label list`, then `gh label create <name> --color <hex>` for any absent): `requirement`, `design`, `unit-test`, `bdd-test`, `e2e-test`, `storybook-test`, `qa`, `manual-test`, `deploy-path`, `ci`, `cd`, `accessibility`, `security`. `cd` is distinct from `ci`: `ci` is a pre-merge failure (Step 18, still on the feature branch/PR); `cd` is a failure of the CD workflow itself, caught only after the change merged (Step 19) — build, packaging, auth, artifact upload, or the deploy step, not necessarily a defect a live user hit (the previous version often just stays live). Keeping `cd` separate from `ci` is what lets `quality-reporter`'s shift-left analysis measure a real post-merge delivery-failure rate instead of conflating the two. Close with `gh issue close <n> --comment "<what fixed it>"` once the matching check is green again.
 
-**Accessibility.** This isn't a separate pipeline stage — it's a lens every stage applies to UI-facing work, per each agent's own instructions: requirements-analyst always writes testable WCAG 2.1 AA requirements for new/changed UI (not gated on the user asking); solution-designer/-reviewer treat an accessibility design gap the same as a functional coverage gap; the test-author agents wire automated `jest-axe` (unit)/`@axe-core/playwright` (e2e) WCAG scans alongside behavioral tests; the implementer treats the design's accessibility decisions as part of the implementation, not optional polish; qa-reviewer reviews it explicitly and can hand back `STATUS: accessibility-gap` (handled at Step 12 like a coverage gap). Tag any accessibility-specific bug issue with the `accessibility` label in addition to its stage label.
+**Accessibility.** This isn't a separate pipeline stage — it's a lens every stage applies to UI-facing work, per each agent's own instructions: requirements-analyst always writes testable WCAG 2.1 AA requirements for new/changed UI (not gated on the user asking); solution-designer/-reviewer treat an accessibility design gap the same as a functional coverage gap; the test-author agents wire automated `jest-axe` (unit)/`@storybook/addon-a11y` (Storybook)/`@axe-core/playwright` (e2e) WCAG scans alongside behavioral tests; the implementer treats the design's accessibility decisions as part of the implementation, not optional polish; qa-reviewer reviews it explicitly and can hand back `STATUS: accessibility-gap` (handled at Step 12 like a coverage gap). Tag any accessibility-specific bug issue with the `accessibility` label in addition to its stage label.
 
 **Retry caps.** Every loop below (design review, per-layer red/green cycles, QA cycle, manual-test cycle, CI cycle) is capped at 5 iterations. If you hit the cap, stop, summarize what's failing, and ask the user how to proceed (`AskUserQuestion`: keep trying / take over manually / abandon) rather than looping forever.
 
 **Commits.** After every step that changes files, `git add` only the files that step touched and commit `<slug>: <step description>`. Never commit `.workflow/`. Never use `--no-verify` or force operations.
 
-**npm script contract.** CI/CD and every test-running step assume these scripts exist in `package.json`: `build`, `typecheck`, `lint`, `dev`, `test:unit`, `test:bdd`, `test:e2e`, `test:coverage:merge` (outputs one combined coverage % across all layers — three by default, four once the Storybook layer exists). If any is missing, the Step 3 solution design and Step 8 implementation must include adding it — don't silently skip a test layer because the script is missing. For a change that adds or touches the Storybook layer, `storybook`, `build-storybook`, `test:storybook`, and `pretest:storybook` follow the same contract: if missing, Step 5's story-authoring pass and Step 8's implementation must add them, same as the core eight scripts.
+**npm script contract.** CI/CD and every test-running step assume these scripts exist in `package.json`: `build`, `typecheck`, `lint`, `dev`, `test:unit`, `test:bdd`, `test:e2e`, `test:coverage:merge` (outputs one combined coverage % across all layers — three by default, four once the Storybook layer exists). If any is missing, the Step 3 solution design and Step 8 implementation must include adding it — don't silently skip a test layer because the script is missing. For a change that adds or touches the Storybook layer, `storybook`, `build-storybook`, `test:storybook`, and `pretest:storybook` follow the same contract: if missing, Step 6a's story-authoring pass and Step 8's implementation must add them, same as the core eight scripts.
 
 ---
 
@@ -67,11 +67,15 @@ The user's request that invoked `/ship-feature` _is_ Step 1. Nothing to do here 
 
 ## Step 5 — Unit tests (red)
 
-Spawn `Agent(subagent_type="unit-test-author")` with `design.md`. It reviews existing unit tests, adds/changes/removes what's needed for this change (including any `components.test.ts` duplication trim called for by the design), **and authors/updates the matching `.stories.ts` files under `src/components/` per the design's Storybook story spec**, then runs exactly the changed/added unit test files and (where the Storybook toolchain already exists) the changed/added story files to confirm they're red. **If the Storybook toolchain itself doesn't exist yet (first time this repo gains it), it writes the `.stories.ts` files anyway and defers red/green confirmation of that layer to Step 8** — mirroring the existing npm-script-contract carve-out ("don't silently skip a test layer because the script is missing"). On `STATUS: red-confirmed`, record `unit-test-files` **and `storybook-test-files`** (from the agent's `FILES:`/`STORYBOOK_FILES:` sections) in `state.md`. Commit `<slug>: add/update unit tests and Storybook stories (red)`.
+Spawn `Agent(subagent_type="unit-test-author")` with `design.md`. It reviews existing unit tests, adds/changes/removes what's needed for this change, then runs exactly the changed/added unit test files to confirm they're red. On `STATUS: red-confirmed`, record `unit-test-files` in `state.md`. Commit `<slug>: add/update unit tests (red)`.
 
 ## Step 6 — BDD tests (red)
 
 Spawn `Agent(subagent_type="bdd-test-author")` with `design.md`. Same pattern as Step 5 for Cucumber features/steps (`test:bdd` scoped to the changed feature files). On `STATUS: red-confirmed`, record `bdd-test-files` in `state.md`. Commit `<slug>: add/update BDD tests (red)`.
+
+## Step 6a — Storybook tests (red)
+
+Skip (record `storybook: n/a` in `state.md`) only if the design's "Test impact" section assigns nothing to the Storybook layer — i.e. no new/changed component under `src/components/`. Otherwise spawn `Agent(subagent_type="storybook-test-author")` with `design.md` and the `unit-test-files`/`bdd-test-files` lists from `state.md`. It authors/updates the co-located `.stories.ts` files per the design's Storybook story spec, performs any `components.test.ts` duplication trim the design calls for, and runs exactly the changed/added story files (`npx vitest run --config vitest.storybook.config.ts <paths>`) to confirm they're red. **If the Storybook toolchain itself doesn't exist yet (first time this repo gains it), it writes the story files anyway and defers red/green confirmation of this layer to Step 8** — mirroring the npm-script-contract carve-out ("don't silently skip a test layer because the script is missing"). On `STATUS: red-confirmed`, record `storybook-test-files` (its `FILES:` section) in `state.md`, and note any `TRIMMED:` cases there too. Commit `<slug>: add/update Storybook stories (red)`.
 
 ## Step 7 — E2E tests (red)
 
@@ -79,7 +83,7 @@ Spawn `Agent(subagent_type="e2e-test-author")` with `design.md`. Same pattern fo
 
 ## Step 8 — Implementation
 
-Spawn `Agent(subagent_type="implementer")` with `design.md` and the test-file lists from `state.md` (`unit-test-files`, `bdd-test-files`, `e2e-test-files`, and `storybook-test-files` when Step 5 recorded one). It implements the solution until those specific files pass (it may run them repeatedly, but this is still scoped — not the full suite yet). On `STATUS: green`, commit `<slug>: implement solution`. On `STATUS: blocked`, surface the reason to the user and ask how to proceed.
+Spawn `Agent(subagent_type="implementer")` with `design.md` and the test-file lists from `state.md` (`unit-test-files`, `bdd-test-files`, `e2e-test-files`, and `storybook-test-files` when Step 6a recorded one). It implements the solution until those specific files pass (it may run them repeatedly, but this is still scoped — not the full suite yet). On `STATUS: green`, commit `<slug>: implement solution`. On `STATUS: blocked`, surface the reason to the user and ask how to proceed.
 
 ## Step 9 — Unit test suite (full) + bug loop
 
@@ -89,13 +93,13 @@ Run the **full** unit suite yourself: `npm run test:unit`. On failure: `gh issue
 
 Same pattern as Step 9, running `npm run test:bdd`, label `bdd-test`.
 
+## Step 10a — Storybook test suite (full) + bug loop
+
+Run the full Storybook suite yourself: `npm run build-storybook && npm run test:storybook`. On failure: `gh issue create --label storybook-test --title "<slug>: Storybook test failure" --body "<failure output>\n\nRelated to #<tracking-issue>"`, spawn/`SendMessage` `Agent(subagent_type="bug-fixer")` with the failure output and `npm run test:storybook` (or `npm run build-storybook` if that's the failing step), re-run once it reports `STATUS: fixed`, close the issue once green. Repeat until passing, capped at 5 cycles. Commit after each fix. Run this even when Step 6a was skipped — the full suite still guards every existing story against regressions from this change.
+
 ## Step 11 — E2E test suite (full) + bug loop
 
 Same pattern as Step 9, running `npm run test:e2e`, label `e2e-test`.
-
-## Step 11a — Storybook test suite (full) + bug loop
-
-Run the full Storybook suite yourself: `npm run build-storybook && npm run test:storybook`. On failure: `gh issue create --label storybook-test --title "<slug>: Storybook test failure" --body "<failure output>\n\nRelated to #<tracking-issue>"`, spawn/`SendMessage` `Agent(subagent_type="bug-fixer")` with the failure output and `npm run test:storybook` (or `npm run build-storybook` if that's the failing step), re-run once it reports `STATUS: fixed`, close the issue once green. Repeat until passing, capped at 5 cycles. Commit after each fix.
 
 ## Step 12 — QA review + coverage gate
 
@@ -117,13 +121,13 @@ Run the full Storybook suite yourself: `npm run build-storybook && npm run test:
      spawn/`SendMessage` `bug-fixer` directly with the finding and its reproduce command (e.g.
      `npm audit --omit=dev --audit-level=high`, or the specific rendering call site).
 
-   Once every finding (of either kind above) is resolved: re-run the full Step 9–11 suites as a
+   Once every finding (of either kind above) is resolved: re-run the full Steps 9–11 suites (including Step 10a) as a
    safety net, close the issue(s), then re-spawn `qa-reviewer` fresh. Counts toward the same
    5-iteration cap as the rest of Step 12.
 
-3. On `STATUS: accessibility-gap` (a UI surface is missing an automated WCAG scan, or has a violation the reviewer couldn't fix directly): `gh issue create --label accessibility --label qa ...` for each finding, route back to the matching Step 5/6/7 test-author agent(s) (or `unit-test-author` for a missing/failing Storybook a11y scan; solution-designer first if the finding implies a design gap, not just a missing test) to add coverage or request a design fix, then re-run **Steps 9–11 and 11a** for the affected layer(s), close the issue(s), then re-spawn `qa-reviewer` fresh. A Storybook-layer accessibility-gap finding (a missing story a11y scan, or a violation `qa-reviewer` couldn't fix directly) must re-run Step 11a, not just Steps 9–11 — the whole point of Step 11a existing is that Steps 9–11 alone never execute `npm run test:storybook`.
-4. On `STATUS: coverage-gap` (combined coverage below the threshold defined in `.claude/STANDARDS.md`, listing which layer(s) need more cases): route back to the matching Step 5/6/7 author agent(s) to add coverage (or `unit-test-author` for the Storybook layer, per its `LAYERS:` `- storybook: <what's uncovered>` bullet), then re-run **Steps 9–11 and 11a** for the affected layer(s), then re-spawn `qa-reviewer` fresh. Same rationale as point 3 — a `storybook:` line in `qa-reviewer`'s coverage-gap report has nowhere to be re-verified unless Step 11a is explicitly in scope for this re-run.
-5. On `STATUS: changes-made`: re-run the full Step 9–11 suites (safety net). Any failure follows the normal bug-fixer loop from those steps.
+3. On `STATUS: accessibility-gap` (a UI surface is missing an automated WCAG scan, or has a violation the reviewer couldn't fix directly): `gh issue create --label accessibility --label qa ...` for each finding, route back to the matching Step 5/6/6a/7 test-author agent(s) (`storybook-test-author` for a missing/failing Storybook a11y scan; solution-designer first if the finding implies a design gap, not just a missing test) to add coverage or request a design fix, then re-run **Steps 9, 10, 10a, and 11** for the affected layer(s), close the issue(s), then re-spawn `qa-reviewer` fresh. A Storybook-layer accessibility-gap finding (a missing story a11y scan, or a violation `qa-reviewer` couldn't fix directly) must re-run Step 10a — it's the only full-suite step that executes `npm run test:storybook`.
+4. On `STATUS: coverage-gap` (combined coverage below the threshold defined in `.claude/STANDARDS.md`, listing which layer(s) need more cases): route back to the matching Step 5/6/6a/7 author agent(s) to add coverage (`storybook-test-author` for the Storybook layer, per its `LAYERS:` `- storybook: <what's uncovered>` bullet), then re-run **Steps 9, 10, 10a, and 11** for the affected layer(s), then re-spawn `qa-reviewer` fresh. Same rationale as point 3 — a `storybook:` line in `qa-reviewer`'s coverage-gap report is only re-verified by Step 10a.
+5. On `STATUS: changes-made`: re-run the full Steps 9–11 suites (including Step 10a) (safety net). Any failure follows the normal bug-fixer loop from those steps.
 6. On `STATUS: approved` (no changes needed, coverage at or above the threshold defined in `.claude/STANDARDS.md`): move on.
 7. Once the cycle ends (via `approved` or `changes-made`), record its final `COVERAGE:` value into `state.md` as `coverage-percent: <value>` — `report-generator` reads this at Step 21 to build its metrics block.
 8. Cap the whole Step 12 cycle at 5 iterations.
@@ -145,8 +149,8 @@ Steps 7 and 11 run `test:e2e` against a local preview built with the default bas
 1. Before starting, check `state.md` for a leftover `dev-server-pid` from an interrupted prior run of this step and stop it if still running. Start the app locally (`npm run dev`) in the background, record its PID as `dev-server-pid` in `state.md`, and give the user the local URL.
 2. Ask (`AskUserQuestion` or plain question) whether manual testing passed, or isn't needed.
 3. If the user reports something wrong, classify it before routing — don't force every report through the bug-fixer path by default:
-   - **Implementation defect** (the design/requirements are right, the code doesn't match them): `gh issue create --label manual-test --title "..." --body "<what the user reported>\n\nRelated to #<tracking-issue>"`, spawn/`SendMessage` `Agent(subagent_type="bug-fixer")` with the report, re-run the full Steps 9–11 suites as a safety net once it reports `STATUS: fixed`, close the issue, ask the user to re-test.
-   - **Wrong or missing test** (the code is arguably right but a test asserts the wrong thing, or an obvious case has no coverage): route to the matching Step 5/6/7 test-author agent instead of bug-fixer, then re-run the full Steps 9–11 suites, then re-test.
+   - **Implementation defect** (the design/requirements are right, the code doesn't match them): `gh issue create --label manual-test --title "..." --body "<what the user reported>\n\nRelated to #<tracking-issue>"`, spawn/`SendMessage` `Agent(subagent_type="bug-fixer")` with the report, re-run the full Steps 9–11 suites (including Step 10a) as a safety net once it reports `STATUS: fixed`, close the issue, ask the user to re-test.
+   - **Wrong or missing test** (the code is arguably right but a test asserts the wrong thing, or an obvious case has no coverage): route to the matching Step 5/6/6a/7 test-author agent instead of bug-fixer, then re-run the full Steps 9–11 suites (including Step 10a), then re-test.
    - **Design gap** (the implementation matches `design.md`, but the design itself doesn't handle this case): `SendMessage` the finding to the Step 3 solution-designer agent to amend `design.md`, re-review via a fresh `solution-reviewer`, then route the resulting change through `implementer`/`bug-fixer` as needed, then re-run Steps 9–11, then re-test — same pattern as Step 12's design-gap routing.
    - **Changed or wrong requirement** (what the user actually wants differs from what `requirements.md` says, discovered only now that it's running): this is not a bug. `SendMessage` the finding to the Step 2 requirements-analyst agent to amend `requirements.md`, then re-run the full human approval gate from Step 2.4 (show the user the updated document, get explicit approval) before touching any code — reopening the first human gate rather than silently reinterpreting the requirement as an implementation bug.
      Ask the user which of these it is if it's not obvious from how they described it; don't guess when the classification changes which agent gets involved. Loop until confirmed pass (or explicitly not required).
