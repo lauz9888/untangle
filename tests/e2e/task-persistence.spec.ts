@@ -1,6 +1,14 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from './coverage-fixture'
-import { addTaskButton, addTaskModal, taskItem, taskDoneToggle } from './helpers'
+import {
+  addTaskButton,
+  addTaskModal,
+  taskItem,
+  taskDoneToggle,
+  readTasks,
+  completedButton,
+  completedRowCheckbox,
+} from './helpers'
 
 const TASKS_STORAGE_KEY = 'untangle:tasks'
 
@@ -36,11 +44,17 @@ test('toggling a task done, then reloading, preserves the toggled state', async 
   await addTaskViaModal(page, 'File taxes')
 
   await taskDoneToggle(page, 'File taxes').click()
-  await expect(taskDoneToggle(page, 'File taxes')).toBeChecked()
+  await expect(taskItem(page, 'File taxes')).toHaveCount(0)
 
   await page.reload()
 
-  await expect(taskDoneToggle(page, 'File taxes')).toBeChecked()
+  await expect(taskItem(page, 'File taxes')).toHaveCount(0)
+  const stored = await readTasks(page)
+  expect(stored).toHaveLength(1)
+  expect(stored[0]!.done).toBe(true)
+
+  await completedButton(page).click()
+  await expect(completedRowCheckbox(page, 'File taxes')).toBeChecked()
 })
 
 test('malformed localStorage task data falls back to an empty board without crashing', async ({
