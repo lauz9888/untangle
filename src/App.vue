@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import EnergySelector from './components/EnergySelector.vue'
 import EncourageButton from './components/EncourageButton.vue'
 import ToughLoveButton from './components/ToughLoveButton.vue'
@@ -6,17 +7,22 @@ import ToastNotification from './components/ToastNotification.vue'
 import NowNextLaterBoard from './components/NowNextLaterBoard.vue'
 import AddTaskButton from './components/AddTaskButton.vue'
 import AddTaskModal from './components/AddTaskModal.vue'
+import TaskDetailModal from './components/TaskDetailModal.vue'
 import { useAddTaskModal } from './composables/useAddTaskModal'
+import { useTaskDetail } from './composables/useTaskDetail'
 
 const { isOpen: isAddTaskModalOpen } = useAddTaskModal()
+const { isOpen: isTaskDetailOpen } = useTaskDetail()
+
+const isAnyModalOpen = computed(() => isAddTaskModalOpen.value || isTaskDetailOpen.value)
 </script>
 
 <template>
   <main>
     <div
       class="app-background"
-      :inert="isAddTaskModalOpen ? true : undefined"
-      :aria-hidden="isAddTaskModalOpen ? 'true' : undefined"
+      :inert="isAnyModalOpen ? true : undefined"
+      :aria-hidden="isAnyModalOpen ? 'true' : undefined"
     >
       <header class="brand">
         <div class="brand-text">
@@ -51,6 +57,7 @@ const { isOpen: isAddTaskModalOpen } = useAddTaskModal()
       <ToastNotification />
     </div>
     <AddTaskModal v-if="isAddTaskModalOpen" />
+    <TaskDetailModal v-if="isTaskDetailOpen" />
   </main>
 </template>
 

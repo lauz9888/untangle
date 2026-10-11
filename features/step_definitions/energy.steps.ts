@@ -29,4 +29,22 @@ Given('a fresh session', function (this: EnergyWorld) {
   for (const task of [...this.tasks.tasks.value]) {
     this.tasks.removeTask(task.id)
   }
+
+  // `taskDetail` is also a true module-level singleton (like `energy`/
+  // `addTaskModal`/`tasks`), so its open/draft/confirmation state otherwise
+  // leaks across scenarios within the same Cucumber process. Resolve any
+  // confirmation dialog first (defensively, in whichever order might be
+  // open), then close the detail view itself if still open.
+  if (this.taskDetail.isDeleteConfirmOpen.value) {
+    this.taskDetail.cancelDelete()
+  }
+  if (this.taskDetail.isDiscardConfirmOpen.value) {
+    this.taskDetail.confirmDiscard()
+  }
+  if (this.taskDetail.isOpen.value) {
+    this.taskDetail.requestClose()
+    if (this.taskDetail.isDiscardConfirmOpen.value) {
+      this.taskDetail.confirmDiscard()
+    }
+  }
 })

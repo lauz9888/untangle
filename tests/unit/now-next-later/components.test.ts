@@ -70,6 +70,21 @@ vi.mock('../../../src/composables/useTasks', () => ({
   useTasks: () => tasksState,
 }))
 
+// App.vue now also calls useTaskDetail (to render <TaskDetailModal v-if="isTaskDetailOpen" />
+// and extend .app-background's inert condition), and NowNextLaterBoard.vue calls it to open the
+// detail view from each task's new open-button — mocked here with the same shape as
+// tests/unit/task-detail/components.test.ts so both describe blocks below can mount freely.
+const taskDetailState = {
+  isOpen: ref(false),
+  lastOpenedTaskId: ref<number | null>(null),
+  lastOpenedTaskSection: ref<'now' | 'next' | 'later' | null>(null),
+  open: vi.fn(),
+}
+
+vi.mock('../../../src/composables/useTaskDetail', () => ({
+  useTaskDetail: () => taskDetailState,
+}))
+
 let mountedWrappers: VueWrapper[] = []
 
 function mountTracked(component: Parameters<typeof mount>[0], props?: Record<string, unknown>) {
@@ -94,6 +109,11 @@ beforeEach(() => {
 
   tasksState.tasks.value = []
   tasksState.toggleTaskDone.mockReset()
+
+  taskDetailState.isOpen.value = false
+  taskDetailState.lastOpenedTaskId.value = null
+  taskDetailState.lastOpenedTaskSection.value = null
+  taskDetailState.open.mockReset()
 })
 
 afterEach(() => {
@@ -210,6 +230,44 @@ describe('NowNextLaterBoard', () => {
       const wrapper = mountTracked(NowNextLaterBoard)
       await expectNoAxeViolations(wrapper.element)
     })
+
+    describe('task selection (open detail view)', () => {
+      it("clicking a task's name button calls the mocked open with that task's id", async () => {
+        tasksState.tasks.value = [
+          { id: 7, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
+        ]
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        const openButton = wrapper.find('button.task-open-button')
+        expect(openButton.exists()).toBe(true)
+        expect(openButton.text()).toBe('Buy milk')
+        await openButton.trigger('click')
+
+        expect(taskDetailState.open).toHaveBeenCalledWith(7)
+      })
+
+      it("the done checkbox's accessible name still equals the task name", () => {
+        tasksState.tasks.value = [
+          { id: 7, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
+        ]
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        const checkbox = wrapper.find('#task-7-done')
+        expect(checkbox.attributes('aria-label')).toBe('Buy milk')
+      })
+
+      it('clicking the done checkbox itself does not call open', async () => {
+        tasksState.tasks.value = [
+          { id: 7, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
+        ]
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        await wrapper.find('#task-7-done').trigger('change')
+
+        expect(taskDetailState.open).not.toHaveBeenCalled()
+        expect(tasksState.toggleTaskDone).toHaveBeenCalledWith(7)
+      })
+    })
   })
 })
 
@@ -267,6 +325,14 @@ describe('CollapsibleSection', () => {
   it('has no accessibility violations when collapsed', async () => {
     const wrapper = mountTracked(CollapsibleSection, { ...baseProps, expanded: false })
     await expectNoAxeViolations(wrapper.element)
+  })
+
+  it('gives the heading tabindex="-1" so it is a valid focus-return fallback target, expanded or collapsed', () => {
+    const expandedWrapper = mountTracked(CollapsibleSection, { ...baseProps, expanded: true })
+    expect(expandedWrapper.find('h2').attributes('tabindex')).toBe('-1')
+
+    const collapsedWrapper = mountTracked(CollapsibleSection, { ...baseProps, expanded: false })
+    expect(collapsedWrapper.find('h2').attributes('tabindex')).toBe('-1')
   })
 })
 

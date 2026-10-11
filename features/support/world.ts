@@ -2,6 +2,7 @@ import { setWorldConstructor, World } from '@cucumber/cucumber'
 import { useEnergyLevel } from '../../src/composables/useEnergyLevel'
 import { useAddTaskModal } from '../../src/composables/useAddTaskModal'
 import { useTasks } from '../../src/composables/useTasks'
+import { useTaskDetail } from '../../src/composables/useTaskDetail'
 
 // BDD scenarios drive composables directly — the same instances/singletons
 // components use — rather than reaching into implementation details.
@@ -15,11 +16,15 @@ import { useTasks } from '../../src/composables/useTasks'
 // reset step (see energy.steps.ts's `a fresh session` step). `tasks` is a
 // true module-level singleton too, shared by `AddTaskModal.vue` (writer) and
 // `NowNextLaterBoard.vue` (reader), so it also needs an explicit reset step
-// (see energy.steps.ts's `a fresh session` step).
+// (see energy.steps.ts's `a fresh session` step). `taskDetail` is the same
+// kind of singleton again (design.md's `useTaskDetail.ts`), shared by
+// `NowNextLaterBoard.vue` (trigger) and `TaskDetailModal.vue`/its nested
+// confirmation dialogs — it also needs resetting per scenario.
 export class EnergyWorld extends World {
   energy = useEnergyLevel()
   addTaskModal = useAddTaskModal()
   tasks = useTasks()
+  taskDetail = useTaskDetail()
 }
 
 setWorldConstructor(EnergyWorld)

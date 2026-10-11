@@ -36,6 +36,25 @@ Given(
   }
 )
 
+// Fixture used by features/task-detail-edit-delete.feature's "opening pre-fills every field"
+// scenario — exercises the full field set a unit-level composable.test.ts case only covers one
+// field at a time for, per design.md's Test impact section.
+Given(
+  'I have added a task named {string} to {string} with every field populated',
+  function (this: EnergyWorld, name: string, sectionLabel: string) {
+    this.tasks.addTask({
+      name,
+      section: keyForLabel(sectionLabel),
+      description: 'Pull together the quarterly proposal draft.',
+      energyLevel: 'medium',
+      estimate: { days: 1, hours: 2, minutes: 30 },
+      availableFrom: '2026-10-05',
+      dueBy: '2026-10-20',
+      subTasks: [{ text: 'Outline sections' }, { text: 'Gather data' }],
+    })
+  }
+)
+
 // --- Assertions --------------------------------------------------------------
 
 Then(
@@ -50,3 +69,15 @@ Then(
     assert.deepEqual(actual, expected)
   }
 )
+
+Then('there should be no tasks in {string}', function (this: EnergyWorld, sectionLabel: string) {
+  const key = keyForLabel(sectionLabel)
+  const actual = this.tasks.tasks.value.filter((task) => task.section === key)
+  assert.deepEqual(actual, [])
+})
+
+Then('the task {string} should be marked done', function (this: EnergyWorld, name: string) {
+  const task = this.tasks.tasks.value.find((t) => t.name === name)
+  assert.ok(task, `No task named "${name}" found`)
+  assert.equal(task!.done, true)
+})

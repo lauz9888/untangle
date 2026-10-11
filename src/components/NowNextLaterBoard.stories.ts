@@ -40,6 +40,17 @@ vi.mock('../composables/useTasks', () => ({
   useTasks: () => tasksState,
 }))
 
+const taskDetailState = {
+  isOpen: ref(false),
+  lastOpenedTaskId: ref<number | null>(null),
+  lastOpenedTaskSection: ref<'now' | 'next' | 'later' | null>(null),
+  open: vi.fn(),
+}
+
+vi.mock('../composables/useTaskDetail', () => ({
+  useTaskDetail: () => taskDetailState,
+}))
+
 const meta: Meta<typeof NowNextLaterBoard> = {
   title: 'Components/NowNextLaterBoard',
   component: NowNextLaterBoard,
@@ -76,6 +87,24 @@ export const OneIncompleteTask: Story = {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole('checkbox', { name: 'Buy milk' }))
     expect(tasksState.toggleTaskDone).toHaveBeenCalledWith(7)
+  },
+}
+
+// Requirement 1/15: reproduces tests/unit/now-next-later/components.test.ts's new
+// "clicking a task's name button calls the mocked open with that task's id" case.
+export const OneIncompleteTaskWithOpenAffordance: Story = {
+  beforeEach: () => {
+    resetSectionState()
+    tasksState.tasks.value = [
+      { id: 7, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
+    ]
+    tasksState.toggleTaskDone.mockReset()
+    taskDetailState.open.mockReset()
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(canvas.getByRole('button', { name: 'Buy milk' }))
+    expect(taskDetailState.open).toHaveBeenCalledWith(7)
   },
 }
 

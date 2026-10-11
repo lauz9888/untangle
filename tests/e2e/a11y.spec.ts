@@ -9,6 +9,10 @@ import {
   addTaskButton,
   addTaskModal,
   closeConfirmDialog,
+  taskOpenButton,
+  taskDetailModal,
+  taskDetailDiscardDialog,
+  taskDetailDeleteDialog,
 } from './helpers'
 
 // Scope to actual WCAG 2.1 A/AA success criteria, not axe-core's broader
@@ -117,6 +121,69 @@ test('has no violations with a completed (done: true) task rendered on the board
   })
   await page.reload()
   await expect(page.getByRole('listitem')).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the task detail view open, fields populated, and two sub-tasks', async ({
+  page,
+}) => {
+  await page.evaluate(({ key, task }) => localStorage.setItem(key, JSON.stringify([task])), {
+    key: TASKS_STORAGE_KEY,
+    task: makeTask({
+      id: 1,
+      name: 'Plan launch',
+      description: 'Coordinate with marketing',
+      energyLevel: 'high',
+      estimate: { days: 2, hours: 3, minutes: 15 },
+      availableFrom: '2026-09-01',
+      dueBy: '2026-09-10',
+      subTasks: [
+        { id: 1, text: 'Draft brief', done: false },
+        { id: 2, text: 'Send invites', done: true },
+      ],
+    }),
+  })
+  await page.reload()
+
+  await taskOpenButton(page, 'Plan launch').click()
+  await expect(taskDetailModal(page)).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the task detail discard-confirmation dialog open', async ({
+  page,
+}) => {
+  await page.evaluate(({ key, task }) => localStorage.setItem(key, JSON.stringify([task])), {
+    key: TASKS_STORAGE_KEY,
+    task: makeTask({ id: 1, name: 'Plan launch' }),
+  })
+  await page.reload()
+
+  await taskOpenButton(page, 'Plan launch').click()
+  const modal = taskDetailModal(page)
+  await modal.getByLabel('Task name', { exact: true }).fill('Changed name')
+  await page.keyboard.press('Escape')
+  await expect(taskDetailDiscardDialog(page)).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the task detail delete-confirmation dialog open', async ({ page }) => {
+  await page.evaluate(({ key, task }) => localStorage.setItem(key, JSON.stringify([task])), {
+    key: TASKS_STORAGE_KEY,
+    task: makeTask({ id: 1, name: 'Plan launch' }),
+  })
+  await page.reload()
+
+  await taskOpenButton(page, 'Plan launch').click()
+  const modal = taskDetailModal(page)
+  await modal.getByRole('button', { name: 'Delete task', exact: true }).click()
+  await expect(taskDetailDeleteDialog(page)).toBeVisible()
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(results.violations).toEqual([])

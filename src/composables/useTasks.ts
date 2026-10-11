@@ -171,13 +171,20 @@ function toggleSubTaskDone(taskId: number, subTaskId: number): boolean {
   return true
 }
 
+// A single, stable module-level object (not a fresh literal per call) so that any caller —
+// including vi.spyOn(tasks, 'updateTask')-style test spies — observes the exact same function
+// references regardless of which call site obtained them. Every useTasks() call returns this
+// one object; nothing here changes the store's actual shared-singleton behavior (tasksInternal
+// was already shared by reference), it just makes the *returned object itself* stable too.
+const api = {
+  tasks: tasksInternal,
+  addTask,
+  updateTask,
+  removeTask,
+  toggleTaskDone,
+  toggleSubTaskDone,
+}
+
 export function useTasks() {
-  return {
-    tasks: tasksInternal,
-    addTask,
-    updateTask,
-    removeTask,
-    toggleTaskDone,
-    toggleSubTaskDone,
-  }
+  return api
 }
