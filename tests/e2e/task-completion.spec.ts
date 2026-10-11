@@ -418,7 +418,7 @@ test.describe('Completed button and panel', () => {
     ])
     await completedButton(page).click()
 
-    await completedRowCheckbox(page, 'First').uncheck()
+    await completedRowCheckbox(page, 'First').click()
 
     await expect(completedRowButton(page, 'First')).toHaveCount(0)
     await expect(completedButtonAlways(page)).toHaveText('Completed (2)')
@@ -428,11 +428,11 @@ test.describe('Completed button and panel', () => {
     await expect(completedPanel(page)).toBeVisible()
 
     // Last row: focus goes to the previous row's checkbox.
-    await completedRowCheckbox(page, 'Third').uncheck()
+    await completedRowCheckbox(page, 'Third').click()
     await expect(completedRowCheckbox(page, 'Second')).toBeFocused()
 
     // Only row: focus goes to the X.
-    await completedRowCheckbox(page, 'Second').uncheck()
+    await completedRowCheckbox(page, 'Second').click()
     await expect(completedPanel(page).getByText('No completed tasks yet')).toBeVisible()
     await expect(completedPanelClose(page)).toBeFocused()
 
@@ -507,7 +507,7 @@ test.describe('Task Detail stacked over the Completed panel', () => {
     await expect(completedButtonAlways(page)).toHaveText('Completed (1)')
 
     await taskDetailModal(page).getByLabel('Task name', { exact: true }).fill('Alpha edited')
-    await done.check()
+    await done.click()
 
     await expect(taskDetailModal(page)).toBeHidden()
     await expect(taskDetailDiscardDialog(page)).toHaveCount(0)
