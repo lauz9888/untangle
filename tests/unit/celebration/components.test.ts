@@ -59,7 +59,10 @@ const state = {
   toggleTaskDoneWithCelebration: vi.fn(),
 }
 
-vi.mock('../../../src/composables/useCelebration', () => ({
+// Keep the real pure helpers (computeNotificationTop, NOTIFICATION_MIN_TOP) the component imports
+// alongside the composable; only useCelebration itself is mocked.
+vi.mock('../../../src/composables/useCelebration', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   useCelebration: () => state,
 }))
 
@@ -316,6 +319,122 @@ describe('CelebrationNotification', () => {
       await nextTick()
       expect(state.dismissCelebration).toHaveBeenCalled()
       expect(document.activeElement).toBe(outside)
+    })
+  })
+
+  describe('placement below the header', () => {
+    let headerBottom = 120
+    let header: HTMLElement
+
+    function addHeader() {
+      header = addNode('<header id="app-header"></header>')
+      header.getBoundingClientRect = () => ({ bottom: headerBottom }) as DOMRect
+    }
+
+    function regionTop(wrapper: VueWrapper) {
+      return (wrapper.find('[role="status"]').element as HTMLElement).style.top
+    }
+
+    async function mountShown() {
+      state.celebrationMessage.value = 'Nicely done.'
+      const wrapper = mountTracked(CelebrationNotification)
+      await nextTick()
+      return wrapper
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      vi.restoreAllMocks()
+    })
+
+    it.each([
+      [120, '128px'],
+      [-50, '96px'],
+      [40, '96px'],
+    ])('header bottom %s gives an inline top of %s', async (bottom, expected) => {
+      headerBottom = bottom
+      addHeader()
+      const wrapper = await mountShown()
+      expect(regionTop(wrapper)).toBe(expected)
+    })
+
+    it('with no #app-header the top is the 96px floor', async () => {
+      const wrapper = await mountShown()
+      expect(regionTop(wrapper)).toBe('96px')
+    })
+
+    it('a scroll event re-measures the header', async () => {
+      headerBottom = 120
+      addHeader()
+      const wrapper = await mountShown()
+      expect(regionTop(wrapper)).toBe('128px')
+
+      headerBottom = 200
+      window.dispatchEvent(new Event('scroll'))
+      await nextTick()
+      expect(regionTop(wrapper)).toBe('208px')
+    })
+
+    it('a resize event re-measures the header', async () => {
+      headerBottom = 120
+      addHeader()
+      const wrapper = await mountShown()
+      headerBottom = 300
+      window.dispatchEvent(new Event('resize'))
+      await nextTick()
+      expect(regionTop(wrapper)).toBe('308px')
+    })
+
+    it('a new celebration (celebrationId change) re-measures the header', async () => {
+      headerBottom = 120
+      addHeader()
+      const wrapper = await mountShown()
+      headerBottom = 150
+      state.celebrationId.value += 1
+      await nextTick()
+      await nextTick()
+      expect(regionTop(wrapper)).toBe('158px')
+    })
+
+    it('a ResizeObserver callback on the header updates top', async () => {
+      let callback: (() => void) | null = null
+      const observe = vi.fn()
+      const disconnect = vi.fn()
+      class FakeResizeObserver {
+        constructor(cb: () => void) {
+          callback = cb
+        }
+        observe = observe
+        unobserve = vi.fn()
+        disconnect = disconnect
+      }
+      vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+      headerBottom = 120
+      addHeader()
+      const wrapper = await mountShown()
+      expect(observe).toHaveBeenCalledWith(header)
+      expect(regionTop(wrapper)).toBe('128px')
+
+      headerBottom = 180
+      callback!()
+      await nextTick()
+      expect(regionTop(wrapper)).toBe('188px')
+    })
+
+    it('removes its scroll/resize listeners on unmount', async () => {
+      const removeSpy = vi.spyOn(window, 'removeEventListener')
+      const addSpy = vi.spyOn(window, 'addEventListener')
+      addHeader()
+      const wrapper = await mountShown()
+      const added = addSpy.mock.calls.filter(([type]) => type === 'scroll' || type === 'resize')
+      expect(added.map(([type]) => type).sort()).toEqual(['resize', 'scroll'])
+
+      wrapper.unmount()
+      mountedWrappers = mountedWrappers.filter((w) => w !== wrapper)
+
+      for (const [type, handler] of added) {
+        expect(removeSpy.mock.calls.some(([t, h]) => t === type && h === handler)).toBe(true)
+      }
     })
   })
 

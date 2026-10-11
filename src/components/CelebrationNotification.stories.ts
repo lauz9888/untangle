@@ -19,7 +19,9 @@ const state = {
   toggleTaskDoneWithCelebration: vi.fn(),
 }
 
-vi.mock('../composables/useCelebration', () => ({
+// Keep the real pure helpers (computeNotificationTop, NOTIFICATION_MIN_TOP) the component imports.
+vi.mock('../composables/useCelebration', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   useCelebration: () => state,
 }))
 
@@ -64,6 +66,36 @@ export const LongMessage: Story = {
     seed(
       'You finished something you were carrying around, and that matters more than it feels like right now, so take a breath.'
     ),
+}
+
+// Req 9a: the card is placed just below the real header, never over it.
+export const WithHeaderAbove: Story = {
+  beforeEach: () => seed('Nicely done. That one is off your plate.'),
+  decorators: [
+    (story) => ({
+      components: { story },
+      template: '<header id="app-header" style="height:120px">Header</header><story />',
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const header = document.getElementById('app-header')!
+    const region = canvasElement.querySelector('[role="status"]') as HTMLElement
+    const card = canvasElement.querySelector('[data-testid="celebration"]') as HTMLElement
+    await waitFor(() => {
+      expect(region.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        header.getBoundingClientRect().bottom
+      )
+    })
+    const h = header.getBoundingClientRect()
+    const c = card.getBoundingClientRect()
+    const intersects = !(
+      c.right <= h.left ||
+      c.left >= h.right ||
+      c.bottom <= h.top ||
+      c.top >= h.bottom
+    )
+    expect(intersects).toBe(false)
+  },
 }
 
 export const CloseButtonFocused: Story = {

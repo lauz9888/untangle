@@ -352,4 +352,20 @@ describe('useCelebration', () => {
       expect(celebration.completionFocusTarget.value).toEqual({ kind: 'section', key: 'later' })
     })
   })
+  describe('computeNotificationTop / NOTIFICATION_MIN_TOP', () => {
+    it('NOTIFICATION_MIN_TOP is 96', async () => {
+      const { NOTIFICATION_MIN_TOP } = await import(modulePath)
+      expect(NOTIFICATION_MIN_TOP).toBe(96)
+    })
+
+    it.each([
+      [null, 96],
+      [-50, 96],
+      [40, 96],
+      [120, 128],
+    ])('computeNotificationTop(%s) = %s', async (bottom, expected) => {
+      const { computeNotificationTop } = await import(modulePath)
+      expect(computeNotificationTop(bottom)).toBe(expected)
+    })
+  })
 })
