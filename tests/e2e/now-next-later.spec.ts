@@ -227,27 +227,37 @@ test.describe('real task rendering (Requirements 12-24)', () => {
     await expect(items.nth(1)).toContainText('Second task')
   })
 
-  test('clicking a task checkbox toggles its done styling and persists across a reload', async ({
+  test('clicking a task checkbox removes the task from the board immediately, and it stays gone after a reload', async ({
     page,
   }) => {
     await seedTasks(page, [makeTask({ id: 1, name: 'Water the plants', section: 'now' })])
     await page.reload()
 
     const checkbox = taskDoneToggle(page, 'Water the plants')
-    const item = taskItem(page, 'Water the plants')
 
     await expect(checkbox).not.toBeChecked()
-    await expect(item.locator('.task-name--done')).toHaveCount(0)
+    await expect(taskItem(page, 'Water the plants').locator('.task-name--done')).toHaveCount(0)
 
     await checkbox.click()
 
-    await expect(checkbox).toBeChecked()
-    await expect(item.locator('.task-name--done')).toHaveCount(1)
+    await expect(taskItem(page, 'Water the plants')).toHaveCount(0)
+    await expect(taskList(page, 'now').getByRole('listitem')).toHaveCount(0)
 
     await page.reload()
 
-    await expect(taskDoneToggle(page, 'Water the plants')).toBeChecked()
-    await expect(taskItem(page, 'Water the plants').locator('.task-name--done')).toHaveCount(1)
+    await expect(taskItem(page, 'Water the plants')).toHaveCount(0)
+    await expect(taskDoneToggle(page, 'Water the plants')).toHaveCount(0)
+  })
+
+  test('a done task loaded from storage is not rendered on the board', async ({ page }) => {
+    await seedTasks(page, [
+      makeTask({ id: 1, name: 'Finished task', section: 'now', done: true }),
+      makeTask({ id: 2, name: 'Open task', section: 'now', createdAt: 2000 }),
+    ])
+    await page.reload()
+
+    await expect(taskItem(page, 'Open task')).toBeVisible()
+    await expect(taskItem(page, 'Finished task')).toHaveCount(0)
   })
 
   test('the task done-toggle is reachable via Tab and toggled via Space', async ({ page }) => {
@@ -267,7 +277,8 @@ test.describe('real task rendering (Requirements 12-24)', () => {
 
     await expect(checkbox).not.toBeChecked()
     await page.keyboard.press('Space')
-    await expect(checkbox).toBeChecked()
+    // Completing removes the task from the board (it moves to the Completed panel).
+    await expect(taskItem(page, 'Read a book')).toHaveCount(0)
   })
 
   test('the task done-toggle shows a visible focus indicator when focused', async ({ page }) => {

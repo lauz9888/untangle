@@ -3,7 +3,6 @@ import { test, expect } from './coverage-fixture'
 import {
   taskList,
   taskItem,
-  taskDoneToggle,
   taskOpenButton,
   taskDetailModal,
   taskDetailDiscardDialog,
@@ -232,7 +231,7 @@ test('closing with no edits closes immediately with no discard confirmation show
   await expect(opener).toBeFocused()
 })
 
-test('toggling the done checkbox in the detail view updates the board checkbox without a reload', async ({
+test('ticking the done checkbox in the detail view closes the dialog and removes the task from the board without a reload', async ({
   page,
 }) => {
   await seedTasks(page, [makeTask({ id: 1, name: 'Water plants', section: 'now', done: false })])
@@ -242,10 +241,12 @@ test('toggling the done checkbox in the detail view updates the board checkbox w
   const modal = taskDetailModal(page)
   await modal.getByLabel('Mark as done', { exact: true }).click()
 
-  await page.keyboard.press('Escape')
   await expect(modal).toBeHidden()
+  await expect(taskDetailDiscardDialog(page)).toHaveCount(0)
+  await expect(taskItem(page, 'Water plants')).toHaveCount(0)
 
-  await expect(taskDoneToggle(page, 'Water plants')).toBeChecked()
+  const tasks = await readTasks(page)
+  expect(tasks[0]!.done).toBe(true)
 })
 
 test('toggling a sub-task done checkbox in the detail view persists across a reload', async ({
