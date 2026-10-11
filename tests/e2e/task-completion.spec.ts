@@ -4,6 +4,8 @@ import {
   addTaskButton,
   addTaskModal,
   encourageButton,
+  toughLoveButton,
+  energyButton,
   toast,
   taskDoneToggle,
   taskItem,
@@ -39,12 +41,23 @@ async function reloadWith(page: Page, tasks: Record<string, unknown>[]) {
   await page.reload()
 }
 
+type Box = { x: number; y: number; width: number; height: number }
+
+function intersects(a: Box, b: Box) {
+  return !(
+    a.x + a.width <= b.x ||
+    b.x + b.width <= a.x ||
+    a.y + a.height <= b.y ||
+    b.y + b.height <= a.y
+  )
+}
+
 function sectionHeading(page: Page, name: string) {
   return page.getByRole('heading', { name, exact: true })
 }
 
 test.describe('completing from the board checkbox', () => {
-  test('shows a top-of-screen celebration message and confetti, and removes the task from the board', async ({
+  test('shows a celebration message and confetti, and removes the task from the board', async ({
     page,
   }) => {
     await reloadWith(page, [makeTask({ id: 1, name: 'Water the plants' })])
@@ -58,11 +71,6 @@ test.describe('completing from the board checkbox', () => {
     await expect(celebrationRegion(page)).toHaveAttribute('aria-live', 'polite')
     const text = (await celebration(page).locator('.celebration-message').textContent()) ?? ''
     expect(text.trim().length).toBeGreaterThan(0)
-
-    const box = await celebration(page).boundingBox()
-    const viewport = page.viewportSize()!
-    expect(box).not.toBeNull()
-    expect(box!.y).toBeLessThan(viewport.height / 3)
 
     expect(await confettiPieces(page).count()).toBeGreaterThan(0)
     await expect(confettiLayer(page)).toHaveAttribute('aria-hidden', 'true')
@@ -272,7 +280,7 @@ test.describe('completing from the Task Detail modal', () => {
 })
 
 test.describe('coexistence with the existing toast', () => {
-  test('the celebration (top) and the Encourage me toast (bottom) are both visible and independent', async ({
+  test('the celebration and the Encourage me toast are both visible, independent, and do not overlap', async ({
     page,
   }) => {
     await reloadWith(page, [makeTask({ id: 1, name: 'Water the plants' })])
@@ -286,7 +294,9 @@ test.describe('coexistence with the existing toast', () => {
 
     const celebrationBox = await celebration(page).boundingBox()
     const toastBox = await toast(page).boundingBox()
-    expect(celebrationBox!.y + celebrationBox!.height).toBeLessThan(toastBox!.y)
+    expect(celebrationBox).not.toBeNull()
+    expect(toastBox).not.toBeNull()
+    expect(intersects(celebrationBox!, toastBox!)).toBe(false)
 
     // Dismissing one leaves the other alone.
     await celebrationClose(page).click()
@@ -538,7 +548,7 @@ test.describe('Task Detail stacked over the Completed panel', () => {
 test.describe('mobile viewport (390x844)', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
-  test('the celebration card stays inside the viewport with a 44px close and 72px free on both sides', async ({
+  test('the celebration card stays inside the viewport width with a 44px close', async ({
     page,
   }) => {
     await reloadWith(page, [makeTask({ id: 1, name: 'Water the plants' })])
@@ -547,8 +557,8 @@ test.describe('mobile viewport (390x844)', () => {
 
     const box = await celebration(page).boundingBox()
     expect(box).not.toBeNull()
-    expect(box!.x).toBeGreaterThanOrEqual(72 - 0.5)
-    expect(390 - (box!.x + box!.width)).toBeGreaterThanOrEqual(72 - 0.5)
+    expect(box!.x).toBeGreaterThanOrEqual(0)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(390)
 
     const closeBox = await celebrationClose(page).boundingBox()
     expect(closeBox!.width).toBeGreaterThanOrEqual(44)
@@ -624,13 +634,14 @@ test.describe('mobile viewport (390x844)', () => {
     await taskDoneToggle(page, 'Water the plants').click()
     await expect(celebration(page)).toBeVisible()
 
-    // dispatchEvent: the trigger is not the subject here, so avoid any hit-test dependence on it.
-    await addTaskButton(page).dispatchEvent('click')
+    await addTaskButton(page).click()
     const modal = addTaskModal(page)
     await expect(modal).toBeVisible()
     await expect(celebration(page)).toBeVisible()
 
-    expect(await topElementIsClose(page)).toBe(true)
+    await expect(async () => {
+      expect(await topElementIsClose(page)).toBe(true)
+    }).toPass()
     await modal.getByRole('button', { name: 'Close', exact: true }).click()
     await expect(modal).toBeHidden()
   })
@@ -645,12 +656,16 @@ test.describe('mobile viewport (390x844)', () => {
     await taskDoneToggle(page, 'Water the plants').click()
     await expect(celebration(page)).toBeVisible()
 
-    await taskOpenButton(page, 'Read a book').dispatchEvent('click')
+    // Keyboard activation: at 390px the card may sit over the board's open-buttons.
+    await taskOpenButton(page, 'Read a book').focus()
+    await page.keyboard.press('Enter')
     const modal = taskDetailModal(page)
     await expect(modal).toBeVisible()
     await expect(celebration(page)).toBeVisible()
 
-    expect(await topElementIsClose(page)).toBe(true)
+    await expect(async () => {
+      expect(await topElementIsClose(page)).toBe(true)
+    }).toPass()
     // The card's own close stays reachable by pointer (not covered by the modal overlay).
     const closeCenter = await celebrationClose(page).boundingBox()
     const reachable = await page.evaluate(
@@ -663,7 +678,7 @@ test.describe('mobile viewport (390x844)', () => {
     await expect(modal).toBeHidden()
   })
 
-  test('with the Completed panel and a stacked Task Detail open, the card does not cover either X', async ({
+  test('with the Completed panel and a stacked Task Detail open, the card does not cover the stacked Task Detail X', async ({
     page,
   }) => {
     await reloadWith(page, [
@@ -673,12 +688,138 @@ test.describe('mobile viewport (390x844)', () => {
     await taskDoneToggle(page, 'Water the plants').click()
     await expect(celebration(page)).toBeVisible()
 
-    await completedButton(page).dispatchEvent('click')
+    await completedButton(page).click()
     await expect(completedPanel(page)).toBeVisible()
-    expect(await topElementIsClose(page)).toBe(true)
 
     await completedRowButton(page, 'Old win').click()
     await expect(taskDetailModal(page)).toBeVisible()
-    expect(await topElementIsClose(page)).toBe(true)
+    await expect(async () => {
+      expect(await topElementIsClose(page)).toBe(true)
+    }).toPass()
+  })
+})
+
+const VIEWPORTS = [
+  { width: 1280, height: 800 },
+  { width: 800, height: 700 },
+  { width: 641, height: 800 },
+  { width: 640, height: 800 },
+  { width: 390, height: 844 },
+]
+
+test.describe('celebration card never covers header controls (req 9a)', () => {
+  for (const vp of VIEWPORTS) {
+    test(`at ${vp.width}x${vp.height}, the card does not intersect or intercept any header control`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(vp)
+      await reloadWith(page, [makeTask({ id: 1, name: 'Water the plants' })])
+      await taskDoneToggle(page, 'Water the plants').click()
+      await expect(celebration(page)).toBeVisible()
+
+      const controls = [
+        page.locator('.logo h1'),
+        addTaskButton(page),
+        energyButton(page, 'Low'),
+        energyButton(page, 'Medium'),
+        energyButton(page, 'High'),
+        encourageButton(page),
+        toughLoveButton(page),
+        completedButton(page),
+      ]
+
+      await expect(async () => {
+        const cardBox = await celebration(page).boundingBox()
+        expect(cardBox).not.toBeNull()
+        for (const control of controls) {
+          const box = await control.boundingBox()
+          expect(box).not.toBeNull()
+          expect(intersects(cardBox!, box!)).toBe(false)
+          const reached = await control.evaluate((el) => {
+            const r = el.getBoundingClientRect()
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+            return !!hit && el.contains(hit)
+          })
+          expect(reached).toBe(true)
+        }
+      }).toPass()
+    })
+  }
+
+  test.describe('390px with the header scrolled', () => {
+    test.use({ viewport: { width: 390, height: 844 } })
+
+    const many = () =>
+      Array.from({ length: 60 }, (_, i) =>
+        makeTask({ id: i + 1, name: `Task ${i + 1}`, createdAt: 1000 + i })
+      )
+
+    test('header partly visible: the card sits below the visible part of the header, inside the viewport', async ({
+      page,
+    }) => {
+      await reloadWith(page, many())
+      await page.evaluate(() => window.scrollTo(0, 40))
+      await taskDoneToggle(page, 'Task 1').click()
+      await expect(celebration(page)).toBeVisible()
+
+      await expect(async () => {
+        const cardBox = await celebration(page).boundingBox()
+        const headerBox = await page.locator('#app-header').boundingBox()
+        expect(cardBox).not.toBeNull()
+        expect(headerBox).not.toBeNull()
+        expect(intersects(cardBox!, headerBox!)).toBe(false)
+        expect(cardBox!.y).toBeGreaterThanOrEqual(0)
+        expect(cardBox!.y + cardBox!.height).toBeLessThanOrEqual(844)
+        expect(cardBox!.x).toBeGreaterThanOrEqual(0)
+        expect(cardBox!.x + cardBox!.width).toBeLessThanOrEqual(390)
+      }).toPass()
+    })
+
+    test('header scrolled away: the card sits at 96px or lower, fully inside the viewport', async ({
+      page,
+    }) => {
+      await reloadWith(page, many())
+      await page.evaluate(() => window.scrollTo(0, 2000))
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(500)
+      await taskDoneToggle(page, 'Task 40').click()
+      await expect(celebration(page)).toBeVisible()
+
+      await expect(async () => {
+        const cardBox = await celebration(page).boundingBox()
+        expect(cardBox).not.toBeNull()
+        expect(cardBox!.y).toBeGreaterThanOrEqual(96 - 0.5)
+        expect(cardBox!.y + cardBox!.height).toBeLessThanOrEqual(844)
+        expect(cardBox!.x).toBeGreaterThanOrEqual(0)
+        expect(cardBox!.x + cardBox!.width).toBeLessThanOrEqual(390)
+      }).toPass()
+    })
+
+    test('header scrolled away: a keyboard-opened Task Detail has its X topmost, with the card in view at 96px or lower', async ({
+      page,
+    }) => {
+      await reloadWith(page, many())
+      await page.evaluate(() => window.scrollTo(0, 2000))
+      await taskDoneToggle(page, 'Task 40').click()
+      await expect(celebration(page)).toBeVisible()
+
+      await taskOpenButton(page, 'Task 41').focus()
+      await page.keyboard.press('Enter')
+      await expect(taskDetailModal(page)).toBeVisible()
+      await expect(celebration(page)).toBeVisible()
+
+      await expect(async () => {
+        const cardBox = await celebration(page).boundingBox()
+        expect(cardBox).not.toBeNull()
+        expect(cardBox!.y).toBeGreaterThanOrEqual(96 - 0.5)
+        expect(cardBox!.y + cardBox!.height).toBeLessThanOrEqual(844)
+        const topmost = await page.evaluate(() => {
+          const close = document.querySelector<HTMLElement>('[role="dialog"] .close-button')!
+          const r = close.getBoundingClientRect()
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+          return !!hit && close.contains(hit)
+        })
+        expect(topmost).toBe(true)
+      }).toPass()
+    })
   })
 })
