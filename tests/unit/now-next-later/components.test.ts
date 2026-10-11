@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
-import { reactive, ref } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
 import { axe } from 'jest-axe'
 import CollapsibleSection from '../../../src/components/CollapsibleSection.vue'
 import NowNextLaterBoard from '../../../src/components/NowNextLaterBoard.vue'
@@ -66,6 +66,43 @@ const tasksState = {
   toggleTaskDone: vi.fn(),
 }
 
+// The board now completes tasks through useCelebration().toggleTaskDoneWithCelebration and
+// consumes the data-computed completion focus target - mocked here so the board is isolated.
+// It also carries the notification/confetti refs because the App test below mounts the whole tree
+// (App.vue renders CelebrationNotification and ConfettiLayer).
+const celebrationState = {
+  celebrationMessage: ref<string | null>(null),
+  celebrationId: ref(0),
+  confettiPieces: ref<unknown[]>([]),
+  confettiBurstId: ref(0),
+  completionFocusTarget: ref(null),
+  celebrate: vi.fn(),
+  dismissCelebration: vi.fn(),
+  pauseDismiss: vi.fn(),
+  resumeDismiss: vi.fn(),
+  toggleTaskDoneWithCelebration: vi.fn(),
+  consumeCompletionFocusTarget: vi.fn(),
+}
+
+// App.vue also renders CompletedButton / CompletedTasksPanel.
+const completedPanelState = {
+  isOpen: ref(false),
+  completedTasks: ref<unknown[]>([]),
+  completedCount: ref(0),
+  open: vi.fn(),
+  close: vi.fn(),
+  uncomplete: vi.fn(),
+  openTask: vi.fn(),
+}
+
+vi.mock('../../../src/composables/useCompletedPanel', () => ({
+  useCompletedPanel: () => completedPanelState,
+}))
+
+vi.mock('../../../src/composables/useCelebration', () => ({
+  useCelebration: () => celebrationState,
+}))
+
 vi.mock('../../../src/composables/useTasks', () => ({
   useTasks: () => tasksState,
 }))
@@ -78,6 +115,7 @@ const taskDetailState = {
   isOpen: ref(false),
   lastOpenedTaskId: ref<number | null>(null),
   lastOpenedTaskSection: ref<'now' | 'next' | 'later' | null>(null),
+  openedFrom: ref<'board' | 'completed'>('board'),
   open: vi.fn(),
 }
 
@@ -110,6 +148,15 @@ beforeEach(() => {
   tasksState.tasks.value = []
   tasksState.toggleTaskDone.mockReset()
 
+  celebrationState.toggleTaskDoneWithCelebration.mockReset()
+  celebrationState.consumeCompletionFocusTarget.mockReset()
+  celebrationState.consumeCompletionFocusTarget.mockReturnValue(null)
+
+  celebrationState.celebrationMessage.value = null
+  completedPanelState.isOpen.value = false
+  completedPanelState.completedCount.value = 0
+
+  taskDetailState.openedFrom.value = 'board'
   taskDetailState.isOpen.value = false
   taskDetailState.lastOpenedTaskId.value = null
   taskDetailState.lastOpenedTaskSection.value = null
@@ -166,21 +213,39 @@ describe('NowNextLaterBoard', () => {
       expect(nextSection.find('ul').exists()).toBe(false)
     })
 
-    it("a task's checkbox reflects task.done (checked/unchecked)", () => {
+    it('a done task renders no .task-item', () => {
       tasksState.tasks.value = [
         { id: 1, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
         { id: 2, name: 'Bring bins', section: 'now', done: true, createdAt: 2 },
       ]
       const wrapper = mountTracked(NowNextLaterBoard)
-      const checkboxes = wrapper.findAll('input[type="checkbox"]')
 
-      const incomplete = checkboxes.find(
-        (c) => (c.element as HTMLInputElement).id === 'task-1-done'
-      )!
-      const complete = checkboxes.find((c) => (c.element as HTMLInputElement).id === 'task-2-done')!
+      const items = wrapper.findAll('.task-item')
+      expect(items).toHaveLength(1)
+      expect(items[0]!.text()).toContain('Buy milk')
+      expect(wrapper.text()).not.toContain('Bring bins')
+      expect(wrapper.find('#task-2-done').exists()).toBe(false)
+    })
 
-      expect((incomplete.element as HTMLInputElement).checked).toBe(false)
-      expect((complete.element as HTMLInputElement).checked).toBe(true)
+    it('a section whose tasks are all done shows no list', () => {
+      tasksState.tasks.value = [
+        { id: 1, name: 'Bring bins', section: 'now', done: true, createdAt: 1 },
+      ]
+      const wrapper = mountTracked(NowNextLaterBoard)
+      const sections = wrapper.findAllComponents(CollapsibleSection)
+      const now = sections.find((section) => section.props('sectionKey') === 'now')!
+
+      expect(now.find('ul').exists()).toBe(false)
+      expect(now.findAll('li')).toHaveLength(0)
+    })
+
+    it('an incomplete task checkbox is unchecked and not struck through', () => {
+      tasksState.tasks.value = [
+        { id: 1, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
+      ]
+      const wrapper = mountTracked(NowNextLaterBoard)
+      expect((wrapper.find('#task-1-done').element as HTMLInputElement).checked).toBe(false)
+      expect(wrapper.find('.task-name--done').exists()).toBe(false)
     })
 
     it("renders tasks sorted by ascending createdAt regardless of the mocked array's input order", () => {
@@ -223,7 +288,7 @@ describe('NowNextLaterBoard', () => {
       await expectNoAxeViolations(wrapper.element)
     })
 
-    it('has no accessibility violations with a section rendering one completed task', async () => {
+    it('has no accessibility violations with a board containing only done tasks (empty)', async () => {
       tasksState.tasks.value = [
         { id: 1, name: 'Buy milk', section: 'now', done: true, createdAt: 1 },
       ]
@@ -265,7 +330,125 @@ describe('NowNextLaterBoard', () => {
         await wrapper.find('#task-7-done').trigger('change')
 
         expect(taskDetailState.open).not.toHaveBeenCalled()
-        expect(tasksState.toggleTaskDone).toHaveBeenCalledWith(7)
+        expect(celebrationState.toggleTaskDoneWithCelebration).toHaveBeenCalledWith(7)
+        expect(tasksState.toggleTaskDone).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('focus after completing from the board checkbox', () => {
+      it('focuses the open-button of the consumed task target', async () => {
+        tasksState.tasks.value = [
+          { id: 1, name: 'First', section: 'now', done: false, createdAt: 1 },
+          { id: 2, name: 'Second', section: 'now', done: false, createdAt: 2 },
+        ]
+        celebrationState.consumeCompletionFocusTarget.mockReturnValue({ kind: 'task', id: 2 })
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        await wrapper.find('#task-1-done').trigger('change')
+        await nextTick()
+        await nextTick()
+
+        const buttons = wrapper.findAll('button.task-open-button')
+        const second = buttons.find((b) => b.text() === 'Second')!
+        expect(document.activeElement).toBe(second.element)
+      })
+
+      it('focuses the section heading when the consumed target is a section', async () => {
+        tasksState.tasks.value = [
+          { id: 1, name: 'Only', section: 'next', done: false, createdAt: 1 },
+        ]
+        celebrationState.consumeCompletionFocusTarget.mockReturnValue({
+          kind: 'section',
+          key: 'next',
+        })
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        await wrapper.find('#task-1-done').trigger('change')
+        await nextTick()
+        await nextTick()
+
+        expect(document.activeElement).toBe(document.getElementById('section-next-heading'))
+      })
+    })
+
+    describe('focus after the Task Detail modal closes', () => {
+      async function closeDetail(origin: 'board' | 'completed') {
+        taskDetailState.openedFrom.value = origin
+        taskDetailState.isOpen.value = true
+        await nextTick()
+        taskDetailState.isOpen.value = false
+        await nextTick()
+        await nextTick()
+      }
+
+      it("origin 'completed': does not consume the target or move focus", async () => {
+        tasksState.tasks.value = [
+          { id: 1, name: 'First', section: 'now', done: false, createdAt: 1 },
+        ]
+        taskDetailState.lastOpenedTaskId.value = 1
+        const outside = document.createElement('button')
+        document.body.appendChild(outside)
+        mountTracked(NowNextLaterBoard)
+        outside.focus()
+
+        await closeDetail('completed')
+
+        expect(celebrationState.consumeCompletionFocusTarget).not.toHaveBeenCalled()
+        expect(document.activeElement).toBe(outside)
+        outside.remove()
+      })
+
+      it("origin 'board' with a completion target: focuses the neighbor open-button", async () => {
+        tasksState.tasks.value = [
+          { id: 2, name: 'Second', section: 'now', done: false, createdAt: 2 },
+        ]
+        taskDetailState.lastOpenedTaskId.value = 1
+        celebrationState.consumeCompletionFocusTarget.mockReturnValue({ kind: 'task', id: 2 })
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        await closeDetail('board')
+
+        expect(celebrationState.consumeCompletionFocusTarget).toHaveBeenCalled()
+        expect(document.activeElement).toBe(wrapper.find('button.task-open-button').element)
+      })
+
+      it("origin 'board' with a section completion target: focuses that section heading", async () => {
+        tasksState.tasks.value = []
+        taskDetailState.lastOpenedTaskId.value = 1
+        celebrationState.consumeCompletionFocusTarget.mockReturnValue({
+          kind: 'section',
+          key: 'later',
+        })
+        mountTracked(NowNextLaterBoard)
+
+        await closeDetail('board')
+
+        expect(document.activeElement).toBe(document.getElementById('section-later-heading'))
+      })
+
+      it("origin 'board' with no target (cancel/save): focuses the task's own open-button", async () => {
+        tasksState.tasks.value = [
+          { id: 1, name: 'First', section: 'now', done: false, createdAt: 1 },
+        ]
+        taskDetailState.lastOpenedTaskId.value = 1
+        celebrationState.consumeCompletionFocusTarget.mockReturnValue(null)
+        const wrapper = mountTracked(NowNextLaterBoard)
+
+        await closeDetail('board')
+
+        expect(document.activeElement).toBe(wrapper.find('button.task-open-button').element)
+      })
+
+      it("origin 'board' with no target and a deleted task: focuses its last section heading", async () => {
+        tasksState.tasks.value = []
+        taskDetailState.lastOpenedTaskId.value = 1
+        taskDetailState.lastOpenedTaskSection.value = 'next'
+        celebrationState.consumeCompletionFocusTarget.mockReturnValue(null)
+        mountTracked(NowNextLaterBoard)
+
+        await closeDetail('board')
+
+        expect(document.activeElement).toBe(document.getElementById('section-next-heading'))
       })
     })
   })
