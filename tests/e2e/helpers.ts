@@ -47,3 +47,19 @@ export function taskDoneToggle(page: Page, name: string) {
 export function taskItem(page: Page, name: string) {
   return page.getByRole('listitem').filter({ hasText: name })
 }
+
+export function taskOpenButton(page: Page, name: string) {
+  return taskItem(page, name).getByRole('button', { name, exact: true })
+}
+
+export function taskDetailModal(page: Page) {
+  return page.getByRole('dialog', { name: 'Edit Task' })
+}
+
+export function taskDetailDiscardDialog(page: Page) {
+  return page.getByRole('alertdialog', { name: 'Discard changes?' })
+}
+
+export function taskDetailDeleteDialog(page: Page) {
+  return page.getByRole('alertdialog', { name: /^Delete this task\?/ })
+}
