@@ -8,17 +8,26 @@ import NowNextLaterBoard from './components/NowNextLaterBoard.vue'
 import AddTaskButton from './components/AddTaskButton.vue'
 import AddTaskModal from './components/AddTaskModal.vue'
 import TaskDetailModal from './components/TaskDetailModal.vue'
+import CompletedButton from './components/CompletedButton.vue'
+import CompletedTasksPanel from './components/CompletedTasksPanel.vue'
+import CelebrationNotification from './components/CelebrationNotification.vue'
+import ConfettiLayer from './components/ConfettiLayer.vue'
 import { useAddTaskModal } from './composables/useAddTaskModal'
 import { useTaskDetail } from './composables/useTaskDetail'
+import { useCompletedPanel } from './composables/useCompletedPanel'
 
 const { isOpen: isAddTaskModalOpen } = useAddTaskModal()
 const { isOpen: isTaskDetailOpen } = useTaskDetail()
 
-const isAnyModalOpen = computed(() => isAddTaskModalOpen.value || isTaskDetailOpen.value)
+const { isOpen: isCompletedPanelOpen } = useCompletedPanel()
+
+const isAnyModalOpen = computed(
+  () => isAddTaskModalOpen.value || isTaskDetailOpen.value || isCompletedPanelOpen.value
+)
 </script>
 
 <template>
-  <main>
+  <main tabindex="-1">
     <div
       class="app-background"
       :inert="isAnyModalOpen ? true : undefined"
@@ -51,13 +60,17 @@ const isAnyModalOpen = computed(() => isAddTaskModalOpen.value || isTaskDetailOp
           <EnergySelector />
           <EncourageButton />
           <ToughLoveButton />
+          <CompletedButton />
         </div>
       </header>
       <NowNextLaterBoard />
       <ToastNotification />
     </div>
     <AddTaskModal v-if="isAddTaskModalOpen" />
+    <CompletedTasksPanel v-if="isCompletedPanelOpen" />
     <TaskDetailModal v-if="isTaskDetailOpen" />
+    <CelebrationNotification />
+    <ConfettiLayer />
   </main>
 </template>
 

@@ -1,27 +1,18 @@
 import { Given, When, Then, After } from '@cucumber/cucumber'
 import assert from 'node:assert/strict'
 import type { EnergyWorld } from '../support/world'
+import { useCelebration } from '../../src/composables/useCelebration'
+import { useCompletedPanel } from '../../src/composables/useCompletedPanel'
+import { groupActiveTasksBySection } from '../../src/composables/useBoardOrdering'
 
 // Drives useCelebration()/useCompletedPanel()/useTaskDetail() directly (the same
 // singletons components share). "Absent from the board" is asserted through the
 // shared groupActiveTasksBySection helper that NowNextLaterBoard.vue renders from,
 // not a bare store filter. Reused steps: task-store.steps.ts ("I have added a
 // task named ..."), task-detail.steps.ts (detail view open / set name / closed).
-//
-// The new modules are loaded lazily via require() so that, while they do not
-// exist yet, only scenarios in this feature fail (not every feature at load time).
-// The implementer may convert these to static imports once the modules exist.
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
 
-function celebration(): any {
-  return require('../../src/composables/useCelebration').useCelebration()
-}
-function completedPanel(): any {
-  return require('../../src/composables/useCompletedPanel').useCompletedPanel()
-}
-function boardOrdering(): any {
-  return require('../../src/composables/useBoardOrdering')
-}
+const celebration = useCelebration
+const completedPanel = useCompletedPanel
 
 let celebrationCountSnapshot = 0
 
@@ -32,8 +23,8 @@ function taskId(world: EnergyWorld, name: string): number {
 }
 
 function boardNames(world: EnergyWorld, key: 'now' | 'next' | 'later'): string[] {
-  const grouped = boardOrdering().groupActiveTasksBySection(world.tasks.tasks.value)
-  return grouped[key].map((t: { name: string }) => t.name)
+  const grouped = groupActiveTasksBySection(world.tasks.tasks.value)
+  return grouped[key].map((t) => t.name)
 }
 
 function boardHasTask(world: EnergyWorld, name: string): boolean {
@@ -59,12 +50,8 @@ Given('a fresh celebration session', function () {
 
 // Clear module-level timers so they never leak across scenarios or hold the process open.
 After(function () {
-  try {
-    celebration().dismissCelebration()
-    celebration().confettiPieces.value = []
-  } catch {
-    // module not present yet (red phase)
-  }
+  celebration().dismissCelebration()
+  celebration().confettiPieces.value = []
 })
 
 Given('I have noted the celebration count', function () {
@@ -135,7 +122,7 @@ Then(
 Then('a celebration message should be showing', function () {
   const message = celebration().celebrationMessage.value
   assert.equal(typeof message, 'string')
-  assert.ok(message.length > 0)
+  assert.ok(message && message.length > 0)
 })
 
 Then('the Completed count should be {int}', function (expected: number) {
@@ -143,7 +130,7 @@ Then('the Completed count should be {int}', function (expected: number) {
 })
 
 Then(/^the Completed panel should list, most recent first: (.+)$/, function (rawList: string) {
-  const actual = completedPanel().completedTasks.value.map((t: { name: string }) => t.name)
+  const actual = completedPanel().completedTasks.value.map((t) => t.name)
   assert.deepEqual(actual, parseQuotedList(rawList))
 })
 

@@ -296,7 +296,7 @@ test.describe('coexistence with the existing toast', () => {
 })
 
 test.describe('reduced motion', () => {
-  test.use({ reducedMotion: 'reduce' })
+  test.use({ contextOptions: { reducedMotion: 'reduce' } })
 
   test('shows the message but renders no confetti', async ({ page }) => {
     await reloadWith(page, [makeTask({ id: 1, name: 'Water the plants' })])
