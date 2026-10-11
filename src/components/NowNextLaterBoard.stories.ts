@@ -40,10 +40,20 @@ vi.mock('../composables/useTasks', () => ({
   useTasks: () => tasksState,
 }))
 
+const celebrationState = {
+  toggleTaskDoneWithCelebration: vi.fn(),
+  consumeCompletionFocusTarget: vi.fn(),
+}
+
+vi.mock('../composables/useCelebration', () => ({
+  useCelebration: () => celebrationState,
+}))
+
 const taskDetailState = {
   isOpen: ref(false),
   lastOpenedTaskId: ref<number | null>(null),
   lastOpenedTaskSection: ref<'now' | 'next' | 'later' | null>(null),
+  openedFrom: ref<'board' | 'completed'>('board'),
   open: vi.fn(),
 }
 
@@ -82,11 +92,14 @@ export const OneIncompleteTask: Story = {
       { id: 7, name: 'Buy milk', section: 'now', done: false, createdAt: 1 },
     ]
     tasksState.toggleTaskDone.mockReset()
+    celebrationState.toggleTaskDoneWithCelebration.mockReset()
+    celebrationState.consumeCompletionFocusTarget.mockReset()
+    celebrationState.consumeCompletionFocusTarget.mockReturnValue(null)
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole('checkbox', { name: 'Buy milk' }))
-    expect(tasksState.toggleTaskDone).toHaveBeenCalledWith(7)
+    expect(celebrationState.toggleTaskDoneWithCelebration).toHaveBeenCalledWith(7)
   },
 }
 
@@ -108,11 +121,15 @@ export const OneIncompleteTaskWithOpenAffordance: Story = {
   },
 }
 
-export const OneCompletedTask: Story = {
+// Completed tasks leave the board (they live in the Completed panel instead).
+export const DoneTasksHidden: Story = {
   beforeEach: () => {
     resetSectionState()
     tasksState.tasks.value = [{ id: 1, name: 'Buy milk', section: 'now', done: true, createdAt: 1 }]
     tasksState.toggleTaskDone.mockReset()
+  },
+  play: async ({ canvasElement }) => {
+    expect(canvasElement.querySelectorAll('.task-item')).toHaveLength(0)
   },
 }
 

@@ -8,26 +8,23 @@ import {
 } from '../composables/useSectionCollapse'
 import { useTasks, type Task } from '../composables/useTasks'
 import { useTaskDetail } from '../composables/useTaskDetail'
+import { useCelebration } from '../composables/useCelebration'
+import { groupActiveTasksBySection, type FocusTarget } from '../composables/useBoardOrdering'
 
 const { expanded, toggle } = useSectionCollapse()
-const { tasks, toggleTaskDone } = useTasks()
+const { tasks } = useTasks()
+const { toggleTaskDoneWithCelebration, consumeCompletionFocusTarget } = useCelebration()
 const {
   open: openDetail,
   isOpen: isTaskDetailOpen,
+  openedFrom,
   lastOpenedTaskId,
   lastOpenedTaskSection,
 } = useTaskDetail()
 
-const tasksBySection = computed<Record<SectionKey, Task[]>>(() => {
-  const grouped: Record<SectionKey, Task[]> = { now: [], next: [], later: [] }
-  for (const task of tasks.value) {
-    grouped[task.section].push(task)
-  }
-  for (const key of Object.keys(grouped) as SectionKey[]) {
-    grouped[key].sort((a, b) => a.createdAt - b.createdAt)
-  }
-  return grouped
-})
+const tasksBySection = computed<Record<SectionKey, Task[]>>(() =>
+  groupActiveTasksBySection(tasks.value)
+)
 
 // Local, non-reactive map of task id -> rendered open-button element, used only for the
 // focus-return watcher below. Vue's :ref callback fires with null on unmount, which deletes a
@@ -42,9 +39,29 @@ function setTaskButtonRef(id: number, el: HTMLElement | null) {
   }
 }
 
+function focusTarget(target: FocusTarget | null) {
+  if (!target) return
+  if (target.kind === 'task') {
+    taskButtonRefs.get(target.id)?.focus()
+  } else {
+    document.getElementById(`section-${target.key}-heading`)?.focus()
+  }
+}
+
+function onBoardToggle(id: number) {
+  toggleTaskDoneWithCelebration(id)
+  const target = consumeCompletionFocusTarget()
+  nextTick(() => focusTarget(target))
+}
+
 watch(isTaskDetailOpen, (open, wasOpen) => {
-  if (wasOpen && !open) {
+  if (wasOpen && !open && openedFrom.value === 'board') {
     nextTick(() => {
+      const target = consumeCompletionFocusTarget()
+      if (target) {
+        focusTarget(target)
+        return
+      }
       const button =
         lastOpenedTaskId.value !== null ? taskButtonRefs.get(lastOpenedTaskId.value) : null
       if (button) {
@@ -77,14 +94,12 @@ watch(isTaskDetailOpen, (open, wasOpen) => {
             type="checkbox"
             class="task-done-checkbox"
             :aria-label="task.name"
-            :checked="task.done"
-            @change="toggleTaskDone(task.id)"
+            @change="onBoardToggle(task.id)"
           />
           <button
             :ref="(el) => setTaskButtonRef(task.id, el as HTMLElement | null)"
             type="button"
             class="task-open-button task-name"
-            :class="{ 'task-name--done': task.done }"
             @click="openDetail(task.id)"
           >
             {{ task.name }}
@@ -139,11 +154,6 @@ watch(isTaskDetailOpen, (open, wasOpen) => {
   padding: 0;
   font-family: inherit;
   text-align: left;
-}
-.task-name--done {
-  text-decoration: line-through;
-  color: #767676; /* same muted color already used by App.vue's .tagline and
-                      AddTaskModal.vue's .field-error — precedented, passing contrast */
 }
 @media (max-width: 640px) {
   .now-next-later-board {

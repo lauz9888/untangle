@@ -2,6 +2,7 @@ import { ref, computed, type Ref } from 'vue'
 import type { SectionKey } from './useSectionCollapse'
 import type { EnergyLevel } from './useEnergyLevel'
 import { useTasks, type UpdateTaskChanges } from './useTasks'
+import { useCelebration } from './useCelebration'
 
 export interface DraftSubTask {
   id: number
@@ -14,6 +15,7 @@ type EstimateField = 'days' | 'hours' | 'minutes'
 const selectedTaskId: Ref<number | null> = ref(null)
 const lastOpenedTaskId: Ref<number | null> = ref(null)
 const lastOpenedTaskSection: Ref<SectionKey | null> = ref(null)
+const openedFrom: Ref<'board' | 'completed'> = ref('board')
 const isDiscardConfirmOpen = ref(false)
 const isDeleteConfirmOpen = ref(false)
 
@@ -99,12 +101,13 @@ const hasUnsavedChanges = computed(() => {
   return false
 })
 
-function open(taskId: number): void {
+function open(taskId: number, origin: 'board' | 'completed' = 'board'): void {
   const task = useTasks().tasks.value.find((t) => t.id === taskId)
   if (!task) {
     return
   }
 
+  openedFrom.value = origin
   selectedTaskId.value = taskId
   lastOpenedTaskId.value = taskId
   lastOpenedTaskSection.value = task.section
@@ -170,8 +173,15 @@ function cancelDelete(): void {
 }
 
 function toggleDone(): void {
-  if (selectedTaskId.value !== null) {
-    useTasks().toggleTaskDone(selectedTaskId.value)
+  const id = selectedTaskId.value
+  if (id === null) {
+    return
+  }
+  const completed = useCelebration().toggleTaskDoneWithCelebration(id, {
+    computeFocusTarget: openedFrom.value === 'board',
+  })
+  if (completed) {
+    close()
   }
 }
 
@@ -281,6 +291,7 @@ export function useTaskDetail() {
     isOpen,
     lastOpenedTaskId,
     lastOpenedTaskSection,
+    openedFrom,
     isDiscardConfirmOpen,
     isDeleteConfirmOpen,
     name,

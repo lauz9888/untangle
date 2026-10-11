@@ -4,6 +4,7 @@ import type { useTasks } from '../../../src/composables/useTasks'
 
 const modulePath = '../../../src/composables/useTaskDetail'
 const tasksModulePath = '../../../src/composables/useTasks'
+const celebrationModulePath = '../../../src/composables/useCelebration'
 
 type TaskDetailState = ReturnType<typeof useTaskDetail>
 type TasksState = ReturnType<typeof useTasks>
@@ -397,6 +398,118 @@ describe('useTaskDetail', () => {
       expect(toggleSpy).toHaveBeenCalledWith(created.id, subTaskId)
       const savedTask = tasks.tasks.value.find((t) => t.id === created.id)!
       expect(savedTask.subTasks.find((s) => s.id === subTaskId)!.done).toBe(true)
+    })
+  })
+  describe('completion behaviour (task-completion-celebration)', () => {
+    async function loadWithCelebration() {
+      const { detail, tasks } = await loadBoth()
+      const celebrationMod = await import(celebrationModulePath)
+      return { detail, tasks, celebration: celebrationMod.useCelebration() }
+    }
+
+    it("open(id) defaults openedFrom to 'board'; open(id, 'completed') sets it", async () => {
+      const { detail, tasks } = await loadBoth()
+      const created = seedFullTask(tasks)
+
+      detail.open(created.id)
+      expect(detail.openedFrom.value).toBe('board')
+
+      detail.close()
+      detail.open(created.id, 'completed')
+      expect(detail.openedFrom.value).toBe('completed')
+    })
+
+    it('openedFrom survives close()', async () => {
+      const { detail, tasks } = await loadBoth()
+      const created = seedFullTask(tasks)
+      detail.open(created.id, 'completed')
+
+      detail.close()
+
+      expect(detail.isOpen.value).toBe(false)
+      expect(detail.openedFrom.value).toBe('completed')
+    })
+
+    it('completing closes immediately with no discard confirmation, even with a dirty draft, and persists no draft edits', async () => {
+      const { detail, tasks, celebration } = await loadWithCelebration()
+      const updateSpy = vi.spyOn(tasks, 'updateTask')
+      const created = seedFullTask(tasks)
+      detail.open(created.id)
+      detail.name.value = 'Edited but never saved'
+      expect(detail.hasUnsavedChanges.value).toBe(true)
+
+      detail.toggleDone()
+
+      expect(detail.isOpen.value).toBe(false)
+      expect(detail.isDiscardConfirmOpen.value).toBe(false)
+      expect(updateSpy).not.toHaveBeenCalled()
+      const stored = tasks.tasks.value.find((t) => t.id === created.id)!
+      expect(stored.done).toBe(true)
+      expect(stored.name).toBe('Buy milk')
+      expect(celebration.celebrationMessage.value).not.toBeNull()
+    })
+
+    it('completing celebrates exactly once', async () => {
+      const { detail, tasks, celebration } = await loadWithCelebration()
+      const created = seedFullTask(tasks)
+      detail.open(created.id)
+      const before = celebration.celebrationId.value
+
+      detail.toggleDone()
+
+      expect(celebration.celebrationId.value).toBe(before + 1)
+    })
+
+    it('un-ticking a done task keeps the modal open and does not celebrate', async () => {
+      const { detail, tasks, celebration } = await loadWithCelebration()
+      const created = seedFullTask(tasks)
+      tasks.toggleTaskDone(created.id)
+      detail.open(created.id, 'completed')
+      const before = celebration.celebrationId.value
+
+      detail.toggleDone()
+
+      expect(detail.isOpen.value).toBe(true)
+      expect(tasks.tasks.value.find((t) => t.id === created.id)!.done).toBe(false)
+      expect(celebration.celebrationId.value).toBe(before)
+      expect(celebration.celebrationMessage.value).toBeNull()
+    })
+
+    it('completing from a board-origin modal leaves a completionFocusTarget', async () => {
+      const { detail, tasks, celebration } = await loadWithCelebration()
+      const created = seedFullTask(tasks)
+      const other = tasks.addTask({ name: 'Other', section: 'now' })!
+      detail.open(created.id)
+
+      detail.toggleDone()
+
+      expect(celebration.completionFocusTarget.value).toEqual({ kind: 'task', id: other.id })
+    })
+
+    it("completing from a 'completed'-origin modal leaves completionFocusTarget null", async () => {
+      const { detail, tasks, celebration } = await loadWithCelebration()
+      const created = seedFullTask(tasks)
+      tasks.addTask({ name: 'Other', section: 'now' })
+      tasks.toggleTaskDone(created.id)
+      detail.open(created.id, 'completed')
+      detail.toggleDone() // un-tick
+      expect(detail.isOpen.value).toBe(true)
+
+      detail.toggleDone() // re-tick
+
+      expect(detail.isOpen.value).toBe(false)
+      expect(celebration.completionFocusTarget.value).toBeNull()
+    })
+
+    it('sub-task toggles do not celebrate or close the modal', async () => {
+      const { detail, tasks, celebration } = await loadWithCelebration()
+      const created = seedFullTask(tasks)
+      detail.open(created.id)
+
+      detail.toggleSubTaskDoneInView(detail.subTasks.value[0]!.id)
+
+      expect(detail.isOpen.value).toBe(true)
+      expect(celebration.celebrationMessage.value).toBeNull()
     })
   })
 })

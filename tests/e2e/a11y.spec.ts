@@ -13,6 +13,15 @@ import {
   taskDetailModal,
   taskDetailDiscardDialog,
   taskDetailDeleteDialog,
+  taskDoneToggle,
+  makeTask,
+  seedTasks,
+  celebration,
+  celebrationClose,
+  confettiPieces,
+  completedButton,
+  completedPanel,
+  completedRowButton,
 } from './helpers'
 
 // Scope to actual WCAG 2.1 A/AA success criteria, not axe-core's broader
@@ -20,26 +29,6 @@ import {
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
 const TASKS_STORAGE_KEY = 'untangle:tasks'
-
-// Local fixture builder mirroring design.md's Task shape (docs/adr/0003) — seeded directly into
-// localStorage since the real useTasks.ts store doesn't exist yet.
-function makeTask(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 1,
-    name: 'Read a book',
-    section: 'now',
-    description: '',
-    energyLevel: null,
-    estimate: { days: 0, hours: 0, minutes: 0 },
-    availableFrom: null,
-    dueBy: null,
-    subTasks: [],
-    done: false,
-    createdAt: 1000,
-    updatedAt: 1000,
-    ...overrides,
-  }
-}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('./')
@@ -112,15 +101,72 @@ test('has no violations with an incomplete task rendered on the board', async ({
   expect(results.violations).toEqual([])
 })
 
-test('has no violations with a completed (done: true) task rendered on the board', async ({
+test('has no violations with the Completed panel populated (done tasks)', async ({ page }) => {
+  await seedTasks(page, [
+    makeTask({ id: 1, name: 'Read a book', done: true, updatedAt: 2000 }),
+    makeTask({ id: 2, name: 'Water the plants', done: true, updatedAt: 1000, createdAt: 2000 }),
+  ])
+  await page.reload()
+  await completedButton(page).click()
+  await expect(completedPanel(page)).toBeVisible()
+  await expect(completedPanel(page).getByRole('listitem')).toHaveCount(2)
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the Completed panel empty', async ({ page }) => {
+  await completedButton(page).click()
+  await expect(completedPanel(page)).toBeVisible()
+  await expect(completedPanel(page).getByText('No completed tasks yet')).toBeVisible()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations on the header with the Completed button showing a non-zero count', async ({
   page,
 }) => {
-  await page.evaluate(({ key, task }) => localStorage.setItem(key, JSON.stringify([task])), {
-    key: TASKS_STORAGE_KEY,
-    task: makeTask({ done: true }),
-  })
+  await seedTasks(page, [makeTask({ id: 1, name: 'Read a book', done: true })])
   await page.reload()
-  await expect(page.getByRole('listitem')).toBeVisible()
+  await expect(completedButton(page)).toHaveText('Completed (1)')
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the celebration visible and confetti in flight', async ({ page }) => {
+  await seedTasks(page, [makeTask({ id: 1, name: 'Read a book' })])
+  await page.reload()
+  await taskDoneToggle(page, 'Read a book').click()
+  await expect(celebration(page)).toBeVisible()
+  await expect(confettiPieces(page).first()).toBeAttached()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with the celebration close button focused', async ({ page }) => {
+  await seedTasks(page, [makeTask({ id: 1, name: 'Read a book' })])
+  await page.reload()
+  await taskDoneToggle(page, 'Read a book').click()
+  await celebrationClose(page).focus()
+  await expect(celebrationClose(page)).toBeFocused()
+
+  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  expect(results.violations).toEqual([])
+})
+
+test('has no violations with Task Detail stacked on top of the Completed panel', async ({
+  page,
+}) => {
+  await seedTasks(page, [
+    makeTask({ id: 1, name: 'Plan launch', done: true, description: 'Coordinate with marketing' }),
+  ])
+  await page.reload()
+  await completedButton(page).click()
+  await completedRowButton(page, 'Plan launch').click()
+  await expect(taskDetailModal(page)).toBeVisible()
 
   const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
   expect(results.violations).toEqual([])
