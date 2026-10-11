@@ -99,7 +99,8 @@ vi.mock('../../../src/composables/useCompletedPanel', () => ({
   useCompletedPanel: () => completedPanelState,
 }))
 
-vi.mock('../../../src/composables/useCelebration', () => ({
+vi.mock('../../../src/composables/useCelebration', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
   useCelebration: () => celebrationState,
 }))
 

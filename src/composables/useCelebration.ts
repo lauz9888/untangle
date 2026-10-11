@@ -5,6 +5,11 @@ import { getCompletionFocusTarget, type FocusTarget } from './useBoardOrdering'
 export const CELEBRATION_AUTO_DISMISS_MS = 6000
 export const CONFETTI_TOTAL_MS = 4500
 export const CONFETTI_PIECE_COUNT = 60
+export const NOTIFICATION_MIN_TOP = 96
+
+export function computeNotificationTop(headerBottom: number | null): number {
+  return Math.max(Math.max(headerBottom ?? 0, 0) + 8, NOTIFICATION_MIN_TOP)
+}
 
 export const CELEBRATION_MESSAGES: readonly string[] = [
   'Task complete. Well done.',

@@ -33,7 +33,7 @@ const isAnyModalOpen = computed(
       :inert="isAnyModalOpen ? true : undefined"
       :aria-hidden="isAnyModalOpen ? 'true' : undefined"
     >
-      <header class="brand">
+      <header id="app-header" class="brand">
         <div class="brand-text">
           <div class="logo">
             <svg class="logo-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
@@ -124,7 +124,10 @@ h1 {
 .header-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 @media (max-width: 640px) {

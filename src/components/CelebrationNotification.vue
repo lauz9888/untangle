@@ -1,12 +1,38 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
-import { useCelebration } from '../composables/useCelebration'
+import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { useCelebration, computeNotificationTop } from '../composables/useCelebration'
 
 const { celebrationMessage, celebrationId, dismissCelebration, pauseDismiss, resumeDismiss } =
   useCelebration()
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+const topPx = ref(computeNotificationTop(null))
+let resizeObserver: ResizeObserver | null = null
+
+function updateTop() {
+  const header = document.getElementById('app-header')
+  topPx.value = computeNotificationTop(header ? header.getBoundingClientRect().bottom : null)
+}
+
+onMounted(() => {
+  updateTop()
+  window.addEventListener('scroll', updateTop, { passive: true })
+  window.addEventListener('resize', updateTop, { passive: true })
+  const header = document.getElementById('app-header')
+  if (header && typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(updateTop)
+    resizeObserver.observe(header)
+  }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateTop)
+  window.removeEventListener('resize', updateTop)
+  resizeObserver?.disconnect()
+  resizeObserver = null
+})
 
 const cardRef = ref<HTMLElement | null>(null)
 const hovered = ref(false)
@@ -58,6 +84,7 @@ watch(celebrationMessage, (message) => {
 })
 
 watch(celebrationId, () => {
+  updateTop()
   if (hovered.value || focused.value) {
     pauseDismiss()
   }
@@ -97,7 +124,13 @@ async function onDismissClick() {
 </script>
 
 <template>
-  <div class="celebration-region" role="status" aria-live="polite" aria-atomic="true">
+  <div
+    class="celebration-region"
+    :style="{ top: topPx + 'px' }"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+  >
     <div
       v-if="celebrationMessage"
       ref="cardRef"
@@ -124,7 +157,6 @@ async function onDismissClick() {
 <style scoped>
 .celebration-region {
   position: fixed;
-  top: max(1rem, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
@@ -173,10 +205,8 @@ async function onDismissClick() {
 
 @media (max-width: 640px) {
   .celebration-region {
-    left: 4.5rem;
-    right: 4.5rem;
-    width: auto;
-    transform: none;
+    width: calc(100% - 2rem);
+    max-width: none;
   }
 
   .celebration {
