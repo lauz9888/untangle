@@ -270,7 +270,7 @@ test('toggling a sub-task done checkbox in the detail view persists across a rel
 
   const tasks = await readTasks(page)
   const subTasks = (tasks[0] as { subTasks: { id: number; done: boolean }[] }).subTasks
-  expect(subTasks[0].done).toBe(true)
+  expect(subTasks[0]!.done).toBe(true)
 })
 
 test('deleting the currently-open task returns focus to its section heading', async ({ page }) => {

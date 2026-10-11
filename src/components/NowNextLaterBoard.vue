@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, watch } from 'vue'
 import CollapsibleSection from './CollapsibleSection.vue'
 import {
   useSectionCollapse,
@@ -7,9 +7,16 @@ import {
   type SectionKey,
 } from '../composables/useSectionCollapse'
 import { useTasks, type Task } from '../composables/useTasks'
+import { useTaskDetail } from '../composables/useTaskDetail'
 
 const { expanded, toggle } = useSectionCollapse()
 const { tasks, toggleTaskDone } = useTasks()
+const {
+  open: openDetail,
+  isOpen: isTaskDetailOpen,
+  lastOpenedTaskId,
+  lastOpenedTaskSection,
+} = useTaskDetail()
 
 const tasksBySection = computed<Record<SectionKey, Task[]>>(() => {
   const grouped: Record<SectionKey, Task[]> = { now: [], next: [], later: [] }
@@ -20,6 +27,36 @@ const tasksBySection = computed<Record<SectionKey, Task[]>>(() => {
     grouped[key].sort((a, b) => a.createdAt - b.createdAt)
   }
   return grouped
+})
+
+// Local, non-reactive map of task id -> rendered open-button element, used only for the
+// focus-return watcher below. Vue's :ref callback fires with null on unmount, which deletes a
+// removed task's entry for us.
+const taskButtonRefs = new Map<number, HTMLElement>()
+
+function setTaskButtonRef(id: number, el: HTMLElement | null) {
+  if (el) {
+    taskButtonRefs.set(id, el)
+  } else {
+    taskButtonRefs.delete(id)
+  }
+}
+
+watch(isTaskDetailOpen, (open, wasOpen) => {
+  if (wasOpen && !open) {
+    nextTick(() => {
+      const button =
+        lastOpenedTaskId.value !== null ? taskButtonRefs.get(lastOpenedTaskId.value) : null
+      if (button) {
+        button.focus()
+        return
+      }
+      const fallbackSection = lastOpenedTaskSection.value
+      if (fallbackSection) {
+        document.getElementById(`section-${fallbackSection}-heading`)?.focus()
+      }
+    })
+  }
 })
 </script>
 
@@ -39,16 +76,19 @@ const tasksBySection = computed<Record<SectionKey, Task[]>>(() => {
             :id="`task-${task.id}-done`"
             type="checkbox"
             class="task-done-checkbox"
+            :aria-label="task.name"
             :checked="task.done"
             @change="toggleTaskDone(task.id)"
           />
-          <label
-            :for="`task-${task.id}-done`"
-            class="task-name"
+          <button
+            :ref="(el) => setTaskButtonRef(task.id, el as HTMLElement | null)"
+            type="button"
+            class="task-open-button task-name"
             :class="{ 'task-name--done': task.done }"
+            @click="openDetail(task.id)"
           >
             {{ task.name }}
-          </label>
+          </button>
         </li>
       </ul>
     </CollapsibleSection>
@@ -92,6 +132,13 @@ const tasksBySection = computed<Record<SectionKey, Task[]>>(() => {
   color: #1a1a1a;
   font-size: 0.95rem;
   cursor: pointer;
+}
+.task-open-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  text-align: left;
 }
 .task-name--done {
   text-decoration: line-through;

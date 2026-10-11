@@ -17,7 +17,7 @@ const contentId = computed(() => `section-${props.sectionKey}-content`)
 <template>
   <section class="now-next-later-section" :aria-labelledby="headingId">
     <div class="section-header">
-      <h2 :id="headingId" class="section-heading">{{ label }}</h2>
+      <h2 :id="headingId" class="section-heading" tabindex="-1">{{ label }}</h2>
       <button
         type="button"
         class="section-toggle"
