@@ -645,6 +645,11 @@ function isSubTaskDone(id: number): boolean {
     min-width: 44px;
   }
 
+  .sub-task-item input[type='checkbox'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   .save-button,
   .delete-button {
     min-height: 44px;
