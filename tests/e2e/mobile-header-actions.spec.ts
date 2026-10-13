@@ -23,21 +23,18 @@ async function seedCompleted(page: import('@playwright/test').Page, count: numbe
       updatedAt: 1000 + i,
     })
   )
+  // Each test gets a fresh browser context (empty storage), so no clear/reload
+  // is needed: navigate once if we haven't yet, seed, then reload once.
+  if (page.url() === 'about:blank') await page.goto('./')
   await seedTasks(page, tasks)
   await page.reload()
 }
 
-test.beforeEach(async ({ page }) => {
-  await page.goto('./')
-  await page.evaluate(() => localStorage.clear())
-  await page.reload()
-})
-
 test.describe('header action buttons share one row at mobile widths', () => {
   for (const width of WIDTHS) {
-    for (const count of COUNTS) {
-      test(`${width}px wide with ${count} completed tasks`, async ({ page }) => {
-        await page.setViewportSize({ width, height: 812 })
+    test(`${width}px wide with 0, 9, 99 and 999 completed tasks`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 812 })
+      for (const count of COUNTS) {
         await seedCompleted(page, count)
 
         const label = `Completed (${count})`
@@ -80,8 +77,8 @@ test.describe('header action buttons share one row at mobile widths', () => {
           expect(info.fits).toBe(true)
           expect(info.fontSize).toBeGreaterThanOrEqual(12)
         }
-      })
-    }
+      }
+    })
   }
 })
 

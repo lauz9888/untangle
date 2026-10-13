@@ -218,7 +218,7 @@ describe('App', () => {
     expect(childClasses[0]).toContain('energy-panel')
     expect(childClasses[1]).toContain('header-buttons')
 
-    const wrapperClasses = Array.from(actions.element.children[1].children).map(
+    const wrapperClasses = Array.from(actions.element.children[1]!.children).map(
       (el) => el.className
     )
     expect(wrapperClasses[0]).toContain('encourage-button')
