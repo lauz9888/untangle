@@ -82,10 +82,11 @@ const isAnyModalOpen = computed(
 }
 
 .brand {
-  position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
-  right: 1.5rem;
+  /* In flow (not absolute) so the board always clears it, even when wrapped. The
+     -8px margins cancel body's default 8px margin so content stays at x=24,y=24. */
+  position: static;
+  margin: -8px -8px 0;
+  padding: 1.5rem 1.5rem 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -139,6 +140,7 @@ h1 {
 @media (max-width: 640px) {
   .brand {
     position: static;
+    margin: 0;
     flex-direction: column;
     align-items: stretch;
     padding: 1.5rem 1.5rem 1rem;
