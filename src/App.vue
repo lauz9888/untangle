@@ -58,9 +58,11 @@ const isAnyModalOpen = computed(
         </div>
         <div class="header-actions">
           <EnergySelector />
-          <EncourageButton />
-          <ToughLoveButton />
-          <CompletedButton />
+          <div class="header-buttons">
+            <EncourageButton />
+            <ToughLoveButton />
+            <CompletedButton />
+          </div>
         </div>
       </header>
       <NowNextLaterBoard />
@@ -121,6 +123,10 @@ h1 {
   color: #767676;
 }
 
+.header-buttons {
+  display: contents;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -142,6 +148,16 @@ h1 {
     width: 100%;
     flex-wrap: wrap;
     margin-top: 0.75rem;
+  }
+
+  .header-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 0 0 auto;
+    width: calc(100% + 2rem);
+    margin-inline: -1rem;
   }
 }
 </style>

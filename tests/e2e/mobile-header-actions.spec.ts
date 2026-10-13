@@ -46,9 +46,10 @@ test.describe('header action buttons share one row at mobile widths', () => {
         const completed = completedButtonAlways(page)
         await expect(completed).toHaveText(label)
 
-        const [e, t, c] = await Promise.all(
-          [encourage, tough, completed].map(async (l) => (await l.boundingBox())!)
-        )
+        const e = await encourage.boundingBox()
+        const t = await tough.boundingBox()
+        const c = await completed.boundingBox()
+        if (!e || !t || !c) throw new Error('header button has no bounding box')
 
         // Same row (top offsets within 1px)
         expect(Math.abs(e.y - t.y)).toBeLessThanOrEqual(1)

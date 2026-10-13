@@ -53,7 +53,11 @@ watch(isOpen, (now, was) => {
 @media (max-width: 640px) {
   .completed-button {
     min-height: 44px;
-    padding: 0.6rem 1rem;
+    min-width: 44px;
+    padding: 0.6rem 0.3rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex: 1 1 auto;
   }
 }
 </style>
