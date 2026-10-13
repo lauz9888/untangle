@@ -114,25 +114,38 @@ test.describe('640/641 boundary (Req 21)', () => {
   }
 })
 
-// Req 7 position pin. Values measured on main at 85180c4 (absolutely positioned
-// .brand, pre-change layout), empty storage, viewport Nx900.
+// Req 7: above 640px the header must sit exactly where the old absolutely
+// positioned .brand put it. Font-independent A/B check: measure the current
+// layout, temporarily inject the pre-change rules, measure again, and compare.
 test.describe('header position is unchanged above 640px (Req 7)', () => {
-  const PINS = [
-    { width: 1280, logo: { x: 24, y: 24 }, completed: { x: 1137.046875, y: 30.59375 } },
-    { width: 700, logo: { x: 24, y: 24 }, completed: { x: 557.046875, y: 77.96875 } },
-  ]
-  for (const pin of PINS) {
-    test(`${pin.width}px: logo and Completed button sit where they did before`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: pin.width, height: HEIGHT })
+  for (const width of [1280, 700]) {
+    test(`${width}px: logo and Completed button sit where they did before`, async ({ page }) => {
+      await page.setViewportSize({ width, height: HEIGHT })
       await page.reload()
-      const logo = await box(page.locator('.logo'))
-      const completed = await box(completedButtonAlways(page))
-      expect(Math.abs(logo.x - pin.logo.x)).toBeLessThanOrEqual(1)
-      expect(Math.abs(logo.y - pin.logo.y)).toBeLessThanOrEqual(1)
-      expect(Math.abs(completed.x - pin.completed.x)).toBeLessThanOrEqual(1)
-      expect(Math.abs(completed.y - pin.completed.y)).toBeLessThanOrEqual(1)
+      const measure = async () => ({
+        logo: await box(page.locator('.logo')),
+        completed: await box(completedButtonAlways(page)),
+      })
+
+      const current = await measure()
+
+      const legacy = await page.addStyleTag({
+        content: `.brand {
+          position: absolute !important;
+          top: 1.5rem !important;
+          left: 1.5rem !important;
+          right: 1.5rem !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }`,
+      })
+      const before = await measure()
+      await legacy.evaluate((el) => (el as Element).remove())
+
+      for (const key of ['logo', 'completed'] as const) {
+        expect(Math.abs(current[key].x - before[key].x)).toBeLessThanOrEqual(1)
+        expect(Math.abs(current[key].y - before[key].y)).toBeLessThanOrEqual(1)
+      }
     })
   }
 
