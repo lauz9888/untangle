@@ -253,6 +253,24 @@ test.describe('header action buttons at 320x812 with 999 completed tasks', () =>
   })
 })
 
+test.describe('wrapped header at 700x900 with 999 completed tasks', () => {
+  test.use({ viewport: { width: 700, height: 900 } })
+
+  test('has no violations', async ({ page }) => {
+    await seedTasks(
+      page,
+      Array.from({ length: 999 }, (_, i) =>
+        makeTask({ id: i + 1, name: `Done ${i + 1}`, done: true, createdAt: 1000 + i })
+      )
+    )
+    await page.reload()
+    await expect(completedButton(page)).toHaveText('Completed (999)')
+
+    const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+    expect(results.violations).toEqual([])
+  })
+})
+
 test.describe('Now/Next/Later sections at mobile viewport (375x812)', () => {
   test.use({ viewport: { width: 375, height: 812 } })
 
