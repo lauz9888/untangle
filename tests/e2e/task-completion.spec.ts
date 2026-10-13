@@ -702,6 +702,9 @@ test.describe('mobile viewport (390x844)', () => {
 const VIEWPORTS = [
   { width: 1280, height: 800 },
   { width: 800, height: 700 },
+  { width: 1024, height: 900 },
+  { width: 900, height: 900 },
+  { width: 700, height: 900 },
   { width: 641, height: 800 },
   { width: 640, height: 800 },
   { width: 390, height: 844 },

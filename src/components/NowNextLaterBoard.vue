@@ -115,10 +115,11 @@ watch(isTaskDetailOpen, (open, wasOpen) => {
   display: flex;
   flex-direction: row; /* desktop-first: columns, Requirement 3 */
   gap: 1rem;
-  margin-top: 6rem; /* clears the absolutely-positioned .brand header at >640px — implementer:
-                        verify visually against actual rendered header height, including the
-                        case where .header-actions wraps to a second line on narrower desktop
-                        widths (~641–900px); adjust this value if the header overlaps content */
+  /* The header is in flow above 640px, so this is only a visual gap below it.
+     Measured at 1024/1280: single-line header bottom ~74px + 1.375rem (22px) = board
+     top ~96px (matches the previous fixed offset). Wrapped (641-910px) the board
+     simply follows the taller header. */
+  margin-top: 1.375rem;
   padding: 0 1.5rem 1.5rem;
 }
 .now-next-later-board > * {

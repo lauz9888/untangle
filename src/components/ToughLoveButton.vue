@@ -31,7 +31,16 @@ const { toughLove } = useEnergyLevel()
 @media (max-width: 640px) {
   .tough-love-button {
     min-height: 44px;
-    padding: 0.6rem 1rem;
+    min-width: 44px;
+    padding: 0.6rem 0.3rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    flex: 1 1 auto;
+  }
+
+  .tough-love-button:focus-visible {
+    outline: 2px solid #1a1a1a;
+    outline-offset: 2px;
   }
 }
 </style>

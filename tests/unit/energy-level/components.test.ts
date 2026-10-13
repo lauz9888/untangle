@@ -216,8 +216,13 @@ describe('App', () => {
     const childClasses = Array.from(actions.element.children).map((el) => el.className)
 
     expect(childClasses[0]).toContain('energy-panel')
-    expect(childClasses[1]).toContain('encourage-button')
-    expect(childClasses[2]).toContain('tough-love-button')
+    expect(childClasses[1]).toContain('header-buttons')
+
+    const wrapperClasses = Array.from(actions.element.children[1]!.children).map(
+      (el) => el.className
+    )
+    expect(wrapperClasses[0]).toContain('encourage-button')
+    expect(wrapperClasses[1]).toContain('tough-love-button')
   })
 
   it('has no accessibility violations', async () => {

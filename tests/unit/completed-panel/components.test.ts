@@ -149,6 +149,13 @@ describe('CompletedButton', () => {
     const wrapper = mountTracked(CompletedButton)
     await expectNoAxeViolations(wrapper.element)
   })
+
+  it('has no accessibility violations with a 3-digit count (999)', async () => {
+    panelState.completedCount.value = 999
+    const wrapper = mountTracked(CompletedButton)
+    expect(wrapper.find('button').text()).toBe('Completed (999)')
+    await expectNoAxeViolations(wrapper.element)
+  })
 })
 
 describe('CompletedTasksPanel', () => {
