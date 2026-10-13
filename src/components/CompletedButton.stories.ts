@@ -50,3 +50,16 @@ export const WithCount: Story = {
     expect(state.open).toHaveBeenCalledTimes(1)
   },
 }
+
+// Mobile header single-row change, req 3/17: widest label ("Completed (999)").
+export const LargeCount: Story = {
+  beforeEach: () => {
+    state.isOpen.value = false
+    state.completedCount.value = 999
+    state.open.mockReset()
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    expect(canvas.getByRole('button', { name: 'Completed (999)' })).toBeTruthy()
+  },
+}

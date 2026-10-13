@@ -1,4 +1,5 @@
 import { vi, expect } from 'vitest'
+import { page } from 'vitest/browser'
 import { within, userEvent } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
@@ -40,5 +41,21 @@ export const Default: Story = {
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole('button', { name: 'Encourage me' }))
     expect(state.encourageMe).toHaveBeenCalled()
+  },
+}
+
+// Mobile header single-row change, req 14: a visible 2px focus ring at <=640px.
+// The rule is media-scoped, so resize the real browser viewport first.
+export const MobileFocusRing: Story = {
+  play: async ({ canvasElement }) => {
+    await page.viewport(375, 812)
+    expect(window.matchMedia('(max-width: 640px)').matches).toBe(true)
+    const canvas = within(canvasElement)
+    const button = canvas.getByRole('button', { name: 'Encourage me' })
+    await userEvent.tab()
+    expect(document.activeElement).toBe(button)
+    const style = getComputedStyle(button)
+    expect(style.outlineStyle).not.toBe('none')
+    expect(style.outlineWidth).toBe('2px')
   },
 }
