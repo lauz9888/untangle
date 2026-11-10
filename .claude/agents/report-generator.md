@@ -20,9 +20,9 @@ The path to `.workflow/<slug>/` (containing `requirements.md`, `design.md`, `sta
    (recorded by the orchestrator at Step 12), `cd-outcome` (recorded by the orchestrator right
    after Step 19's CD watch resolves — either `deployed` or `merged-deployment-failed`), and
    `bug-issues` — the exact list of issue numbers this run created.
-3. Fetch each issue in `bug-issues` **by number** — `gh issue view <number> --json
-number,title,state,labels,createdAt,closedAt,body,url` — not a `gh issue list --search`. A
-   search is unbounded-result-limited by default (a run with more issues than the default page
+3. Fetch each issue in `bug-issues` **by number** —
+   `gh issue view <number> --json number,title,state,labels,createdAt,closedAt,body,url` — not a
+   `gh issue list --search`. A search is unbounded-result-limited by default (a run with more issues than the default page
    size would silently produce incomplete metrics) and matches on text, which is weaker than a
    direct lookup by an identifier you already have recorded (indexing lag, an unrelated issue
    coincidentally containing the same text, a wording change breaking the match). `bug-issues` is
@@ -30,9 +30,8 @@ number,title,state,labels,createdAt,closedAt,body,url` — not a `gh issue list 
    bugs were raised this run, not that you should go looking for some.
 
    For each issue fetched, intersect its labels against the stage taxonomy — exactly one of
-   `requirement`, `design`, `unit-test`, `bdd-test`,
-   `e2e-test`, `storybook-test`, `qa`, `deploy-path`,
-   `manual-test`, `ci`, `cd` — identifying _where in the pipeline it was caught_. `security` and
+   `requirement`, `design`, `unit-test`, `bdd-test`, `e2e-test`, `storybook-test`, `qa`,
+   `deploy-path`, `manual-test`, `ci`, `cd` — identifying _where in the pipeline it was caught_. `security` and
    `accessibility` are never the stage label: per the "Bug tracking"/"Accessibility" conventions
    in `SKILL.md`, every security/accessibility issue is always filed _with_ a stage label
    alongside it (e.g. `--label security --label qa`), so treat those two as **classification**
@@ -52,8 +51,9 @@ number,title,state,labels,createdAt,closedAt,body,url` — not a `gh issue list 
        `accessibility`, kept separate and never summed into `bugs_by_stage` or a run's total
        defect count — these are informational classifications of issues already counted once
        above, not additional defects.
-       Every stage key in the taxonomy gets an entry in `bugs_by_stage` (0 if none raised this run),
-       same for `security`/`accessibility` in `bugs_by_category`.
+
+     Every stage key in the taxonomy gets an entry in `bugs_by_stage` (0 if none raised this run),
+     same for `security`/`accessibility` in `bugs_by_category`.
 
 4. Write `reports/<YYYY-MM-DD>-<slug>.md` with:
    - A fenced ` ```metrics ` block **first**, before any prose — this is what `quality-reporter` reads to build the rollup weekly/monthly reports, so keep the keys and format exact:
