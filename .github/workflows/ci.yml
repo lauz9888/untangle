@@ -122,6 +122,8 @@ jobs:
       - run: npm ci
       - run: npm run build-storybook
       - run: npm run test:storybook
+      - name: Interactive Storybook check
+        run: npm run test:storybook:interactive
       # pretest:storybook (package.json) installs the Chromium browser
       # automatically before test:storybook runs, mirroring pretest:e2e —
       # same pinned browser version as e2e-tests/coverage-merge, so no

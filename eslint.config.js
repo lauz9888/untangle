@@ -50,6 +50,7 @@ export default tseslint.config(
       'cucumber.cjs',
       '.storybook/**/*.ts',
       'vitest.storybook.config.ts',
+      'playwright.storybook.config.ts',
     ],
     languageOptions: {
       globals: {
@@ -63,6 +64,26 @@ export default tseslint.config(
     },
   },
   {
+    // Playwright requires object destructuring for its first fixture argument.
+    files: ['tests/storybook-interactive/**/*.ts'],
+    languageOptions: { globals: { process: 'readonly' } },
+    rules: { 'no-empty-pattern': 'off' },
+  },
+  {
+    files: ['src/components/*.stories.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'vitest', message: 'Stories must use storybook/test (ADR 0008).' },
+            { name: 'vitest/browser', message: 'Use globals.viewport instead (ADR 0008).' },
+          ],
+        },
+      ],
+    },
+  },
+  {
     ignores: [
       'dist/',
       'coverage/',
@@ -73,6 +94,7 @@ export default tseslint.config(
       '.workflow/',
       '.nyc_output/',
       'storybook-static/',
+      '.claude/worktrees/',
     ],
   }
 )

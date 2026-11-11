@@ -1,22 +1,21 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent } from 'storybook/test'
+import { fn, expect, mocked, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import TaskDetailDeleteDialog from './TaskDetailDeleteDialog.vue'
+import { useTaskDetail } from '../composables/useTaskDetail'
 
 const state = {
   isDeleteConfirmOpen: ref(false),
-  confirmDelete: vi.fn(),
-  cancelDelete: vi.fn(),
+  confirmDelete: fn(),
+  cancelDelete: fn(),
 }
-
-vi.mock('../composables/useTaskDetail', () => ({
-  useTaskDetail: () => state,
-}))
 
 const meta: Meta<typeof TaskDetailDeleteDialog> = {
   title: 'Components/TaskDetailDeleteDialog',
   component: TaskDetailDeleteDialog,
+  beforeEach: () => {
+    mocked(useTaskDetail).mockReturnValue(state as unknown as ReturnType<typeof useTaskDetail>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof TaskDetailDeleteDialog>

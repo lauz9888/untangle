@@ -1,8 +1,8 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent, waitFor } from 'storybook/test'
+import { fn, expect, mocked, userEvent, waitFor, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import TaskDetailModal from './TaskDetailModal.vue'
+import { useTaskDetail } from '../composables/useTaskDetail'
 
 type DraftSubTask = { id: number; text: string; isNew: boolean }
 type StoredSubTask = { id: number; text: string; done: boolean }
@@ -63,58 +63,25 @@ const state = {
   dueByInvalid: ref(false),
   canSaveSubTaskDraft: ref(false),
   hasUnsavedChanges: ref(false),
-  open: vi.fn(),
-  requestClose: vi.fn(),
-  close: vi.fn(),
-  confirmDiscard: vi.fn(),
-  cancelDiscard: vi.fn(),
-  requestDelete: vi.fn(),
-  confirmDelete: vi.fn(),
-  cancelDelete: vi.fn(),
-  toggleDone: vi.fn(),
-  toggleSubTaskDoneInView: vi.fn(),
-  selectSection: vi.fn(),
-  selectEnergyLevel: vi.fn(),
-  setEstimateField: vi.fn(),
-  openSubTaskInput: vi.fn(),
-  closeSubTaskInput: vi.fn(),
-  removeSubTask: vi.fn(),
-  saveSubTaskDraft: vi.fn(),
-  save: vi.fn(),
+  open: fn(),
+  requestClose: fn(),
+  close: fn(),
+  confirmDiscard: fn(),
+  cancelDiscard: fn(),
+  requestDelete: fn(),
+  confirmDelete: fn(),
+  cancelDelete: fn(),
+  toggleDone: fn(),
+  toggleSubTaskDoneInView: fn(),
+  selectSection: fn(),
+  selectEnergyLevel: fn(),
+  setEstimateField: fn(),
+  openSubTaskInput: fn(),
+  closeSubTaskInput: fn(),
+  removeSubTask: fn(),
+  saveSubTaskDraft: fn(),
+  save: fn(),
 }
-
-vi.mock('../composables/useTaskDetail', () => ({
-  useTaskDetail: () => state,
-}))
-
-// TaskDetailModal.vue imports SECTION_DEFS/ENERGY_LEVEL_OPTIONS as static constants (not via
-// the composable functions), same as tests/unit/task-detail/components.test.ts's mocks and
-// AddTaskModal.stories.ts's precedent.
-vi.mock('../composables/useSectionCollapse', () => ({
-  useSectionCollapse: () => ({ expanded: { now: true, next: true, later: true }, toggle: vi.fn() }),
-  SECTION_DEFS: [
-    { key: 'now', label: 'Now' },
-    { key: 'next', label: 'Next' },
-    { key: 'later', label: 'Later' },
-  ],
-}))
-
-vi.mock('../composables/useEnergyLevel', () => ({
-  useEnergyLevel: () => ({
-    selectedLevel: ref(null),
-    toastMessage: ref(null),
-    toastId: ref(0),
-    selectLevel: vi.fn(),
-    dismissToast: vi.fn(),
-    encourageMe: vi.fn(),
-    toughLove: vi.fn(),
-  }),
-  ENERGY_LEVEL_OPTIONS: [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-  ],
-}))
 
 function resetState() {
   state.selectedTaskId.value = 1
@@ -163,6 +130,9 @@ function resetState() {
 const meta: Meta<typeof TaskDetailModal> = {
   title: 'Components/TaskDetailModal',
   component: TaskDetailModal,
+  beforeEach: () => {
+    mocked(useTaskDetail).mockReturnValue(state as unknown as ReturnType<typeof useTaskDetail>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof TaskDetailModal>

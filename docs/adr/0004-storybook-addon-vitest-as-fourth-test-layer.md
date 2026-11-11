@@ -48,6 +48,7 @@ it's less likely to go stale.
   `test:storybook`; the plain interactive `npm run storybook` dev server renders the same files
   against the real singleton composables instead, since it doesn't run through Vitest's transform
   pipeline (documented as an accepted limitation, not a defect — see the design's Risks section).
+  Superseded for this point by ADR 0008, which removes the limitation.
 - Adding a fifth `@storybook/*`-family devDependency set in future (e.g. a visual-regression addon)
   should revisit this ADR rather than being bolted on silently, per the same
   new-dependency/new-pattern trigger that prompted this one.

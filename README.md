@@ -17,22 +17,23 @@ Opens at `http://localhost:5173`.
 
 ## Scripts
 
-| Command                       | Purpose                                                                                 |
-| ----------------------------- | --------------------------------------------------------------------------------------- |
-| `npm run dev`                 | Start the dev server                                                                    |
-| `npm run build`               | Production build                                                                        |
-| `npm run preview`             | Preview the production build                                                            |
-| `npm run typecheck`           | Type check (`vue-tsc`)                                                                  |
-| `npm run test:unit`           | Unit tests (Vitest)                                                                     |
-| `npm run test:bdd`            | BDD tests (Cucumber.js)                                                                 |
-| `npm run test:e2e`            | End-to-end tests (Playwright, reads `BASE_URL` when set)                                |
-| `npm run test:storybook`      | Storybook stories/interaction tests (Vitest browser mode via `@storybook/addon-vitest`) |
-| `npm run test:coverage:merge` | Combined statement and branch coverage across all four test layers                      |
-| `npm run storybook`           | Storybook interactive dev server (port 6006)                                            |
-| `npm run build-storybook`     | Static Storybook build (used by CI's `storybook-tests` job before `test:storybook`)     |
-| `npm run lint`                | ESLint                                                                                  |
-| `npm run format`              | Prettier (writes)                                                                       |
-| `npm run format:check`        | Prettier check (used in CI)                                                             |
+| Command                              | Purpose                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------- |
+| `npm run dev`                        | Start the dev server                                                                      |
+| `npm run build`                      | Production build                                                                          |
+| `npm run preview`                    | Preview the production build                                                              |
+| `npm run typecheck`                  | Type check (`vue-tsc`)                                                                    |
+| `npm run test:unit`                  | Unit tests (Vitest)                                                                       |
+| `npm run test:bdd`                   | BDD tests (Cucumber.js)                                                                   |
+| `npm run test:e2e`                   | End-to-end tests (Playwright, reads `BASE_URL` when set)                                  |
+| `npm run test:storybook`             | Storybook stories/interaction tests (Vitest browser mode via `@storybook/addon-vitest`)   |
+| `npm run test:coverage:merge`        | Combined statement and branch coverage across all four test layers                        |
+| `npm run test:storybook:interactive` | Playwright check that every story renders and plays cleanly in the static Storybook build |
+| `npm run storybook`                  | Storybook interactive dev server (port 6006)                                              |
+| `npm run build-storybook`            | Static Storybook build (used by CI's `storybook-tests` job before `test:storybook`)       |
+| `npm run lint`                       | ESLint                                                                                    |
+| `npm run format`                     | Prettier (writes)                                                                         |
+| `npm run format:check`               | Prettier check (used in CI)                                                               |
 
 ### Accessibility
 

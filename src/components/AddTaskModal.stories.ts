@@ -1,8 +1,8 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent, waitFor } from 'storybook/test'
+import { fn, expect, mocked, userEvent, waitFor, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import AddTaskModal from './AddTaskModal.vue'
+import { useAddTaskModal } from '../composables/useAddTaskModal'
 
 type SubTask = { id: number; text: string }
 
@@ -24,51 +24,19 @@ const state = {
   taskNameInvalid: ref(false),
   dueByInvalid: ref(false),
   canSaveSubTaskDraft: ref(false),
-  openModal: vi.fn(),
-  requestClose: vi.fn(),
-  confirmDiscard: vi.fn(),
-  cancelDiscard: vi.fn(),
-  selectSection: vi.fn(),
-  selectEnergyLevel: vi.fn(),
-  openSubTaskInput: vi.fn(),
-  closeSubTaskInput: vi.fn(),
-  saveSubTaskDraft: vi.fn(),
-  removeSubTask: vi.fn(),
-  setEstimateField: vi.fn(),
-  save: vi.fn(),
+  openModal: fn(),
+  requestClose: fn(),
+  confirmDiscard: fn(),
+  cancelDiscard: fn(),
+  selectSection: fn(),
+  selectEnergyLevel: fn(),
+  openSubTaskInput: fn(),
+  closeSubTaskInput: fn(),
+  saveSubTaskDraft: fn(),
+  removeSubTask: fn(),
+  setEstimateField: fn(),
+  save: fn(),
 }
-
-vi.mock('../composables/useAddTaskModal', () => ({
-  useAddTaskModal: () => state,
-}))
-
-// AddTaskModal.vue imports SECTION_DEFS/ENERGY_LEVEL_OPTIONS as static constants (not via
-// the composable functions), same as tests/unit/add-task-modal/components.test.ts's mocks.
-vi.mock('../composables/useSectionCollapse', () => ({
-  useSectionCollapse: () => ({ expanded: { now: true, next: true, later: true }, toggle: vi.fn() }),
-  SECTION_DEFS: [
-    { key: 'now', label: 'Now' },
-    { key: 'next', label: 'Next' },
-    { key: 'later', label: 'Later' },
-  ],
-}))
-
-vi.mock('../composables/useEnergyLevel', () => ({
-  useEnergyLevel: () => ({
-    selectedLevel: ref(null),
-    toastMessage: ref(null),
-    toastId: ref(0),
-    selectLevel: vi.fn(),
-    dismissToast: vi.fn(),
-    encourageMe: vi.fn(),
-    toughLove: vi.fn(),
-  }),
-  ENERGY_LEVEL_OPTIONS: [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-  ],
-}))
 
 function resetState() {
   state.isOpen.value = false
@@ -105,6 +73,9 @@ function resetState() {
 const meta: Meta<typeof AddTaskModal> = {
   title: 'Components/AddTaskModal',
   component: AddTaskModal,
+  beforeEach: () => {
+    mocked(useAddTaskModal).mockReturnValue(state as unknown as ReturnType<typeof useAddTaskModal>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof AddTaskModal>

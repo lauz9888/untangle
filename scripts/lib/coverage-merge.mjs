@@ -9,7 +9,7 @@ import path from 'node:path'
 
 // Must mirror vite.config.ts's `test.coverage.exclude`. assertUniverseComplete
 // fails loudly if the two drift.
-export const UNIVERSE_EXCLUDES = ['src/main.ts', 'src/**/*.stories.ts']
+export const UNIVERSE_EXCLUDES = ['src/main.ts', 'src/**/*.stories.ts', 'src/**/__mocks__/**']
 
 export const PRIMARY_LAYERS = ['unit', 'storybook']
 export const SECONDARY_LAYERS = ['bdd', 'e2e']

@@ -1,9 +1,11 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent } from 'storybook/test'
-import { page } from 'vitest/browser'
+import { fn, expect, mocked, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { reactive, ref } from 'vue'
 import NowNextLaterBoard from './NowNextLaterBoard.vue'
+import { useSectionCollapse } from '../composables/useSectionCollapse'
+import { useTasks } from '../composables/useTasks'
+import { useCelebration } from '../composables/useCelebration'
+import { useTaskDetail } from '../composables/useTaskDetail'
 
 interface FakeTask {
   id: number
@@ -19,51 +21,42 @@ const sectionState = {
     next: true,
     later: true,
   }),
-  toggle: vi.fn(),
+  toggle: fn(),
 }
-
-vi.mock('../composables/useSectionCollapse', () => ({
-  useSectionCollapse: () => sectionState,
-  SECTION_DEFS: [
-    { key: 'now', label: 'Now' },
-    { key: 'next', label: 'Next' },
-    { key: 'later', label: 'Later' },
-  ],
-}))
 
 const tasksState = {
   tasks: ref<FakeTask[]>([]),
-  toggleTaskDone: vi.fn(),
+  toggleTaskDone: fn(),
 }
-
-vi.mock('../composables/useTasks', () => ({
-  useTasks: () => tasksState,
-}))
 
 const celebrationState = {
-  toggleTaskDoneWithCelebration: vi.fn(),
-  consumeCompletionFocusTarget: vi.fn(),
+  toggleTaskDoneWithCelebration: fn(),
+  consumeCompletionFocusTarget: fn(),
 }
-
-vi.mock('../composables/useCelebration', () => ({
-  useCelebration: () => celebrationState,
-}))
 
 const taskDetailState = {
   isOpen: ref(false),
   lastOpenedTaskId: ref<number | null>(null),
   lastOpenedTaskSection: ref<'now' | 'next' | 'later' | null>(null),
   openedFrom: ref<'board' | 'completed'>('board'),
-  open: vi.fn(),
+  open: fn(),
 }
-
-vi.mock('../composables/useTaskDetail', () => ({
-  useTaskDetail: () => taskDetailState,
-}))
 
 const meta: Meta<typeof NowNextLaterBoard> = {
   title: 'Components/NowNextLaterBoard',
   component: NowNextLaterBoard,
+  beforeEach: () => {
+    mocked(useSectionCollapse).mockReturnValue(
+      sectionState as unknown as ReturnType<typeof useSectionCollapse>
+    )
+    mocked(useTasks).mockReturnValue(tasksState as unknown as ReturnType<typeof useTasks>)
+    mocked(useCelebration).mockReturnValue(
+      celebrationState as unknown as ReturnType<typeof useCelebration>
+    )
+    mocked(useTaskDetail).mockReturnValue(
+      taskDetailState as unknown as ReturnType<typeof useTaskDetail>
+    )
+  },
 }
 export default meta
 type Story = StoryObj<typeof NowNextLaterBoard>
@@ -139,6 +132,7 @@ export const DoneTasksHidden: Story = {
 // breakpoint (CollapsibleSection.vue's desktop-first CSS) — resize the real browser
 // viewport before interacting so each click lands on a rendered element.
 export const MixedCollapsedExpanded: Story = {
+  globals: { viewport: { value: 'untangleMobile', isRotated: false } },
   beforeEach: () => {
     sectionState.expanded.now = false
     sectionState.expanded.next = true
@@ -148,7 +142,6 @@ export const MixedCollapsedExpanded: Story = {
     tasksState.toggleTaskDone.mockReset()
   },
   play: async ({ canvasElement }) => {
-    await page.viewport(375, 812)
     const canvas = within(canvasElement)
 
     await userEvent.click(canvas.getByRole('button', { name: 'Expand Now' }))

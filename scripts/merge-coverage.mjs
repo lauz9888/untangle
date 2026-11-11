@@ -71,13 +71,24 @@ function listSourceFiles(dir) {
   return out
 }
 
+// Minimal glob matcher for UNIVERSE_EXCLUDES: `**/` spans any number of
+// directories, a trailing `**` matches anything below, `*` stays within one
+// segment (`src/**/*.stories.ts`, `src/**/__mocks__/**`).
+function globToRegExp(pattern) {
+  const source = pattern
+    .split(/(\*\*\/|\*\*|\*)/)
+    .map((part) => {
+      if (part === '**/') return '(?:.*/)?'
+      if (part === '**') return '.*'
+      if (part === '*') return '[^/]*'
+      return part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+    })
+    .join('')
+  return new RegExp(`^${source}$`)
+}
+
 function isExcluded(relPath) {
-  return UNIVERSE_EXCLUDES.some((pattern) => {
-    if (!pattern.includes('*')) return relPath === pattern
-    // `src/**/*.stories.ts` -> any path under src/ ending in .stories.ts
-    const suffix = pattern.slice(pattern.lastIndexOf('*') + 1)
-    return relPath.startsWith(pattern.split('*')[0]) && relPath.endsWith(suffix)
-  })
+  return UNIVERSE_EXCLUDES.some((pattern) => globToRegExp(pattern).test(relPath))
 }
 
 // 1. Clean stale output.

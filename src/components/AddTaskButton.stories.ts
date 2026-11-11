@@ -1,21 +1,20 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent } from 'storybook/test'
+import { fn, expect, mocked, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import AddTaskButton from './AddTaskButton.vue'
+import { useAddTaskModal } from '../composables/useAddTaskModal'
 
 const state = {
   isOpen: ref(false),
-  openModal: vi.fn(),
+  openModal: fn(),
 }
-
-vi.mock('../composables/useAddTaskModal', () => ({
-  useAddTaskModal: () => state,
-}))
 
 const meta: Meta<typeof AddTaskButton> = {
   title: 'Components/AddTaskButton',
   component: AddTaskButton,
+  beforeEach: () => {
+    mocked(useAddTaskModal).mockReturnValue(state as unknown as ReturnType<typeof useAddTaskModal>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof AddTaskButton>

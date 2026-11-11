@@ -1,9 +1,8 @@
-import { vi, expect } from 'vitest'
-import { page } from 'vitest/browser'
-import { within, userEvent, waitFor } from 'storybook/test'
+import { fn, expect, mocked, userEvent, waitFor, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import CelebrationNotification from './CelebrationNotification.vue'
+import { useCelebration } from '../composables/useCelebration'
 
 const state = {
   celebrationMessage: ref<string | null>(null),
@@ -11,19 +10,13 @@ const state = {
   confettiPieces: ref<unknown[]>([]),
   confettiBurstId: ref(0),
   completionFocusTarget: ref(null),
-  celebrate: vi.fn(),
-  dismissCelebration: vi.fn(),
-  pauseDismiss: vi.fn(),
-  resumeDismiss: vi.fn(),
-  consumeCompletionFocusTarget: vi.fn(),
-  toggleTaskDoneWithCelebration: vi.fn(),
+  celebrate: fn(),
+  dismissCelebration: fn(),
+  pauseDismiss: fn(),
+  resumeDismiss: fn(),
+  consumeCompletionFocusTarget: fn(),
+  toggleTaskDoneWithCelebration: fn(),
 }
-
-// Keep the real pure helpers (computeNotificationTop, NOTIFICATION_MIN_TOP) the component imports.
-vi.mock('../composables/useCelebration', async (importOriginal) => ({
-  ...(await importOriginal<Record<string, unknown>>()),
-  useCelebration: () => state,
-}))
 
 function seed(message: string | null) {
   state.celebrationMessage.value = message
@@ -37,6 +30,9 @@ function seed(message: string | null) {
 const meta: Meta<typeof CelebrationNotification> = {
   title: 'Components/CelebrationNotification',
   component: CelebrationNotification,
+  beforeEach: () => {
+    mocked(useCelebration).mockReturnValue(state as unknown as ReturnType<typeof useCelebration>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof CelebrationNotification>
@@ -110,9 +106,9 @@ export const CloseButtonFocused: Story = {
 }
 
 export const Mobile: Story = {
+  globals: { viewport: { value: 'untangleMobileLarge', isRotated: false } },
   beforeEach: () => seed('Nicely done. That one is off your plate.'),
   play: async ({ canvasElement }) => {
-    await page.viewport(390, 844)
     const close = canvasElement.querySelector('.celebration-close') as HTMLElement
     const rect = close.getBoundingClientRect()
     expect(rect.width).toBeGreaterThanOrEqual(44)

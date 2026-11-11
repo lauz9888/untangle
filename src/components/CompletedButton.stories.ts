@@ -1,26 +1,27 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent } from 'storybook/test'
+import { fn, expect, mocked, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import CompletedButton from './CompletedButton.vue'
+import { useCompletedPanel } from '../composables/useCompletedPanel'
 
 const state = {
   isOpen: ref(false),
   completedTasks: ref<unknown[]>([]),
   completedCount: ref(0),
-  open: vi.fn(),
-  close: vi.fn(),
-  uncomplete: vi.fn(),
-  openTask: vi.fn(),
+  open: fn(),
+  close: fn(),
+  uncomplete: fn(),
+  openTask: fn(),
 }
-
-vi.mock('../composables/useCompletedPanel', () => ({
-  useCompletedPanel: () => state,
-}))
 
 const meta: Meta<typeof CompletedButton> = {
   title: 'Components/CompletedButton',
   component: CompletedButton,
+  beforeEach: () => {
+    mocked(useCompletedPanel).mockReturnValue(
+      state as unknown as ReturnType<typeof useCompletedPanel>
+    )
+  },
 }
 export default meta
 type Story = StoryObj<typeof CompletedButton>
