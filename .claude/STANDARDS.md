@@ -39,16 +39,17 @@ As an array literal (the shape both tools' APIs expect):
 
 ## Combined coverage threshold
 
-The combined statement-coverage percentage across all four test layers (unit + BDD + e2e +
-Storybook, per `npm run test:coverage:merge`) must be **at least 90%** before a change passes
-`qa-reviewer`'s Step 12 gate or CI's `coverage-merge` job.
+The combined **statement** coverage and the combined **branch** coverage across all four test
+layers (unit + BDD + e2e + Storybook, per `npm run test:coverage:merge`) must each be **at least
+90%** before a change passes `qa-reviewer`'s Step 12 gate or CI's `coverage-merge` job. The two
+figures are de-duplicated into one statement/branch universe rather than naively merged (see
+`docs/adr/0007-single-statement-universe-and-istanbul-e2e-for-combined-coverage.md`).
 
-This threshold is a floor, not a complete quality measure — a statement-coverage percentage can be
-satisfied by shallow tests that execute a line without meaningfully asserting on it. Branch
-coverage, critical-path coverage, and documented exceptions for legitimately hard-to-cover code
-remain a manual judgment call for `qa-reviewer` (its "Review testability" step) rather than
-something this version automates; don't read "combined coverage ≥ threshold" as "test quality is
-comprehensively verified."
+These thresholds are a floor, not a complete quality measure — a coverage percentage can be
+satisfied by shallow tests that execute a line without meaningfully asserting on it. Critical-path
+coverage and documented exceptions for legitimately hard-to-cover code remain a manual judgment
+call for `qa-reviewer` (its "Review testability" step); don't read "combined coverage ≥ threshold"
+as "test quality is comprehensively verified."
 
 ## Node version
 

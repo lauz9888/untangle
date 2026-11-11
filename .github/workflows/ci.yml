@@ -128,12 +128,13 @@ jobs:
       # redundant download.
 
   coverage-merge:
-    name: Combined coverage (>=90%, see .claude/STANDARDS.md)
+    name: Combined coverage (statements >=90%, branches >=90%, see .claude/STANDARDS.md)
     runs-on: ubuntu-latest
     env:
       # Mirrors the threshold documented in .claude/STANDARDS.md — update
       # both together if this ever changes.
       COVERAGE_THRESHOLD: 90
+      BRANCH_COVERAGE_THRESHOLD: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -152,11 +153,19 @@ jobs:
       - name: Run combined coverage and enforce threshold
         run: |
           npm run test:coverage:merge | tee coverage-output.txt
-          pct=$(grep -oE 'Combined coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+')
-          if [ -z "$pct" ]; then
-            echo "Could not parse combined coverage percentage from test:coverage:merge output"
+          stmt=$(grep -oE 'Combined coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+')
+          branch=$(grep -oE 'Combined branch coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+')
+          if [ -z "$stmt" ]; then
+            echo "Could not parse combined statement coverage from test:coverage:merge output"
             exit 1
           fi
-          echo "Combined coverage: ${pct}% (threshold: ${COVERAGE_THRESHOLD}%)"
-          awk -v pct="$pct" -v threshold="$COVERAGE_THRESHOLD" \
+          if [ -z "$branch" ]; then
+            echo "Could not parse combined branch coverage from test:coverage:merge output"
+            exit 1
+          fi
+          echo "Combined statement coverage: ${stmt}% (threshold: ${COVERAGE_THRESHOLD}%)"
+          echo "Combined branch coverage: ${branch}% (threshold: ${BRANCH_COVERAGE_THRESHOLD}%)"
+          awk -v pct="$stmt" -v threshold="$COVERAGE_THRESHOLD" \
+            'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'
+          awk -v pct="$branch" -v threshold="$BRANCH_COVERAGE_THRESHOLD" \
             'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'
