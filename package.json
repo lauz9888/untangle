@@ -18,14 +18,14 @@
     "format:check": "prettier --check .",
     "test:unit": "vitest run",
     "test:bdd": "cucumber-js",
-    "pretest:e2e": "playwright install --with-deps chromium",
+    "pretest:e2e": "playwright install chromium",
     "test:e2e": "playwright test",
     "test:coverage:merge": "node scripts/merge-coverage.mjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "pretest:storybook": "playwright install --with-deps chromium",
+    "pretest:storybook": "playwright install chromium",
     "test:storybook": "vitest run --config vitest.storybook.config.ts",
-    "pretest:storybook:interactive": "playwright install --with-deps chromium",
+    "pretest:storybook:interactive": "playwright install chromium",
     "test:storybook:interactive": "playwright test --config playwright.storybook.config.ts"
   },
   "dependencies": {
