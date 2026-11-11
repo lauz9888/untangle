@@ -54,14 +54,123 @@ function getStorage(): Storage | null {
   }
 }
 
+// Exhaustive-by-construction enum tables: a Record keyed by the union makes tsc fail if a union
+// member is added or removed without updating the table. Deliberately local (not imported at
+// runtime from useSectionCollapse/useEnergyLevel) so hydration isn't coupled to tests' module mocks.
+const SECTION_TABLE: Record<SectionKey, true> = { now: true, next: true, later: true }
+const ENERGY_TABLE: Record<EnergyLevel, true> = { low: true, medium: true, high: true }
+
+function isSection(v: unknown): v is SectionKey {
+  return typeof v === 'string' && Object.prototype.hasOwnProperty.call(SECTION_TABLE, v)
+}
+
+function isEnergy(v: unknown): v is EnergyLevel {
+  return typeof v === 'string' && Object.prototype.hasOwnProperty.call(ENERGY_TABLE, v)
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+function isValidId(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v > 0
+}
+
+function finiteNumber(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) ? v : null
+}
+
+function toNonNegInt(v: unknown): number {
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0
+}
+
+// Gives every entry a unique positive-integer id: the first holder of a valid id keeps it; invalid
+// or duplicate ids get fresh values above the maximum valid id present.
+function resolveIds<T extends { id: number | null }>(items: T[]): Array<T & { id: number }> {
+  let max = 0
+  for (const item of items) if (item.id !== null && item.id > max) max = item.id
+  const seen = new Set<number>()
+  return items.map((item) => {
+    let id = item.id
+    if (id === null || seen.has(id)) id = ++max
+    seen.add(id)
+    return { ...item, id }
+  })
+}
+
+function normalizeSubTasks(raw: unknown): TaskSubTask[] {
+  if (!Array.isArray(raw)) return []
+  const kept: Array<{ id: number | null; text: string; done: boolean }> = []
+  for (const el of raw) {
+    if (!isPlainObject(el)) continue
+    if (typeof el.text !== 'string') continue
+    const text = el.text.trim()
+    if (text === '') continue
+    kept.push({
+      id: isValidId(el.id) ? el.id : null,
+      text,
+      done: typeof el.done === 'boolean' ? el.done : false,
+    })
+  }
+  return resolveIds(kept)
+}
+
+type PendingTask = Omit<Task, 'id'> & { id: number | null }
+
+function normalizeTask(el: unknown, now: number): PendingTask | null {
+  if (!isPlainObject(el)) return null
+  if (typeof el.name !== 'string') return null
+  const name = el.name.trim()
+  if (name === '') return null
+
+  const est = isPlainObject(el.estimate) ? el.estimate : {}
+  const created = finiteNumber(el.createdAt)
+  const updated = finiteNumber(el.updatedAt)
+  const createdAt = created ?? updated ?? now
+  const updatedAt = updated ?? createdAt
+
+  return {
+    id: isValidId(el.id) ? el.id : null,
+    name,
+    section: isSection(el.section) ? el.section : 'now',
+    description: typeof el.description === 'string' ? el.description : '',
+    energyLevel: isEnergy(el.energyLevel) ? el.energyLevel : null,
+    estimate: {
+      days: toNonNegInt(est.days),
+      hours: Math.min(toNonNegInt(est.hours), 23),
+      minutes: Math.min(toNonNegInt(est.minutes), 59),
+    },
+    availableFrom: typeof el.availableFrom === 'string' ? el.availableFrom : null,
+    dueBy: typeof el.dueBy === 'string' ? el.dueBy : null,
+    subTasks: normalizeSubTasks(el.subTasks),
+    done: typeof el.done === 'boolean' ? el.done : false,
+    createdAt,
+    updatedAt,
+  }
+}
+
+// Repairs or drops each stored element so the rest of the app only ever sees well-typed Tasks.
+// Unrecoverable (dropped): non-object elements and elements without a non-empty string name.
+// Most rules have observed failures on unmodified code (see the workflow's characterization.md).
+// DEFENSIVE (no failure observed): the no-write-back policy (repairs persist only at the next
+// mutation) and the mutators' tolerance of malformed records.
+function normalizeStoredTasks(parsed: unknown, now: number): Task[] {
+  if (!Array.isArray(parsed)) return []
+  const pending: PendingTask[] = []
+  for (const el of parsed) {
+    const task = normalizeTask(el, now)
+    if (task) pending.push(task)
+  }
+  return resolveIds(pending)
+}
+
 function loadInitialTasks(): Task[] {
   const storage = getStorage()
   if (!storage) return []
   try {
     const raw = storage.getItem(TASKS_STORAGE_KEY)
     if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    return normalizeStoredTasks(JSON.parse(raw), Date.now())
   } catch {
     return []
   }
