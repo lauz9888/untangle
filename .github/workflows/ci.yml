@@ -150,8 +150,10 @@ jobs:
       # This same install also covers the storybook leg's browser-mode
       # requirement (one shared Chromium install satisfies both `npx
       # playwright test` and `npx vitest run --config
-      # vitest.storybook.config.ts`).
-      - run: npx playwright install --with-deps chromium
+      # vitest.storybook.config.ts`). The install is deliberately apt-free (no
+      # `--with-deps`): it relies on the runner image's preinstalled system
+      # libraries, so a missing one fails loudly at Chromium launch.
+      - run: npx playwright install chromium
       - name: Run combined coverage and enforce threshold
         run: |
           npm run test:coverage:merge | tee coverage-output.txt

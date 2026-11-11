@@ -106,19 +106,18 @@ Each subagent can also be inspected or driven directly via the `Agent`/`SendMess
 
 All changes land via a PR from a feature branch — `main` is protected on GitHub (branch protection, not a local hook). CI (`.github/workflows/ci.yml`) runs 10 jobs on every PR:
 
-| Job                              | Tool                                                                                                                                                    |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Install & build                  | `vite build`                                                                                                                                            |
-| Type check                       | `vue-tsc --noEmit`                                                                                                                                      |
-| Lint                             | ESLint (flat config)                                                                                                                                    |
-| Unit tests                       | `vitest run`                                                                                                                                            |
-| BDD tests                        | `cucumber-js`                                                                                                                                           |
-| Format check                     | Prettier                                                                                                                                                |
-| Dependency audit                 | `npm audit --omit=dev --audit-level=high` (production deps only)                                                                                        |
-| E2E tests                        | `playwright test` (local build/preview)                                                                                                                 |
-| Storybook tests                  | `storybook build` + `vitest run --config vitest.storybook.config.ts` (Vitest browser mode via `@storybook/addon-vitest`)                                |
-| Combined coverage                | `scripts/merge-coverage.mjs`, statements and branches each gated at the threshold in `.claude/STANDARDS.md`                                             |
-| `scripts/lib/coverage-merge.mjs` | Pure helpers for the coverage merge: `combineCoverage` (single statement/branch/function universe), `loadLayers`, and the runtime guards (see ADR 0007) |
+| Job               | Tool                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Install & build   | `vite build`                                                                                                             |
+| Type check        | `vue-tsc --noEmit`                                                                                                       |
+| Lint              | ESLint (flat config)                                                                                                     |
+| Unit tests        | `vitest run`                                                                                                             |
+| BDD tests         | `cucumber-js`                                                                                                            |
+| Format check      | Prettier                                                                                                                 |
+| Dependency audit  | `npm audit --omit=dev --audit-level=high` (production deps only)                                                         |
+| E2E tests         | `playwright test` (local build/preview)                                                                                  |
+| Storybook tests   | `storybook build` + `vitest run --config vitest.storybook.config.ts` (Vitest browser mode via `@storybook/addon-vitest`) |
+| Combined coverage | `scripts/merge-coverage.mjs`, statements and branches each gated at the threshold in `.claude/STANDARDS.md`              |
 
 Any job failing blocks the merge and is logged as the matching `ci` bug (see "Bug tracking" above), closed once the job passes. Whether a given job actually _gates_ merge is a separate GitHub branch-protection setting (required-status-checks) that the pipeline can't change itself — see the Developer workflow table's Step 15 note for the one-time reminder it gives the user when a new job like `storybook-tests` is added.
 
@@ -165,6 +164,7 @@ The [GitHub wiki](https://github.com/lauz9888/untangle/wiki) is a separate git r
 | `.claude/agents/`                            | The 12 subagents the orchestrator drives (requirements, design, test-authors — `unit-test-author` also authors Storybook stories — implementer, bug-fixer, QA, docs, report, quality-reporter)                                                                                                                                                                            |
 | `.claude/STANDARDS.md`                       | Shared cross-cutting values: trust boundary, WCAG scope, coverage threshold, Node version, release cadence, security checklist                                                                                                                                                                                                                                            |
 | `scripts/merge-coverage.mjs`                 | Runs all four layers and combines their coverage into one statement and one branch percentage (via `scripts/lib/coverage-merge.mjs`)                                                                                                                                                                                                                                      |
+| `scripts/lib/coverage-merge.mjs`             | Pure helpers for the coverage merge, used by `scripts/merge-coverage.mjs`: `combineCoverage` (builds one statement/branch/function universe from the unit and Storybook layers and credits BDD/e2e hits onto it), `loadLayers`, and the runtime guards (flat e2e layer, `.vue` template parity, universe completeness, dedupe effectiveness); see ADR 0007                |
 | `.githooks/pre-commit`                       | Auto-formats staged files with Prettier before each commit (activated via `npm install`'s `prepare` script) so CI's format check doesn't fail on drift                                                                                                                                                                                                                    |
 | `docs/adr/`                                  | Architecture Decision Records, added by `solution-designer` when a design introduces one (0001–0008 so far)                                                                                                                                                                                                                                                               |
 | `.github/workflows/ci.yml`                   | The 10-job CI pipeline                                                                                                                                                                                                                                                                                                                                                    |
