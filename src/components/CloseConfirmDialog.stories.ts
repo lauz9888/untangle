@@ -1,22 +1,21 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent } from 'storybook/test'
+import { fn, expect, mocked, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import CloseConfirmDialog from './CloseConfirmDialog.vue'
+import { useAddTaskModal } from '../composables/useAddTaskModal'
 
 const state = {
   isConfirmOpen: ref(false),
-  confirmDiscard: vi.fn(),
-  cancelDiscard: vi.fn(),
+  confirmDiscard: fn(),
+  cancelDiscard: fn(),
 }
-
-vi.mock('../composables/useAddTaskModal', () => ({
-  useAddTaskModal: () => state,
-}))
 
 const meta: Meta<typeof CloseConfirmDialog> = {
   title: 'Components/CloseConfirmDialog',
   component: CloseConfirmDialog,
+  beforeEach: () => {
+    mocked(useAddTaskModal).mockReturnValue(state as unknown as ReturnType<typeof useAddTaskModal>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof CloseConfirmDialog>

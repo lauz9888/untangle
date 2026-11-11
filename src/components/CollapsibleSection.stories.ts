@@ -1,5 +1,4 @@
-import { fn, within, userEvent, expect } from 'storybook/test'
-import { page } from 'vitest/browser'
+import { fn, expect, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import CollapsibleSection from './CollapsibleSection.vue'
 
@@ -31,9 +30,9 @@ export const Collapsed: Story = {
 // element, matching the only width at which this control (and thus this
 // interaction) exists in the real app.
 export const Interactions: Story = {
+  globals: { viewport: { value: 'untangleMobile', isRotated: false } },
   args: { expanded: true },
   play: async ({ canvasElement, args }) => {
-    await page.viewport(375, 812)
     const canvas = within(canvasElement)
     await userEvent.click(canvas.getByRole('button'))
     expect(args.onToggle).toHaveBeenCalled()

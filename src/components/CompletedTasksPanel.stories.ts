@@ -1,9 +1,9 @@
-import { vi, expect } from 'vitest'
-import { page } from 'vitest/browser'
-import { within, userEvent, waitFor } from 'storybook/test'
+import { fn, expect, mocked, userEvent, waitFor, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import CompletedTasksPanel from './CompletedTasksPanel.vue'
+import { useCompletedPanel } from '../composables/useCompletedPanel'
+import { useTaskDetail } from '../composables/useTaskDetail'
 
 interface FakeTask {
   id: number
@@ -22,27 +22,19 @@ const panelState = {
   isOpen: ref(true),
   completedTasks: ref<FakeTask[]>([]),
   completedCount: ref(0),
-  open: vi.fn(),
-  close: vi.fn(),
-  uncomplete: vi.fn(),
-  openTask: vi.fn(),
+  open: fn(),
+  close: fn(),
+  uncomplete: fn(),
+  openTask: fn(),
 }
-
-vi.mock('../composables/useCompletedPanel', () => ({
-  useCompletedPanel: () => panelState,
-}))
 
 const detailState = {
   isOpen: ref(false),
   openedFrom: ref<'board' | 'completed'>('board'),
   lastOpenedTaskId: ref<number | null>(null),
   lastOpenedTaskSection: ref<'now' | 'next' | 'later' | null>(null),
-  open: vi.fn(),
+  open: fn(),
 }
-
-vi.mock('../composables/useTaskDetail', () => ({
-  useTaskDetail: () => detailState,
-}))
 
 function seed(tasks: FakeTask[], taskDetailOpen = false) {
   panelState.isOpen.value = true
@@ -60,6 +52,14 @@ function seed(tasks: FakeTask[], taskDetailOpen = false) {
 const meta: Meta<typeof CompletedTasksPanel> = {
   title: 'Components/CompletedTasksPanel',
   component: CompletedTasksPanel,
+  beforeEach: () => {
+    mocked(useCompletedPanel).mockReturnValue(
+      panelState as unknown as ReturnType<typeof useCompletedPanel>
+    )
+    mocked(useTaskDetail).mockReturnValue(
+      detailState as unknown as ReturnType<typeof useTaskDetail>
+    )
+  },
 }
 export default meta
 type Story = StoryObj<typeof CompletedTasksPanel>
@@ -113,10 +113,10 @@ export const StackedUnderTaskDetail: Story = {
 }
 
 export const MobileLong: Story = {
+  globals: { viewport: { value: 'untangleMobileLarge', isRotated: false } },
   beforeEach: () =>
     seed(Array.from({ length: 30 }, (_, i) => done(30 - i, `Completed task number ${30 - i}`))),
   play: async ({ canvasElement }) => {
-    await page.viewport(390, 844)
     const content = canvasElement.querySelector('.completed-content') as HTMLElement
     const rect = content.getBoundingClientRect()
     expect(rect.right).toBeLessThanOrEqual(window.innerWidth)

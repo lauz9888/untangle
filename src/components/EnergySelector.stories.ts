@@ -1,31 +1,25 @@
-import { vi, expect } from 'vitest'
-import { within, userEvent } from 'storybook/test'
+import { fn, expect, mocked, userEvent, within } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import EnergySelector from './EnergySelector.vue'
+import { useEnergyLevel } from '../composables/useEnergyLevel'
 
 const state = {
   selectedLevel: ref<'low' | 'medium' | 'high' | null>(null),
   toastMessage: ref<string | null>(null),
   toastId: ref(0),
-  selectLevel: vi.fn(),
-  dismissToast: vi.fn(),
-  encourageMe: vi.fn(),
-  toughLove: vi.fn(),
+  selectLevel: fn(),
+  dismissToast: fn(),
+  encourageMe: fn(),
+  toughLove: fn(),
 }
-
-vi.mock('../composables/useEnergyLevel', () => ({
-  useEnergyLevel: () => state,
-  ENERGY_LEVEL_OPTIONS: [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-  ],
-}))
 
 const meta: Meta<typeof EnergySelector> = {
   title: 'Components/EnergySelector',
   component: EnergySelector,
+  beforeEach: () => {
+    mocked(useEnergyLevel).mockReturnValue(state as unknown as ReturnType<typeof useEnergyLevel>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof EnergySelector>

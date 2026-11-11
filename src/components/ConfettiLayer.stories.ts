@@ -1,7 +1,8 @@
-import { vi, expect } from 'vitest'
+import { fn, expect, mocked } from 'storybook/test'
 import type { Meta, StoryObj } from '@storybook/vue3-vite'
 import { ref } from 'vue'
 import ConfettiLayer from './ConfettiLayer.vue'
+import { useCelebration } from '../composables/useCelebration'
 
 interface FakePiece {
   id: number
@@ -37,21 +38,20 @@ const state = {
   confettiPieces: ref<FakePiece[]>([]),
   confettiBurstId: ref(0),
   completionFocusTarget: ref(null),
-  celebrate: vi.fn(),
-  dismissCelebration: vi.fn(),
-  pauseDismiss: vi.fn(),
-  resumeDismiss: vi.fn(),
-  consumeCompletionFocusTarget: vi.fn(),
-  toggleTaskDoneWithCelebration: vi.fn(),
+  celebrate: fn(),
+  dismissCelebration: fn(),
+  pauseDismiss: fn(),
+  resumeDismiss: fn(),
+  consumeCompletionFocusTarget: fn(),
+  toggleTaskDoneWithCelebration: fn(),
 }
-
-vi.mock('../composables/useCelebration', () => ({
-  useCelebration: () => state,
-}))
 
 const meta: Meta<typeof ConfettiLayer> = {
   title: 'Components/ConfettiLayer',
   component: ConfettiLayer,
+  beforeEach: () => {
+    mocked(useCelebration).mockReturnValue(state as unknown as ReturnType<typeof useCelebration>)
+  },
 }
 export default meta
 type Story = StoryObj<typeof ConfettiLayer>
