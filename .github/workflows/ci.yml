@@ -165,5 +165,7 @@ jobs:
           fi
           echo "Combined statement coverage: ${stmt}% (threshold: ${COVERAGE_THRESHOLD}%)"
           echo "Combined branch coverage: ${branch}% (threshold: ${BRANCH_COVERAGE_THRESHOLD}%)"
-          awk -v pct="$stmt" -v threshold="$COVERAGE_THRESHOLD"             'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'
-          awk -v pct="$branch" -v threshold="$BRANCH_COVERAGE_THRESHOLD"             'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'
+          awk -v pct="$stmt" -v threshold="$COVERAGE_THRESHOLD" \
+            'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'
+          awk -v pct="$branch" -v threshold="$BRANCH_COVERAGE_THRESHOLD" \
+            'BEGIN { exit (pct+0 < threshold+0) ? 1 : 0 }'

@@ -1,6 +1,8 @@
 // Hand-written declarations for coverage-merge.mjs so unit tests can import it
 // under strict TypeScript without `allowJs`.
 
+// Deliberately loose: Storybook's v8 output has null end columns and sparse
+// maps that istanbul-lib-coverage's FileCoverageData type rejects.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type FileCoverageData = any
 export type LayerData = Record<string, FileCoverageData>
