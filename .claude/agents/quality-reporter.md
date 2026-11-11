@@ -21,13 +21,18 @@ deployed run, each starting with a fenced ` ```metrics ` block written by `repor
 
 1. `Glob` for `reports/*.md` — not `reports/metrics/**`, that's this agent's own output directory,
    exclude it from the input set. For each file, extract its fenced ` ```metrics ` block:
-   `tracking_issue`, `started_at`, `completed_at`, `total_hours`, `coverage_percent`, `outcome`,
+   `tracking_issue`, `started_at`, `completed_at`, `total_hours`, `coverage_percent`,
+   `requirements_total`, `requirements_verified`, `critical_requirements_without_effective_assertions`,
+   `unresolved_significant_risks`, `manual_test`, `outcome`,
    `bugs_by_stage`, `bugs_by_category`. If a report predates this metrics block (written before
    this feature existed), exclude it from the numeric rollup but count it, and note in both
    reports' intros how many pre-metrics releases exist and aren't reflected in the numbers, so the
    totals aren't silently short without explanation. If a report has a metrics block but predates
    `outcome`/`bugs_by_category` specifically (an earlier version of this block), treat a missing
-   `outcome` as `deployed` and a missing `bugs_by_category` as all-zero — don't drop the whole
+   `outcome` as `deployed`, a missing `bugs_by_category` as all-zero, and missing assurance keys
+   (`requirements_*`, `critical_requirements_without_effective_assertions`,
+   `unresolved_significant_risks`, `manual_test`) as not recorded (exclude those releases from the
+   assurance rows and say how many were excluded) — don't drop the whole
    report over a field that didn't exist yet.
 2. Sort the remaining releases by `completed_at` ascending. This list _is_ the release log — one
    entry per completed pipeline run, but **not every entry reached live users**: `outcome` is
@@ -82,6 +87,8 @@ deployed run, each starting with a fenced ` ```metrics ` block written by `repor
    - **Coverage trend** — mean of `coverage_percent` across all of that week's releases (coverage
      is a property of the code change itself, measured pre-merge at Step 12, independent of
      whether the subsequent deploy succeeded).
+   - **Assurance** — reported as separate figures, never combined: requirements verified / total (summed across the week's releases), releases shipped with any critical requirement lacking effective assertions, and releases shipped with unresolved significant risks (a count, with the total of such risks). These sit alongside coverage so a week with excellent coverage but shipped residual risk can't hide it.
+   - **Manual testing** — releases where manual testing was performed vs skipped, and the defect yield when performed (`bugs_by_stage.manual-test` summed over performed releases / performed releases). In the monthly report, add a short note on which kinds of change (from the reports' titles and skip reasons) manual testing found defects in, once there are enough releases to say anything.
    - **Bug-fix churn** — mean bugs raised per release that week, using the same `sum(bugs_by_stage)
 / total_releases` formula as defect density; surfaced as its own row so a churn spike is
      visible even in a week where release count also moved.
