@@ -155,10 +155,13 @@ jobs:
       # libraries, so a missing one fails loudly at Chromium launch.
       - run: npx playwright install chromium
       - name: Run combined coverage and enforce threshold
+        # bash (not the default sh) so the step runs with `-eo pipefail`: the
+        # script's non-zero exit must fail the step even through `| tee`.
+        shell: bash
         run: |
           npm run test:coverage:merge | tee coverage-output.txt
-          stmt=$(grep -oE 'Combined coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+')
-          branch=$(grep -oE 'Combined branch coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+')
+          stmt=$(grep -oE 'Combined coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+') || true
+          branch=$(grep -oE 'Combined branch coverage: [0-9.]+' coverage-output.txt | grep -oE '[0-9.]+') || true
           if [ -z "$stmt" ]; then
             echo "Could not parse combined statement coverage from test:coverage:merge output"
             exit 1

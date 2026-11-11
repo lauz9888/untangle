@@ -80,31 +80,30 @@ combining logic lives in `scripts/lib/coverage-merge.mjs` (unit-tested in
 - **Shared exclusion list:** `src/main.ts` (one statement of bootstrap), `src/**/*.stories.ts`,
   `src/**/__mocks__/**` — `UNIVERSE_EXCLUDES` in `scripts/lib/coverage-merge.mjs`, which must
   mirror `test.coverage.exclude` in `vite.config.ts` and `vitest.storybook.config.ts`.
-- **Known secondary-only artefact classes** (evidence in ADR 0007):
-  1. **BDD CommonJS-emit statements** — ts-node's CommonJS emit attributes statements to
-     `import ...` and `export function ...` lines, which the AST-based primary layers don't treat
-     as statements.
-  2. **e2e production-compile `.vue` template branches** — the production SFC compile places
-     template-derived branches at locations that differ from the development compile the primary
-     layers see.
-  3. **Unalignable branch arms** — a secondary branch whose arm count differs from the inventory's
-     by more than an `if`'s implicit `else` (Istanbul layers drop that arm) is skipped rather than
-     credited by index (which would mis-credit a `switch`).
-
-**Conformance gaps (as of this section's adoption).** `test:coverage:merge` predates this section
-and doesn't yet meet all of it. Until a measurement change closes them, `qa-reviewer` reports
-these as pre-existing (`PRE_EXISTING: yes`), and Step 12 handles them per `coverage-invalid`'s
-pre-existing route rather than widening an unrelated run:
-
-- **Reconciliation is tallied per layer, not per class.** The script prints one "Ignored
-  secondary-only items" total per layer, so it can't tell an item in a known class above from an
-  unclassified one — validity check 4 and calibration requirement 4 are unimplemented.
-- **No calibration statement** exists yet (calibration requirement 1 / validity check 7).
-- **Signals aren't printed** as `Coverage signal:` lines, and the flat-e2e guard
-  (`assertE2eLayerIsReal`) blocks on uniform hit counts, which this section treats as an
-  advisory signal — reconcile it (keep it blocking only on objective evidence) in the same change.
-- **No determinism check** (validity check 8), and the reconciliation summary doesn't print
-  in-scope file counts.
+- **Known secondary-only artefact classes** (evidence in ADR 0007 and ADR 0009). Each has a
+  stable id, printed in the `Coverage reconciliation: class <id>: <n>` lines and listed in
+  `ARTEFACT_CLASSES` in `scripts/lib/coverage-merge.mjs` (a unit test asserts the two lists
+  agree):
+  1. `bdd-commonjs-emit` — **BDD CommonJS-emit statements**: ts-node's CommonJS emit attributes
+     statements to `import ...`, `export function ...`, `export async function ...` and
+     `export const ...` lines, which the AST-based primary layers don't treat as statements.
+     Rule: layer `bdd`, kind statement, no inventory slot, and the source line (trimmed) begins
+     with one of those prefixes.
+  2. `e2e-vue-template-branch` — **e2e production-compile `.vue` template branches**: the
+     production SFC compile places template-derived branches at locations that differ from the
+     development compile the primary layers see. Rule: layer `e2e`, kind branch, `.vue` file,
+     no inventory slot, line strictly inside the top-level `<template>` block (a branch in
+     `<script>` never qualifies).
+  3. `unalignable-branch-arm` — **Unalignable branch arms**: a secondary branch whose arm count
+     differs from the inventory's by more than an `if`'s implicit `else` (Istanbul layers drop
+     that arm) is skipped rather than credited by index (which would mis-credit a `switch`).
+  4. `e2e-vue-template-expression` — **e2e production-compile `.vue` template expressions**:
+     the same production-versus-development compile difference as class 2, for statements and
+     functions the production compile generates from template attribute bindings (`ref=`,
+     `id=`, inline `@keydown.esc` handlers, v-model updaters). Rule: layer `e2e`, kind
+     statement or function, `.vue` file, no inventory slot, line strictly inside `<template>`.
+     Added by ADR 0009 with fresh-run evidence (8 items on the `v2` baseline: 4 statements, 4
+     functions).
 
 ### `test:coverage:merge` output contract
 
@@ -117,10 +116,13 @@ Combined coverage: NN.NN% (<covered>/<total> statements)
 Combined branch coverage: NN.NN% (<covered>/<total> branches)
 ```
 
-preceded by a one-line-per-layer summary (statements and branches, covered/total), the inventory
-reconciliation summary (below), and any investigation signals (below), each signal on a line
-starting `Coverage signal:`. It exits non-zero on any validity failure; signals alone never change
-the exit code. Combining rules:
+these are always the final two lines of output (statements first, then branches), preceded by a
+one-line-per-layer summary (`Coverage layer:`, statements and branches, covered/total), the
+inventory reconciliation summary (below), one `Coverage check N: ok|FAILED` line per validity
+check, and any investigation signals (below), each signal on a line starting `Coverage signal:`.
+It exits non-zero on any validity failure, and then prints no `Combined` line; signals alone never
+change the exit code. `node scripts/merge-coverage.mjs --analyze-only` analyses an existing
+`coverage/` directory without re-running the layers. Combining rules:
 
 - **One canonical inventory, not a raw union.** Different instrumenters (V8 vs Istanbul, a dev vs
   a production compile) place the same statement or branch at different source locations, so a
@@ -197,8 +199,18 @@ blocking):
 - **Statement-count excess:** a layer reports markedly more statements for a file than the
   inventory has (more than max(2, 10%)) — often non-code lines being counted.
 - **Large movement without test changes:** combined statement or branch coverage moves by more
-  than 2 points against `main` while the diff changes no tests and no coverage tooling.
-- **Growing artefact-class counts** against `main`.
+  than 2 points against `main` while the diff changes no tests and no coverage tooling. The
+  script prints this offline, comparing against the newest committed `reports/` file whose
+  `coverage_method` equals the current method version (silent when none matches, e.g. on the
+  first run of a new method version); whether the diff changes tests or tooling is for the
+  investigator to check.
+- **Growing artefact-class counts** against `main`: not printed by the script (reports don't
+  carry per-class counts); `qa-reviewer` compares the `Coverage reconciliation:` lines against
+  the previous report.
+
+The flat-e2e guard blocks only on objective evidence: zero functions, zero branches, or a fully
+flat layer (every statement of every file sharing one hit count). The softer uniform-hit-count
+and no-zero-hit patterns above are advisory signals.
 
 ### Calibration requirements
 
@@ -208,7 +220,10 @@ numbered, testable requirements (`requirements-analyst`) and design items (`solu
 they're what proves the new measurement is real, not just present:
 
 1. A statement known to be unreachable from every layer's tests is reported with hit count 0 in
-   every layer's `coverage-final.json` and as uncovered in the combined figure.
+   every layer's `coverage-final.json` and as uncovered in the combined figure. (The calibration
+   statement is the `return 0` in `coverageCalibrationUnreachable`, in
+   `src/composables/useBoardOrdering.ts`, found by its marker comment, not its line number; see
+   ADR 0009.)
 2. A source file no test imports appears in the inventory with every statement at 0 hits — not
    absent — proving disk enumeration, not provider output, decides which files count.
 3. A synthetic test of the combining logic — the same statement/branch at differing column
@@ -226,7 +241,7 @@ they're what proves the new measurement is real, not just present:
    a new coverage-method version (see the next paragraph) and an ADR explains the old and new
    numbers.
 
-**Coverage method version:** `v2` — ADR 0007's single-inventory measurement, from `accurate-coverage-merge` (2026-11-11) onward; earlier reports are `v1`. Bump it whenever the measurement itself
+**Coverage method version:** `v3` — ADR 0009's calibration statement and class-based reconciliation, from `coverage-measurement-conformance` (2026-11-11) onward; `v2` is ADR 0007's single-inventory measurement (`accurate-coverage-merge`, 2026-11-11); earlier reports are `v1`. Bump it whenever the measurement itself
 changes; `report-generator` stamps it into each report's metrics block as `coverage_method`, so
 `quality-reporter` never reads a measurement correction as a test-quality trend.
 

@@ -32,3 +32,12 @@ export function getCompletionFocusTarget(tasks: Task[], taskId: number): FocusTa
   }
   return { kind: 'section', key: task.section }
 }
+
+/**
+ * Intentionally unreachable: nothing may import or call this. It exists so the combined
+ * coverage run has a statement every layer must report at zero hits (see
+ * docs/adr/0009-coverage-method-v3-calibration-and-class-reconciliation.md).
+ */
+export function coverageCalibrationUnreachable(): number {
+  return 0 // coverage-calibration-statement
+}
