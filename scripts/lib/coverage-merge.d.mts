@@ -2,7 +2,7 @@
 // under strict TypeScript without `allowJs`.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type FileCoverageData = Record<string, any>
+export type FileCoverageData = any
 export type LayerData = Record<string, FileCoverageData>
 
 export interface CoverageTotals {
@@ -20,7 +20,7 @@ export interface IgnoredTally {
 export interface CombineResult {
   data: LayerData
   totals: CoverageTotals
-  ignored: Record<string, IgnoredTally>
+  ignored: { bdd: IgnoredTally; e2e: IgnoredTally } & Record<string, IgnoredTally>
 }
 
 export const UNIVERSE_EXCLUDES: string[]
@@ -29,7 +29,9 @@ export const SECONDARY_LAYERS: string[]
 
 export function normalizeCoverageKeys(data: LayerData): LayerData
 export function scopeToOwnSource(data: LayerData): LayerData
-export function loadLayers(coverageDir: string): Record<string, LayerData>
+export function loadLayers(
+  coverageDir: string
+): Record<'unit' | 'bdd' | 'e2e' | 'storybook', LayerData>
 export function combineCoverage(input: {
   primary: LayerData[]
   secondary: LayerData[]

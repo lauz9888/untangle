@@ -3,12 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import istanbulLibCoverage from 'istanbul-lib-coverage'
-// The lib (and its .d.mts) is created by the implementer; treat as untyped here.
-// @ts-ignore -- module does not exist yet
 import * as lib from '../../../scripts/lib/coverage-merge.mjs'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const L = lib as any
 
 type Pos = { line: number; col?: number; endLine?: number; endCol?: number | null }
 type StmtSpec = Pos & { hits: number }
@@ -96,14 +91,14 @@ describe('combineCoverage', () => {
   it('U1: same statement at different columns in unit vs bdd (hit only by bdd) counts once, covered', () => {
     const unit = layer({ [A]: { statements: [{ line: 5, col: 2, hits: 0 }] } })
     const bdd = layer({ [A]: { statements: [{ line: 5, col: 4, hits: 1 }] } })
-    const r = L.combineCoverage({ primary: [unit], secondary: [bdd] })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd] })
     expect(r.totals.statements).toEqual({ covered: 1, total: 1 })
   })
 
   it('U2: unit + storybook (column 0 / null end column), hit only in storybook, counts once covered', () => {
     const unit = layer({ [A]: { statements: [{ line: 7, col: 8, hits: 0 }] } })
     const sb = layer({ [A]: { statements: [{ line: 7, col: 0, endCol: null, hits: 3 }] } })
-    const r = L.combineCoverage({ primary: [unit, sb], secondary: [] })
+    const r = lib.combineCoverage({ primary: [unit, sb], secondary: [] })
     expect(r.totals.statements).toEqual({ covered: 1, total: 1 })
   })
 
@@ -125,7 +120,7 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const r = L.combineCoverage({ primary: [unit], secondary: [bdd, e2e] })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd, e2e] })
     expect(r.totals.statements).toEqual({ covered: 1, total: 1 })
     expect(r.ignored.bdd.statements).toBe(1)
     expect(r.ignored.e2e.statements).toBe(1)
@@ -148,20 +143,20 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const r = L.combineCoverage({ primary: [unit, sb], secondary: [] })
+    const r = lib.combineCoverage({ primary: [unit, sb], secondary: [] })
     expect(r.totals.statements).toEqual({ covered: 2, total: 2 })
   })
 
   it('U5: if branch with 2 arms in primary and 1 arm (dropped else) in secondary credits arm 0 only', () => {
     const unit = layer({ [A]: { branches: [{ type: 'if', line: 4, arms: [0, 0] }] } })
     const bdd = layer({ [A]: { branches: [{ type: 'if', line: 4, col: 3, arms: [1] }] } })
-    const r = L.combineCoverage({ primary: [unit], secondary: [bdd] })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd] })
     expect(r.totals.branches).toEqual({ covered: 1, total: 2 })
     expect(r.data[A].b['0']).toEqual([1, 0])
 
     const unit2 = layer({ [A]: { branches: [{ type: 'if', line: 4, arms: [0, 1] }] } })
     const bdd2 = layer({ [A]: { branches: [{ type: 'if', line: 4, arms: [0] }] } })
-    const r2 = L.combineCoverage({ primary: [unit2], secondary: [bdd2] })
+    const r2 = lib.combineCoverage({ primary: [unit2], secondary: [bdd2] })
     expect(r2.totals.branches).toEqual({ covered: 1, total: 2 })
   })
 
@@ -182,7 +177,7 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const r = L.combineCoverage({ primary: [unit], secondary: [bdd] })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd] })
     expect(r.totals.branches).toEqual({ covered: 3, total: 4 })
   })
 
@@ -196,7 +191,7 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const r = L.combineCoverage({ primary: [unit], secondary: [empty, e2e] })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [empty, e2e] })
     expect(r.totals.branches).toEqual({ covered: 1, total: 2 })
     expect(r.ignored.e2e.branches).toBe(1)
   })
@@ -219,7 +214,7 @@ describe('combineCoverage', () => {
       },
     })
     const bdd = layer({ [A]: { functions: [{ line: 9, col: 7, hits: 1 }] } })
-    const r = L.combineCoverage({ primary: [unit, sb], secondary: [bdd] })
+    const r = lib.combineCoverage({ primary: [unit, sb], secondary: [bdd] })
     expect(r.totals.functions).toEqual({ covered: 2, total: 2 })
   })
 
@@ -233,7 +228,7 @@ describe('combineCoverage', () => {
       },
     })
     const bdd = layer({ [B]: { statements: [{ line: 1, hits: 1 }] } })
-    const r = L.combineCoverage({ primary: [unit], secondary: [bdd] })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd] })
     expect(Object.keys(r.data)).toEqual([A])
     expect(r.totals.statements).toEqual({ covered: 0, total: 2 })
   })
@@ -249,7 +244,7 @@ describe('combineCoverage', () => {
     })
     const bdd = layer({ [A]: { statements: [{ line: 2, col: 3, hits: 1 }] } })
     const input = { primary: [unit], secondary: [bdd] }
-    expect(L.combineCoverage(input)).toEqual(L.combineCoverage(input))
+    expect(lib.combineCoverage(input)).toEqual(lib.combineCoverage(input))
   })
 
   it('U11: is independent of primary and secondary layer order', () => {
@@ -284,9 +279,9 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const base = L.combineCoverage({ primary: [unit, sb], secondary: [bdd, e2e] })
-    const swappedP = L.combineCoverage({ primary: [sb, unit], secondary: [bdd, e2e] })
-    const swappedS = L.combineCoverage({ primary: [unit, sb], secondary: [e2e, bdd] })
+    const base = lib.combineCoverage({ primary: [unit, sb], secondary: [bdd, e2e] })
+    const swappedP = lib.combineCoverage({ primary: [sb, unit], secondary: [bdd, e2e] })
+    const swappedS = lib.combineCoverage({ primary: [unit, sb], secondary: [e2e, bdd] })
     expect(swappedP.totals).toEqual(base.totals)
     expect(swappedS.totals).toEqual(base.totals)
   })
@@ -298,32 +293,32 @@ describe('combineCoverage', () => {
     const istanbul = layer({
       [A]: { statements: [{ line: 10, col: 6, endLine: 10, endCol: 31, hits: 1 }] },
     })
-    const r = L.combineCoverage({ primary: [v8], secondary: [istanbul] })
+    const r = lib.combineCoverage({ primary: [v8], secondary: [istanbul] })
     expect(r.totals.statements.total).toBe(1)
   })
 
   it('U31: branch arms are credited by index only when safe', () => {
     const sw = layer({ [A]: { branches: [{ type: 'switch', line: 10, arms: [0, 0, 0] }] } })
     const sw2 = layer({ [A]: { branches: [{ type: 'switch', line: 10, arms: [1, 1] }] } })
-    const a = L.combineCoverage({ primary: [sw], secondary: [sw2] })
+    const a = lib.combineCoverage({ primary: [sw], secondary: [sw2] })
     expect(a.totals.branches).toEqual({ covered: 0, total: 3 })
     expect(a.ignored.bdd.branches).toBe(1)
 
     const eq = layer({ [A]: { branches: [{ type: 'cond-expr', line: 3, arms: [0, 0] }] } })
     const eq2 = layer({ [A]: { branches: [{ type: 'cond-expr', line: 3, arms: [0, 1] }] } })
-    const c = L.combineCoverage({ primary: [eq], secondary: [eq2] })
+    const c = lib.combineCoverage({ primary: [eq], secondary: [eq2] })
     expect(c.totals.branches).toEqual({ covered: 1, total: 2 })
     expect(c.data[A].b['0']).toEqual([0, 1])
 
     const if3 = layer({ [A]: { branches: [{ type: 'if', line: 3, arms: [0, 0, 0] }] } })
     const if1 = layer({ [A]: { branches: [{ type: 'if', line: 3, arms: [1] }] } })
-    const d = L.combineCoverage({ primary: [if3], secondary: [if1] })
+    const d = lib.combineCoverage({ primary: [if3], secondary: [if1] })
     expect(d.totals.branches).toEqual({ covered: 0, total: 3 })
     expect(d.ignored.bdd.branches).toBe(1)
 
     const bin2 = layer({ [A]: { branches: [{ type: 'binary-expr', line: 3, arms: [0, 0] }] } })
     const bin1 = layer({ [A]: { branches: [{ type: 'binary-expr', line: 3, arms: [1] }] } })
-    const e = L.combineCoverage({ primary: [bin2], secondary: [bin1] })
+    const e = lib.combineCoverage({ primary: [bin2], secondary: [bin1] })
     expect(e.totals.branches).toEqual({ covered: 0, total: 2 })
     expect(e.ignored.bdd.branches).toBe(1)
   })
@@ -355,8 +350,8 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const withSecondary = L.combineCoverage({ primary: [unit], secondary: [bdd, e2e] })
-    const without = L.combineCoverage({ primary: [unit], secondary: [] })
+    const withSecondary = lib.combineCoverage({ primary: [unit], secondary: [bdd, e2e] })
+    const without = lib.combineCoverage({ primary: [unit], secondary: [] })
     expect(withSecondary.totals).toEqual(without.totals)
     expect(withSecondary.ignored.bdd).toEqual({ statements: 2, branches: 1, functions: 1 })
     expect(withSecondary.ignored.e2e).toEqual({ statements: 1, branches: 0, functions: 2 })
@@ -367,7 +362,7 @@ describe('normalizeCoverageKeys / scopeToOwnSource', () => {
   it('U12: normalises separators, rewrites path, collapses two spellings of one file', () => {
     const win = mkFile('C:\\proj\\src\\a.ts', { statements: [{ line: 1, hits: 1 }] })
     const posix = mkFile('C:/proj/src/a.ts', { statements: [{ line: 1, hits: 1 }] })
-    const out = L.normalizeCoverageKeys({ 'C:\\proj\\src\\a.ts': win, 'C:/proj/src/a.ts': posix })
+    const out = lib.normalizeCoverageKeys({ 'C:\\proj\\src\\a.ts': win, 'C:/proj/src/a.ts': posix })
     expect(Object.keys(out)).toEqual(['C:/proj/src/a.ts'])
     expect(out['C:/proj/src/a.ts'].path).toBe('C:/proj/src/a.ts')
   })
@@ -378,7 +373,7 @@ describe('normalizeCoverageKeys / scopeToOwnSource', () => {
       '/proj/node_modules/vue/src/x.ts': {},
       '/proj/tests/x.ts': {},
     })
-    expect(Object.keys(L.scopeToOwnSource(data))).toEqual(['/proj/src/a.ts'])
+    expect(Object.keys(lib.scopeToOwnSource(data))).toEqual(['/proj/src/a.ts'])
   })
 })
 
@@ -399,7 +394,7 @@ function realisticE2e(): Layer {
 
 describe('assertE2eLayerIsReal', () => {
   it('U13: passes for realistic data', () => {
-    expect(() => L.assertE2eLayerIsReal(realisticE2e())).not.toThrow()
+    expect(() => lib.assertE2eLayerIsReal(realisticE2e())).not.toThrow()
   })
 
   it('U14: fails with 0 functions', () => {
@@ -408,7 +403,7 @@ describe('assertE2eLayerIsReal', () => {
       fc.fnMap = {}
       fc.f = {}
     }
-    expect(() => L.assertE2eLayerIsReal(d)).toThrow(
+    expect(() => lib.assertE2eLayerIsReal(d)).toThrow(
       /e2e coverage layer looks flat\/fake.*functions/is
     )
   })
@@ -419,7 +414,7 @@ describe('assertE2eLayerIsReal', () => {
       fc.branchMap = {}
       fc.b = {}
     }
-    expect(() => L.assertE2eLayerIsReal(d)).toThrow(
+    expect(() => lib.assertE2eLayerIsReal(d)).toThrow(
       /e2e coverage layer looks flat\/fake.*branches/is
     )
   })
@@ -429,7 +424,7 @@ describe('assertE2eLayerIsReal', () => {
     for (const fc of Object.values(d)) {
       for (const k of Object.keys(fc.s)) if (fc.s[k] === 0) fc.s[k] = 1
     }
-    expect(() => L.assertE2eLayerIsReal(d)).toThrow(/e2e coverage layer looks flat\/fake.*zero/is)
+    expect(() => lib.assertE2eLayerIsReal(d)).toThrow(/e2e coverage layer looks flat\/fake.*zero/is)
   })
 
   it('U17: fails on flat data (old fake shape) and tolerates a lone tiny uniform file', () => {
@@ -449,7 +444,7 @@ describe('assertE2eLayerIsReal', () => {
         { line: 2, hits: 0 },
       ],
     })
-    expect(() => L.assertE2eLayerIsReal(flat)).toThrow(
+    expect(() => lib.assertE2eLayerIsReal(flat)).toThrow(
       /e2e coverage layer looks flat\/fake.*(single-valued|uniform)/is
     )
 
@@ -461,7 +456,7 @@ describe('assertE2eLayerIsReal', () => {
         { line: 2, hits: 1 },
       ],
     })
-    expect(() => L.assertE2eLayerIsReal(ok)).not.toThrow()
+    expect(() => lib.assertE2eLayerIsReal(ok)).not.toThrow()
   })
 })
 
@@ -503,13 +498,13 @@ describe('assertDedupeEffective', () => {
 
   it('U18: passes on good combineCoverage output for multi-layer input', () => {
     const layers = multi()
-    const result = L.combineCoverage(layers)
-    expect(() => L.assertDedupeEffective(layers, result)).not.toThrow()
+    const result = lib.combineCoverage(layers)
+    expect(() => lib.assertDedupeEffective(layers, result)).not.toThrow()
   })
 
   it('U19: fails when merged statement count exceeds the bound', () => {
     const layers = multi()
-    const result = L.combineCoverage(layers)
+    const result = lib.combineCoverage(layers)
     const tampered = structuredClone(result)
     const fc = tampered.data[A]
     for (let i = 0; i < 6; i++) {
@@ -518,25 +513,25 @@ describe('assertDedupeEffective', () => {
       fc.s[id] = 1
     }
     tampered.totals = recount(tampered.data)
-    expect(() => L.assertDedupeEffective(layers, tampered)).toThrow()
+    expect(() => lib.assertDedupeEffective(layers, tampered)).toThrow()
   })
 
   it('U19: fails when merged statement count is below the recomputed universe size', () => {
     const layers = multi()
-    const result = L.combineCoverage(layers)
+    const result = lib.combineCoverage(layers)
     const tampered = structuredClone(result)
     const fc = tampered.data[A]
     const id = Object.keys(fc.s)[0] as string
     delete fc.s[id]
     delete fc.statementMap[id]
     tampered.totals = recount(tampered.data)
-    expect(() => L.assertDedupeEffective(layers, tampered)).toThrow()
+    expect(() => lib.assertDedupeEffective(layers, tampered)).toThrow()
   })
 
   it('U20: fails on zero merged statements', () => {
     const layers = { primary: [layer({ [A]: {} })], secondary: [] }
     const result = { data: layer({ [A]: {} }), totals: recount(layer({ [A]: {} })) }
-    expect(() => L.assertDedupeEffective(layers, result)).toThrow()
+    expect(() => lib.assertDedupeEffective(layers, result)).toThrow()
   })
 
   it('R2: a naive FileCoverage.merge of V8-shaped and Istanbul-shaped layers is rejected', () => {
@@ -559,7 +554,9 @@ describe('assertDedupeEffective', () => {
     // sanity: the naive merge really did double count
     expect(Object.keys(naive[A].s).length).toBe(8)
     const layers = { primary: [unit], secondary: [bdd] }
-    expect(() => L.assertDedupeEffective(layers, { data: naive, totals: recount(naive) })).toThrow()
+    expect(() =>
+      lib.assertDedupeEffective(layers, { data: naive, totals: recount(naive) })
+    ).toThrow()
   })
 })
 
@@ -585,7 +582,7 @@ describe('assertE2eTemplateParity', () => {
   it('U21: passes when e2e counts are at/below unit and no statement is on markup/style/comment', () => {
     const unit = layer({ [V]: { statements: stmts([5, 8]) } })
     const e2e = layer({ [V]: { statements: stmts([5, 8]) } })
-    expect(() => L.assertE2eTemplateParity(e2e, unit, readSource)).not.toThrow()
+    expect(() => lib.assertE2eTemplateParity(e2e, unit, readSource)).not.toThrow()
   })
 
   it('U22: fails when e2e count exceeds unit by more than max(2, 10%) (old 601 vs 55 shape)', () => {
@@ -595,42 +592,42 @@ describe('assertE2eTemplateParity', () => {
     const e2e = layer({
       [V]: { statements: Array.from({ length: 601 }, (_, i) => ({ line: 5, col: i, hits: 1 })) },
     })
-    expect(() => L.assertE2eTemplateParity(e2e, unit, readSource)).toThrow(/A\.vue/)
+    expect(() => lib.assertE2eTemplateParity(e2e, unit, readSource)).toThrow(/A\.vue/)
   })
 
   it('U23: fails when an e2e statement sits inside the <style> block', () => {
     const unit = layer({ [V]: { statements: stmts([5, 8, 11]) } })
     const e2e = layer({ [V]: { statements: stmts([5, 8, 11]) } })
-    expect(() => L.assertE2eTemplateParity(e2e, unit, readSource)).toThrow(/A\.vue.*11/s)
+    expect(() => lib.assertE2eTemplateParity(e2e, unit, readSource)).toThrow(/A\.vue.*11/s)
   })
 
   it('U24: fails when an e2e statement is on a blank or comment-only line', () => {
     const unit = layer({ [V]: { statements: stmts([5, 8, 5]) } })
     const blank = layer({ [V]: { statements: stmts([5, 6, 8]) } })
     const comment = layer({ [V]: { statements: stmts([5, 7, 8]) } })
-    expect(() => L.assertE2eTemplateParity(blank, unit, readSource)).toThrow(/A\.vue.*6/s)
-    expect(() => L.assertE2eTemplateParity(comment, unit, readSource)).toThrow(/A\.vue.*7/s)
+    expect(() => lib.assertE2eTemplateParity(blank, unit, readSource)).toThrow(/A\.vue.*6/s)
+    expect(() => lib.assertE2eTemplateParity(comment, unit, readSource)).toThrow(/A\.vue.*7/s)
   })
 })
 
 describe('assertUniverseComplete', () => {
   it('U25: passes when the universe equals the on-disk set; UNIVERSE_EXCLUDES covers main.ts and stories', () => {
     const files = ['/proj/src/a.ts', '/proj/src/b.vue']
-    expect(() => L.assertUniverseComplete(files, [...files].reverse())).not.toThrow()
-    const ex = JSON.stringify(L.UNIVERSE_EXCLUDES)
+    expect(() => lib.assertUniverseComplete(files, [...files].reverse())).not.toThrow()
+    const ex = JSON.stringify(lib.UNIVERSE_EXCLUDES)
     expect(ex).toContain('src/main.ts')
     expect(ex).toContain('stories')
   })
 
   it('U26: throws naming an on-disk source file missing from the universe', () => {
     expect(() =>
-      L.assertUniverseComplete(['/proj/src/a.ts'], ['/proj/src/a.ts', '/proj/src/missing.ts'])
+      lib.assertUniverseComplete(['/proj/src/a.ts'], ['/proj/src/a.ts', '/proj/src/missing.ts'])
     ).toThrow(/src\/missing\.ts/)
   })
 
   it('U27: throws when the universe contains a file not on disk', () => {
     expect(() =>
-      L.assertUniverseComplete(['/proj/src/a.ts', '/proj/src/ghost.ts'], ['/proj/src/a.ts'])
+      lib.assertUniverseComplete(['/proj/src/a.ts', '/proj/src/ghost.ts'], ['/proj/src/a.ts'])
     ).toThrow(/src\/ghost\.ts/)
   })
 })
@@ -652,7 +649,7 @@ describe('loadLayers', () => {
   it('U33: loads all four layers normalised and scoped to own source', () => {
     const dir = makeDir(['unit', 'storybook', 'bdd', 'e2e'])
     try {
-      const out = L.loadLayers(dir)
+      const out = lib.loadLayers(dir)
       expect(Object.keys(out).sort()).toEqual(['bdd', 'e2e', 'storybook', 'unit'])
       expect(Object.keys(out.unit)).toEqual(['C:/proj/src/a.ts'])
     } finally {
@@ -663,7 +660,7 @@ describe('loadLayers', () => {
   it('U33: a missing e2e layer file throws (does not warn)', () => {
     const dir = makeDir(['unit', 'storybook', 'bdd'])
     try {
-      expect(() => L.loadLayers(dir)).toThrow(/e2e/)
+      expect(() => lib.loadLayers(dir)).toThrow(/e2e/)
     } finally {
       fs.rmSync(dir, { recursive: true, force: true })
     }
@@ -672,7 +669,7 @@ describe('loadLayers', () => {
   it('U33: a missing primary layer file throws', () => {
     const dir = makeDir(['storybook', 'bdd', 'e2e'])
     try {
-      expect(() => L.loadLayers(dir)).toThrow(/unit/)
+      expect(() => lib.loadLayers(dir)).toThrow(/unit/)
     } finally {
       fs.rmSync(dir, { recursive: true, force: true })
     }
