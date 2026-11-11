@@ -221,9 +221,9 @@ describe('class 4: e2e-vue-template-expression (REQ-001, REQ-028 / C1)', () => {
       [e2eStmt, 'statement'],
       [e2eFn, 'function'],
     ] as const) {
-      const r = combine([{}, mk(V, 132)])
+      const r = combine([{}, mk(V, 133)])
       expect(count(r, 'e2e-vue-template-expression')).toBe(0)
-      expect(r.reconciliation.unclassified).toEqual([expect.objectContaining({ line: 132, kind })])
+      expect(r.reconciliation.unclassified).toEqual([expect.objectContaining({ line: 133, kind })])
     }
   })
 
