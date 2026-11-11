@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import istanbulLibCoverage from 'istanbul-lib-coverage'
 import * as lib from '../../../scripts/lib/coverage-merge.mjs'
+import { srcText, vueText } from './fixtures'
 
 type Pos = { line: number; col?: number; endLine?: number; endCol?: number | null }
 type StmtSpec = Pos & { hits: number }
@@ -102,7 +103,11 @@ describe('combineCoverage', () => {
     expect(r.totals.statements).toEqual({ covered: 1, total: 1 })
   })
 
-  it('U3: secondary statement with no matching key is ignored and total unchanged', () => {
+  // Changed for REQ-001/REQ-002 (#215): secondary-only items are no longer tallied
+  // into a per-layer `ignored` count; on ordinary code lines they are reported as
+  // unclassified (file/line/kind/layer). The original intent, that they never change
+  // the combined total, is preserved.
+  it('U3: secondary statement with no matching key leaves the total unchanged and is reported unclassified', () => {
     const unit = layer({ [A]: { statements: [{ line: 5, hits: 1 }] } })
     const bdd = layer({
       [A]: {
@@ -120,10 +125,17 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd, e2e] })
+    const readSource = () => srcText({})
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd, e2e], readSource })
     expect(r.totals.statements).toEqual({ covered: 1, total: 1 })
-    expect(r.ignored.bdd.statements).toBe(1)
-    expect(r.ignored.e2e.statements).toBe(1)
+    expect(r.reconciliation.unclassified).toEqual([
+      expect.objectContaining({ line: 98, kind: 'statement', layer: 'e2e' }),
+      expect.objectContaining({ line: 99, kind: 'statement', layer: 'bdd' }),
+    ])
+    for (const u of r.reconciliation.unclassified) expect(u.file).toMatch(/src\/a\.ts$/)
+    for (const c of Object.values(r.reconciliation.classes) as { total: number }[]) {
+      expect(c.total).toBe(0)
+    }
   })
 
   it('U4: two statements on one line covered by different layers are both counted and covered', () => {
@@ -181,7 +193,23 @@ describe('combineCoverage', () => {
     expect(r.totals.branches).toEqual({ covered: 3, total: 4 })
   })
 
-  it('U7: branch only in an e2e layer at an unmatched line is ignored; denominator unchanged', () => {
+  it('REQ-021: a branch at differing columns, hit in only one layer, counts once and as covered', () => {
+    const unit = layer({
+      [A]: { branches: [{ type: 'cond-expr', line: 6, col: 1, arms: [0, 0] }] },
+    })
+    const bdd = layer({
+      [A]: { branches: [{ type: 'cond-expr', line: 6, col: 9, arms: [0, 1] }] },
+    })
+    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd] })
+    expect(r.totals.branches).toEqual({ covered: 1, total: 2 })
+    expect(Object.keys(r.data[A].b)).toHaveLength(1)
+  })
+
+  // Changed for REQ-001/REQ-002/REQ-022 (#215): class 2 (e2e template branch) is
+  // `.vue` + inside `<template>` only, so the same `.ts` fixture is now unclassified.
+  // Original intent (denominator unchanged by an e2e-only branch) is preserved, and a
+  // `.vue` twin asserts the declared class.
+  it('U7: branch only in an e2e layer at an unmatched line in a .ts file leaves the denominator unchanged and is unclassified', () => {
     const unit = layer({ [A]: { branches: [{ type: 'if', line: 4, arms: [1, 0] }] } })
     const e2e = layer({
       [A]: {
@@ -191,9 +219,41 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const r = lib.combineCoverage({ primary: [unit], secondary: [empty, e2e] })
+    const r = lib.combineCoverage({
+      primary: [unit],
+      secondary: [empty, e2e],
+      readSource: () => srcText({}),
+    })
     expect(r.totals.branches).toEqual({ covered: 1, total: 2 })
-    expect(r.ignored.e2e.branches).toBe(1)
+    expect(r.reconciliation.unclassified).toEqual([
+      expect.objectContaining({ line: 120, kind: 'branch', layer: 'e2e' }),
+    ])
+    expect(r.reconciliation.classes['e2e-vue-template-branch'].total).toBe(0)
+  })
+
+  it('U7 (.vue twin): the same e2e-only branch inside the <template> is class e2e-vue-template-branch; denominator unchanged', () => {
+    const unit = layer({
+      [V]: {
+        statements: [{ line: 132, hits: 1 }],
+        branches: [{ type: 'if', line: 132, arms: [1, 0] }],
+      },
+    })
+    const e2e = layer({
+      [V]: {
+        branches: [
+          { type: 'if', line: 132, arms: [1, 0] },
+          { type: 'cond-expr', line: 120, arms: [1, 1] },
+        ],
+      },
+    })
+    const r = lib.combineCoverage({
+      primary: [unit],
+      secondary: [empty, e2e],
+      readSource: () => vueText(130),
+    })
+    expect(r.totals.branches).toEqual({ covered: 1, total: 2 })
+    expect(r.reconciliation.classes['e2e-vue-template-branch'].total).toBe(1)
+    expect(r.reconciliation.unclassified).toEqual([])
   })
 
   it('U8: functions are de-duplicated across layers and covered if any layer hit them', () => {
@@ -218,7 +278,10 @@ describe('combineCoverage', () => {
     expect(r.totals.functions).toEqual({ covered: 2, total: 2 })
   })
 
-  it('U9: secondary-only files are absent; primary-only zero-hit files count as uncovered', () => {
+  // Changed for REQ-002 (#215): a secondary-only file is no longer dropped silently;
+  // its items are classified individually. Original assertions (B absent from the
+  // inventory, totals unchanged) are kept.
+  it('U9: secondary-only files are absent from the inventory but their items are reported; primary-only zero-hit files count as uncovered', () => {
     const unit = layer({
       [A]: {
         statements: [
@@ -228,9 +291,31 @@ describe('combineCoverage', () => {
       },
     })
     const bdd = layer({ [B]: { statements: [{ line: 1, hits: 1 }] } })
-    const r = lib.combineCoverage({ primary: [unit], secondary: [bdd] })
+    const r = lib.combineCoverage({
+      primary: [unit],
+      secondary: [bdd],
+      readSource: () => srcText({}),
+    })
     expect(Object.keys(r.data)).toEqual([A])
     expect(r.totals.statements).toEqual({ covered: 0, total: 2 })
+    expect(r.reconciliation.unclassified).toEqual([
+      expect.objectContaining({ line: 1, kind: 'statement', layer: 'bdd' }),
+    ])
+    expect(r.reconciliation.unclassified[0].file).toMatch(/src\/b\.ts$/)
+  })
+
+  it('U9 (import-line variant): a secondary-only file whose item is on an import line counts under bdd-commonjs-emit', () => {
+    const unit = layer({ [A]: { statements: [{ line: 1, hits: 0 }] } })
+    const bdd = layer({ [B]: { statements: [{ line: 1, hits: 1 }] } })
+    const r = lib.combineCoverage({
+      primary: [unit],
+      secondary: [bdd],
+      readSource: () => srcText({ 1: "import x from 'y'" }),
+    })
+    expect(Object.keys(r.data)).toEqual([A])
+    expect(r.totals.statements).toEqual({ covered: 0, total: 1 })
+    expect(r.reconciliation.classes['bdd-commonjs-emit'].total).toBe(1)
+    expect(r.reconciliation.unclassified).toEqual([])
   })
 
   it('U10: is deterministic across repeated runs', () => {
@@ -297,12 +382,15 @@ describe('combineCoverage', () => {
     expect(r.totals.statements.total).toBe(1)
   })
 
+  // Changed for REQ-001 (#215): the three bdd-branches `ignored` assertions are re-pointed
+  // to the `unalignable-branch-arm` class (each case has a slot whose arm count is rejected).
+  // The credit-by-index assertions are unchanged.
   it('U31: branch arms are credited by index only when safe', () => {
     const sw = layer({ [A]: { branches: [{ type: 'switch', line: 10, arms: [0, 0, 0] }] } })
     const sw2 = layer({ [A]: { branches: [{ type: 'switch', line: 10, arms: [1, 1] }] } })
     const a = lib.combineCoverage({ primary: [sw], secondary: [sw2] })
     expect(a.totals.branches).toEqual({ covered: 0, total: 3 })
-    expect(a.ignored.bdd.branches).toBe(1)
+    expect(a.reconciliation.classes['unalignable-branch-arm'].total).toBe(1)
 
     const eq = layer({ [A]: { branches: [{ type: 'cond-expr', line: 3, arms: [0, 0] }] } })
     const eq2 = layer({ [A]: { branches: [{ type: 'cond-expr', line: 3, arms: [0, 1] }] } })
@@ -314,22 +402,26 @@ describe('combineCoverage', () => {
     const if1 = layer({ [A]: { branches: [{ type: 'if', line: 3, arms: [1] }] } })
     const d = lib.combineCoverage({ primary: [if3], secondary: [if1] })
     expect(d.totals.branches).toEqual({ covered: 0, total: 3 })
-    expect(d.ignored.bdd.branches).toBe(1)
+    expect(d.reconciliation.classes['unalignable-branch-arm'].total).toBe(1)
 
     const bin2 = layer({ [A]: { branches: [{ type: 'binary-expr', line: 3, arms: [0, 0] }] } })
     const bin1 = layer({ [A]: { branches: [{ type: 'binary-expr', line: 3, arms: [1] }] } })
     const e = lib.combineCoverage({ primary: [bin2], secondary: [bin1] })
     expect(e.totals.branches).toEqual({ covered: 0, total: 2 })
-    expect(e.ignored.bdd.branches).toBe(1)
+    expect(e.reconciliation.classes['unalignable-branch-arm'].total).toBe(1)
   })
 
-  it('U32: ignored tally is per layer and kind and does not change totals', () => {
+  // Changed for REQ-001/REQ-004 (#215): the per-layer-and-kind `ignored` tally is replaced
+  // by per-class counts plus an unclassified list. Original intent (secondary-only items
+  // never change the combined totals) is preserved by the totals equality.
+  it('U32: secondary-only items are tallied per class and unclassified, and do not change totals', () => {
     const unit = layer({
       [A]: {
         statements: [{ line: 1, hits: 1 }],
         branches: [{ type: 'if', line: 1, arms: [1, 0] }],
         functions: [{ line: 1, hits: 1 }],
       },
+      [V]: { statements: [{ line: 96, hits: 1 }] },
     })
     const bdd = layer({
       [A]: {
@@ -342,7 +434,8 @@ describe('combineCoverage', () => {
       },
     })
     const e2e = layer({
-      [A]: {
+      [A]: { statements: [{ line: 85, hits: 1 }] },
+      [V]: {
         statements: [{ line: 80, hits: 1 }],
         functions: [
           { line: 81, hits: 1 },
@@ -350,11 +443,34 @@ describe('combineCoverage', () => {
         ],
       },
     })
-    const withSecondary = lib.combineCoverage({ primary: [unit], secondary: [bdd, e2e] })
-    const without = lib.combineCoverage({ primary: [unit], secondary: [] })
+    const files: Record<string, string> = {
+      [A]: srcText({ 70: "import a from 'a'", 71: 'export function f() {' }),
+      [V]: vueText(95),
+    }
+    const readSource = (f: string) => files[f] as string
+    const withSecondary = lib.combineCoverage({
+      primary: [unit],
+      secondary: [bdd, e2e],
+      readSource,
+    })
+    const without = lib.combineCoverage({ primary: [unit], secondary: [], readSource })
     expect(withSecondary.totals).toEqual(without.totals)
-    expect(withSecondary.ignored.bdd).toEqual({ statements: 2, branches: 1, functions: 1 })
-    expect(withSecondary.ignored.e2e).toEqual({ statements: 1, branches: 0, functions: 2 })
+    const { classes, unclassified } = withSecondary.reconciliation
+    expect(classes['bdd-commonjs-emit'].total).toBe(2)
+    expect(classes['e2e-vue-template-expression'].total).toBe(3)
+    expect(classes['e2e-vue-template-branch'].total).toBe(0)
+    expect(classes['unalignable-branch-arm'].total).toBe(0)
+    expect(
+      unclassified.map((u: { line: number; kind: string; layer: string }) => [
+        u.line,
+        u.kind,
+        u.layer,
+      ])
+    ).toEqual([
+      [72, 'branch', 'bdd'],
+      [73, 'function', 'bdd'],
+      [85, 'statement', 'e2e'],
+    ])
   })
 })
 
@@ -392,6 +508,27 @@ function realisticE2e(): Layer {
   })
 }
 
+// Minimal collectSignals input: the given layers over an empty inventory. The enumerate
+// stub reports no functions or branches in any source so only layer-shape signals fire.
+function signalInput(layers: Partial<Record<'unit' | 'storybook' | 'bdd' | 'e2e', Layer>>) {
+  return {
+    layers: { unit: {}, storybook: {}, bdd: {}, e2e: {}, ...layers },
+    inventory: {},
+    readSource: () => '',
+    baseline: null,
+    enumerate: () => ({
+      statementMap: {},
+      fnMap: {},
+      branchMap: {},
+      s: {},
+      f: {},
+      b: {},
+      functions: 0,
+      branches: 0,
+    }),
+  }
+}
+
 describe('assertE2eLayerIsReal', () => {
   it('U13: passes for realistic data', () => {
     expect(() => lib.assertE2eLayerIsReal(realisticE2e())).not.toThrow()
@@ -419,44 +556,81 @@ describe('assertE2eLayerIsReal', () => {
     )
   })
 
-  it('U16: fails when no statement has a zero hit count', () => {
+  // Changed for REQ-012 (#215): "no zero-hit statement anywhere" is now an advisory
+  // signal, not a blocking failure; the layer still blocks if it is also fully flat.
+  it('U16: no zero-hit statement does not block on its own but emits the no-zero-hit-statements signal; still blocks when fully flat', () => {
     const d = realisticE2e()
     for (const fc of Object.values(d)) {
       for (const k of Object.keys(fc.s)) if (fc.s[k] === 0) fc.s[k] = 1
     }
-    expect(() => lib.assertE2eLayerIsReal(d)).toThrow(/e2e coverage layer looks flat\/fake.*zero/is)
+    expect(() => lib.assertE2eLayerIsReal(d)).not.toThrow()
+    const signals = lib.collectSignals(signalInput({ e2e: d }))
+    expect(
+      signals.some(
+        (l: string) => l.startsWith('Coverage signal: no-zero-hit-statements') && l.includes('e2e')
+      )
+    ).toBe(true)
+
+    const flat = realisticE2e()
+    for (const fc of Object.values(flat)) {
+      for (const k of Object.keys(fc.s)) fc.s[k] = 1
+    }
+    expect(() => lib.assertE2eLayerIsReal(flat)).toThrow(/e2e coverage layer looks flat\/fake/i)
   })
 
-  it('U17: fails on flat data (old fake shape) and tolerates a lone tiny uniform file', () => {
-    const flat: Layer = {}
-    for (const n of ['a', 'b', 'c', 'd']) {
-      const p = `/proj/src/${n}.ts`
-      flat[p] = mkFile(p, {
-        statements: [1, 2, 3, 4, 5, 6].map((_, i) => ({ line: i + 1, hits: 1 })),
-        branches: [{ type: 'if', line: 1, arms: [1, 0] }],
-        functions: [{ line: 1, hits: 1 }],
-      })
+  // Changed for REQ-012 (#215): the uniform-hit-count ratio is advisory; only a fully
+  // flat layer (every statement of every file one hit count) is the blocking fake shape.
+  describe('U17: flat-data detection', () => {
+    function flatFiles(): Layer {
+      const flat: Layer = {}
+      for (const n of ['a', 'b', 'c', 'd']) {
+        const p = `/proj/src/${n}.ts`
+        flat[p] = mkFile(p, {
+          statements: [1, 2, 3, 4, 5, 6].map((_, i) => ({ line: i + 1, hits: 1 })),
+          branches: [{ type: 'if', line: 1, arms: [1, 0] }],
+          functions: [{ line: 1, hits: 1 }],
+        })
+      }
+      return flat
     }
     const tiny = '/proj/src/tiny.ts'
-    flat[tiny] = mkFile(tiny, {
+    const tinySpec = {
       statements: [
         { line: 1, hits: 1 },
         { line: 2, hits: 0 },
       ],
-    })
-    expect(() => lib.assertE2eLayerIsReal(flat)).toThrow(
-      /e2e coverage layer looks flat\/fake.*(single-valued|uniform)/is
-    )
+    }
 
-    const ok = realisticE2e()
-    const tinyUniform = '/proj/src/uniform.ts'
-    ok[tinyUniform] = mkFile(tinyUniform, {
-      statements: [
-        { line: 1, hits: 1 },
-        { line: 2, hits: 1 },
-      ],
+    it('(a) the old fake shape (every statement one hit count) still throws', () => {
+      expect(() => lib.assertE2eLayerIsReal(flatFiles())).toThrow(
+        /e2e coverage layer looks flat\/fake/i
+      )
     })
-    expect(() => lib.assertE2eLayerIsReal(ok)).not.toThrow()
+
+    it('(b) the same four flat files plus a tiny file with hit counts {1, 0} no longer throw, and signal uniform-hit-counts for each flat file', () => {
+      const flat = flatFiles()
+      flat[tiny] = mkFile(tiny, tinySpec)
+      expect(() => lib.assertE2eLayerIsReal(flat)).not.toThrow()
+      const signals = lib
+        .collectSignals(signalInput({ e2e: flat }))
+        .filter((l: string) => l.startsWith('Coverage signal: uniform-hit-counts'))
+      expect(signals).toHaveLength(4)
+      for (const l of signals) expect(l).toContain('layer=e2e')
+    })
+
+    it('(c) a realistic layer with a lone tiny uniform file passes and emits no uniform signal for it', () => {
+      const ok = realisticE2e()
+      const tinyUniform = '/proj/src/uniform.ts'
+      ok[tinyUniform] = mkFile(tinyUniform, {
+        statements: [
+          { line: 1, hits: 1 },
+          { line: 2, hits: 1 },
+        ],
+      })
+      expect(() => lib.assertE2eLayerIsReal(ok)).not.toThrow()
+      const signals = lib.collectSignals(signalInput({ e2e: ok }))
+      expect(signals.filter((l: string) => l.includes('uniform.ts'))).toEqual([])
+    })
   })
 })
 
@@ -557,6 +731,34 @@ describe('assertDedupeEffective', () => {
     expect(() =>
       lib.assertDedupeEffective(layers, { data: naive, totals: recount(naive) })
     ).toThrow()
+  })
+})
+
+describe('assertInventoryKeysUnique', () => {
+  // REQ-017 (#215): validity check 6 additionally rejects two inventory items with the same
+  // file + start line + kind + ordinal.
+  it('passes on combineCoverage output', () => {
+    const unit = layer({
+      [A]: {
+        statements: [
+          { line: 3, col: 2, hits: 1 },
+          { line: 3, col: 20, hits: 0 },
+        ],
+        branches: [{ type: 'if', line: 4, arms: [1, 0] }],
+        functions: [{ line: 1, hits: 1 }],
+      },
+    })
+    const result = lib.combineCoverage({ primary: [unit], secondary: [] })
+    expect(() => lib.assertInventoryKeysUnique(result.data)).not.toThrow()
+  })
+
+  it('fails naming the file when two statements share the same location', () => {
+    const unit = layer({ [A]: { statements: [{ line: 3, col: 2, hits: 1 }] } })
+    const result = lib.combineCoverage({ primary: [unit], secondary: [] })
+    const fc = result.data[A]
+    fc.statementMap['1'] = structuredClone(fc.statementMap['0'])
+    fc.s['1'] = 1
+    expect(() => lib.assertInventoryKeysUnique(result.data)).toThrow(/a\.ts/)
   })
 })
 
