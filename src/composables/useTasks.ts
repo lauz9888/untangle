@@ -151,7 +151,8 @@ function normalizeTask(el: unknown, now: number): PendingTask | null {
 
 // Repairs or drops each stored element so the rest of the app only ever sees well-typed Tasks.
 // Unrecoverable (dropped): non-object elements and elements without a non-empty string name.
-// Most rules have observed failures on unmodified code (see the workflow's characterization.md).
+// Most rules were driven by failures observed on the previous unvalidated loader (see the hydration
+// validation addendum in docs/adr/0003-localstorage-persistence-for-task-store.md).
 // DEFENSIVE (no failure observed): the no-write-back policy (repairs persist only at the next
 // mutation) and the mutators' tolerance of malformed records.
 function normalizeStoredTasks(parsed: unknown, now: number): Task[] {
