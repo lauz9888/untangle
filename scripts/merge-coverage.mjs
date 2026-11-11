@@ -1,12 +1,23 @@
-// Coverage-merge pipeline for `npm run test:coverage:merge`. Combines Vitest's
-// native v8 coverage (unit), Storybook's stories/interaction tests under
-// @storybook/addon-vitest (also v8, via vitest.storybook.config.ts — see step
-// 2b below), Cucumber's nyc/ts-node Istanbul instrumentation (BDD), and
-// Playwright's Chromium `page.coverage` (converted via v8-to-istanbul, see
-// `tests/e2e/coverage-fixture.ts`) into a single combined statement-coverage
-// percentage across all four layers. See `.claude/STANDARDS.md` for the
-// gating threshold, and note why `.nyc_output/` must be reset between the BDD
-// and e2e phases below.
+// Coverage-merge pipeline for `npm run test:coverage:merge`. Runs four test
+// layers and combines them into one accurate statement and branch coverage
+// figure:
+//   - unit: Vitest native v8 coverage (AST-based in Vitest 4)
+//   - storybook: stories/interaction tests under @storybook/addon-vitest (also
+//     v8, via vitest.storybook.config.ts)
+//   - bdd: Cucumber under nyc/ts-node Istanbul instrumentation
+//   - e2e: Playwright against a `vite-plugin-istanbul`-instrumented build
+//     (COVERAGE=true), counters read from window.__coverage__ and remapped to
+//     source coordinates with istanbul-lib-source-maps in
+//     tests/e2e/global-teardown.ts
+// The layers place the same statement/branch at different locations, so raw
+// maps are NOT merged (that double counts). Instead scripts/lib/coverage-merge.mjs
+// builds one statement/branch/function universe from unit + Storybook and
+// credits BDD/e2e hits onto keys that already exist in it, then runtime guards
+// (flat e2e layer, e2e template parity, universe completeness, dedupe
+// effectiveness) fail the run if the figure cannot be trusted. Both the
+// statement and branch figures are gated (thresholds in `.claude/STANDARDS.md`).
+// See docs/adr/0007-single-statement-universe-and-istanbul-e2e-for-combined-coverage.md.
+// Note why `.nyc_output/` must be reset between the BDD and e2e phases below.
 
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -14,6 +25,15 @@ import path from 'node:path'
 import istanbulLibCoverage from 'istanbul-lib-coverage'
 import istanbulLibReport from 'istanbul-lib-report'
 import reports from 'istanbul-reports'
+import {
+  UNIVERSE_EXCLUDES,
+  assertDedupeEffective,
+  assertE2eLayerIsReal,
+  assertE2eTemplateParity,
+  assertUniverseComplete,
+  combineCoverage,
+  loadLayers,
+} from './lib/coverage-merge.mjs'
 
 const { createCoverageMap } = istanbulLibCoverage
 const { createContext } = istanbulLibReport
@@ -39,45 +59,25 @@ function rm(target) {
   fs.rmSync(target, { recursive: true, force: true })
 }
 
-function readCoverageFinal(dir) {
-  const file = path.join(dir, 'coverage-final.json')
-  if (!fs.existsSync(file)) {
-    return null
+// Recursive walk of src/ for the on-disk universe (*.ts and *.vue minus the
+// UNIVERSE_EXCLUDES mirror of vite.config.ts's test.coverage.exclude).
+function listSourceFiles(dir) {
+  const out = []
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) out.push(...listSourceFiles(full))
+    else if (/\.(ts|vue)$/.test(entry.name)) out.push(full)
   }
-  return scopeToOwnSource(normalizeCoverageKeys(JSON.parse(fs.readFileSync(file, 'utf8'))))
+  return out
 }
 
-// The e2e layer's v8-to-istanbul conversion (tests/e2e/coverage-fixture.ts)
-// walks the production bundle's sourcemap back to *every* original module
-// bundled into it — including node_modules/vue's own package sources, which
-// ship real sourcemaps of their own. Left unfiltered, Vue's largely-untouched
-// framework internals (thousands of statements) dilute the combined
-// percentage down to what looks like our own coverage. Scope every layer to
-// this project's actual application code.
-function scopeToOwnSource(data) {
-  const scoped = {}
-  for (const [filePath, fileCoverage] of Object.entries(data)) {
-    if (/\/src\//.test(filePath) && !/\/node_modules\//.test(filePath)) {
-      scoped[filePath] = fileCoverage
-    }
-  }
-  return scoped
-}
-
-// Different producers in this pipeline resolve file paths differently on
-// Windows (native fs-based tools like Vitest/nyc use backslashes; ts-node's
-// module-resolution-based paths use forward slashes). istanbul-lib-coverage
-// keys its map by the exact path string, so without normalizing to one
-// separator style first, the same physical file merges as two separate
-// entries instead of one — silently double-counting its statement total in
-// the combined report instead of unioning per-statement hit counts.
-function normalizeCoverageKeys(data) {
-  const normalized = {}
-  for (const [filePath, fileCoverage] of Object.entries(data)) {
-    const key = filePath.split(path.win32.sep).join(path.posix.sep)
-    normalized[key] = { ...fileCoverage, path: key }
-  }
-  return normalized
+function isExcluded(relPath) {
+  return UNIVERSE_EXCLUDES.some((pattern) => {
+    if (!pattern.includes('*')) return relPath === pattern
+    // `src/**/*.stories.ts` -> any path under src/ ending in .stories.ts
+    const suffix = pattern.slice(pattern.lastIndexOf('*') + 1)
+    return relPath.startsWith(pattern.split('*')[0]) && relPath.endsWith(suffix)
+  })
 }
 
 // 1. Clean stale output.
@@ -105,50 +105,66 @@ run('npx', ['nyc', '--reporter=json', '--report-dir=coverage/bdd', 'cucumber-js'
 // .nyc_output/ and must not bleed into the e2e-only merge below.
 rm(nycOutputDir)
 
-// 5. e2e tests with browser coverage collection (COVERAGE=true flips on
-// build.sourcemap in vite.config.ts and tells coverage-fixture.ts to
-// collect per-test coverage into .nyc_output/, which global-teardown.ts
+// 5. e2e tests with browser coverage collection (COVERAGE=true makes
+// vite.config.ts Istanbul-instrument the build and tells coverage-fixture.ts to
+// collect per-test window.__coverage__ counters into .nyc_output/, which global-teardown.ts
 // merges into coverage/e2e/coverage-final.json before deleting
 // .nyc_output/ again).
 run('npx', ['playwright', 'test'], { env: { ...process.env, COVERAGE: 'true' } })
 
-// 6. Merge all four layer-pure coverage-final.json files into one map.
-const map = createCoverageMap({})
-const layers = ['unit', 'storybook', 'bdd', 'e2e']
-let mergedAny = false
+rm(nycOutputDir)
 
-for (const layer of layers) {
-  const data = readCoverageFinal(path.join(coverageDir, layer))
-  if (data) {
-    map.merge(data)
-    mergedAny = true
-  } else {
-    console.warn(`Warning: no coverage-final.json found for the "${layer}" layer.`)
-  }
-}
+// 6. Load all four layers (a missing layer file throws), run the guards, and
+// combine into one universe.
+const layers = loadLayers(coverageDir)
+const readSource = (file) => fs.readFileSync(file, 'utf8')
 
-if (!mergedAny) {
-  throw new Error('No coverage data was produced by any test layer — nothing to merge.')
-}
+assertE2eLayerIsReal(layers.e2e)
+assertE2eTemplateParity(layers.e2e, layers.unit, readSource)
 
+const input = { primary: [layers.unit, layers.storybook], secondary: [layers.bdd, layers.e2e] }
+const result = combineCoverage(input)
+
+const universeFiles = Object.keys(result.data)
+const diskFiles = listSourceFiles(path.join(root, 'src'))
+  .map((f) => f.split(path.win32.sep).join(path.posix.sep))
+  .filter((f) => !isExcluded(f.slice(f.indexOf('/src/') + 1)))
+assertUniverseComplete(
+  universeFiles.map((f) => f.slice(f.lastIndexOf('/src/') + 1)),
+  diskFiles.map((f) => f.slice(f.lastIndexOf('/src/') + 1))
+)
+assertDedupeEffective(input, result)
+
+const ig = result.ignored
+const fmt = (t) => `statements=${t.statements} branches=${t.branches} functions=${t.functions}`
+console.log(
+  `Ignored secondary-only items (not in the unit/Storybook universe): bdd ${fmt(ig.bdd)}; e2e ${fmt(ig.e2e)}`
+)
+
+const map = createCoverageMap(result.data)
 const mergedDir = path.join(coverageDir, 'merged')
 fs.mkdirSync(mergedDir, { recursive: true })
 fs.writeFileSync(path.join(mergedDir, 'coverage-final.json'), JSON.stringify(map.toJSON()))
 
-// 7. Print a text-summary and the single combined percentage as the last
-// line of output (parsed by qa-reviewer at pipeline Step 12, and by CI's
-// coverage-merge job).
+// 7. Print a text-summary, then the gate figures. The statement line is the
+// last line of output (parsed by qa-reviewer at pipeline Step 12, and by CI's
+// coverage-merge job, which also greps the branch line).
 const context = createContext({ dir: mergedDir, coverageMap: map })
-const textSummaryReport = reports.create('text-summary', {})
-textSummaryReport.execute(context)
+reports.create('text-summary', {}).execute(context)
 
-// createCoverageMap doesn't itself expose a single combined summary, so sum
-// each file's summary via the coverage map's fileCoverageFor helper.
 const combined = map.files().reduce((acc, file) => {
   const fileSummary = map.fileCoverageFor(file).toSummary()
   return acc ? acc.merge(fileSummary) : fileSummary
 }, undefined)
 
-const statementPct = combined ? combined.statements.pct : 0
+if (!combined || combined.statements.total === 0) {
+  throw new Error('Merged coverage contains zero statements')
+}
 
-console.log(`Combined coverage: ${statementPct.toFixed(2)}%`)
+const { statements, branches } = combined
+console.log(
+  `Combined branch coverage: ${branches.pct.toFixed(2)}% (${branches.covered}/${branches.total} branches)`
+)
+console.log(
+  `Combined coverage: ${statements.pct.toFixed(2)}% (${statements.covered}/${statements.total} statements)`
+)
