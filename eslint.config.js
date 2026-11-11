@@ -76,8 +76,8 @@ export default tseslint.config(
         'error',
         {
           paths: [
-            { name: 'vitest', message: 'Stories must use storybook/test (ADR 0007).' },
-            { name: 'vitest/browser', message: 'Use globals.viewport instead (ADR 0007).' },
+            { name: 'vitest', message: 'Stories must use storybook/test (ADR 0008).' },
+            { name: 'vitest/browser', message: 'Use globals.viewport instead (ADR 0008).' },
           ],
         },
       ],

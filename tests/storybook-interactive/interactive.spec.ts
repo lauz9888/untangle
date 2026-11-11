@@ -4,7 +4,7 @@ import path from 'node:path'
 // Single source of truth for the mobile sizes, shared with .storybook/preview.ts.
 import { UNTANGLE_VIEWPORTS } from '../../.storybook/viewports'
 
-// Interactive-view health check (ADR 0007): every story of the static
+// Interactive-view health check (ADR 0008): every story of the static
 // Storybook build must render and run its play function without error events,
 // exactly as it would in `npm run storybook`.
 

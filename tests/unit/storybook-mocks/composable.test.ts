@@ -1,4 +1,4 @@
-// Drift guard for the Storybook manual mocks (design.md section 9 / ADR 0007).
+// Drift guard for the Storybook manual mocks (design.md section 9 / ADR 0008).
 // Composable-style only: there is no component in this feature, so there is no
 // components.test.ts counterpart. Imports ONLY the storybook-free constants
 // file (never the __mocks__/useX.ts redirect files, which load `storybook/test`).

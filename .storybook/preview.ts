@@ -2,7 +2,7 @@ import type { Preview } from '@storybook/vue3-vite'
 import { sb } from 'storybook/test'
 import { UNTANGLE_VIEWPORTS } from './viewports'
 
-// Module mocking for stories (ADR 0007). Registrations are global and static.
+// Module mocking for stories (ADR 0008). Registrations are global and static.
 // Modules with non-function exports used by components get a manual redirect
 // (src/composables/__mocks__/); spy:true would empty arrays in the browser runtime.
 sb.mock(import('../src/composables/useEnergyLevel'))

@@ -1,4 +1,4 @@
-# 0007. Storybook `sb.mock` module mocking and a Playwright interactive-view check
+# 0008. Storybook `sb.mock` module mocking and a Playwright interactive-view check
 
 Status: Accepted
 Date: 2026-11-10

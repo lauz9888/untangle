@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// Interactive-view health check for Storybook (ADR 0007): loads every story of
+// Interactive-view health check for Storybook (ADR 0008): loads every story of
 // the static build (storybook-static/) in a real browser and fails on any
 // render/play error. Set STORYBOOK_URL (e.g. http://localhost:6006) to point it
 // at a running `npm run storybook` instead; that skips the local static server.

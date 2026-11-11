@@ -1,11 +1,26 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type ViteUserConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(async (): Promise<ViteUserConfig> => ({
   base: process.env.GITHUB_PAGES ? '/untangle/' : '/',
   plugins: [
     vue(),
+    // Coverage-only (never in normal/CD builds): Istanbul-instrument src/ so
+    // the e2e leg of test:coverage:merge can read window.__coverage__. See
+    // docs/adr/0007-*.md. Dynamic import keeps the dev dependency out of every
+    // other config load.
+    ...(process.env.COVERAGE === 'true'
+      ? [
+          (await import('vite-plugin-istanbul')).default({
+            include: 'src/*',
+            exclude: ['node_modules', 'tests', '**/*.stories.ts'],
+            extension: ['.ts', '.vue'],
+            requireEnv: false,
+            forceBuildInstrument: true,
+          }),
+        ]
+      : []),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
@@ -26,11 +41,6 @@ export default defineConfig({
       },
     }),
   ],
-  build: {
-    // Sourcemaps are only needed when tests/e2e/coverage-fixture.ts converts
-    // V8 coverage to Istanbul format for scripts/merge-coverage.mjs's e2e leg.
-    sourcemap: process.env.COVERAGE === 'true',
-  },
   test: {
     environment: 'jsdom',
     globals: true,
@@ -49,4 +59,4 @@ export default defineConfig({
       exclude: ['src/main.ts', 'src/**/*.stories.ts', 'src/**/__mocks__/**'],
     },
   },
-})
+}))
