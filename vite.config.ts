@@ -46,7 +46,7 @@ export default defineConfig({
       // not this one — no unit test ever imports them, so without this
       // exclusion v8's include-glob walk reports each one as untouched (0%),
       // needlessly diluting this layer's (and the combined) percentage.
-      exclude: ['src/main.ts', 'src/**/*.stories.ts'],
+      exclude: ['src/main.ts', 'src/**/*.stories.ts', 'src/**/__mocks__/**'],
     },
   },
 })

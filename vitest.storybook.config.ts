@@ -29,7 +29,7 @@ export default defineConfig({
       // setup, story objects) get swept in as "source" and instrumented, but
       // no test ever covers a story file's own code, so they report as 0%
       // and needlessly dilute the combined percentage.
-      exclude: ['src/main.ts', 'src/**/*.stories.ts'],
+      exclude: ['src/main.ts', 'src/**/*.stories.ts', 'src/**/__mocks__/**'],
     },
   },
 })

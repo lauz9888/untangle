@@ -57,7 +57,11 @@ function readCoverageFinal(dir) {
 function scopeToOwnSource(data) {
   const scoped = {}
   for (const [filePath, fileCoverage] of Object.entries(data)) {
-    if (/\/src\//.test(filePath) && !/\/node_modules\//.test(filePath)) {
+    if (
+      /\/src\//.test(filePath) &&
+      !/\/node_modules\//.test(filePath) &&
+      !/\/__mocks__\//.test(filePath)
+    ) {
       scoped[filePath] = fileCoverage
     }
   }
