@@ -84,3 +84,20 @@ elsewhere and don't need re-litigating here:
   read-everything/write-everything model can't reasonably support, this decision should be
   revisited — that would be the point to evaluate IndexedDB (option 2) on its actual merits rather
   than deferring it preemptively here.
+
+## Addendum (2026-11-11): hydration validation
+
+This refines the "malformed-data fallback" decision above; it does not replace it.
+
+- `loadInitialTasks()` now normalises each stored element instead of trusting any array. Elements
+  that are not plain objects, or whose `name` is not a non-empty string after trimming, are
+  unrecoverable and dropped. Every other field is repaired to a safe default (invalid `section` to
+  `'now'`, estimate fields to clamped non-negative integers, malformed sub-tasks dropped, missing
+  timestamps filled in, unknown properties stripped).
+- Invalid or duplicate task ids (and sub-task ids, per task) are reassigned fresh values above the
+  largest valid id, so ids are always unique positive integers and the next-id counter is never `NaN`.
+- No write-back at load. Repaired data and dropped entries are replaced in storage only at the next
+  mutation, at which point dropped entries are lost. A `createdAt` that had to fall back to hydration
+  time can therefore differ between reloads until a mutation persists it.
+- Still no schema version: git history shows a single shipped shape, so the "No schema versioning"
+  decision above remains valid.
