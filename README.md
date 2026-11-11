@@ -27,7 +27,7 @@ Opens at `http://localhost:5173`.
 | `npm run test:bdd`                   | BDD tests (Cucumber.js)                                                                   |
 | `npm run test:e2e`                   | End-to-end tests (Playwright, reads `BASE_URL` when set)                                  |
 | `npm run test:storybook`             | Storybook stories/interaction tests (Vitest browser mode via `@storybook/addon-vitest`)   |
-| `npm run test:coverage:merge`        | Combined statement and branch coverage across all four test layers                        |
+| `npm run test:coverage:merge`        | Combined statement and branch coverage across all four test layers, with validity checks  |
 | `npm run test:storybook:interactive` | Playwright check that every story renders and plays cleanly in the static Storybook build |
 | `npm run storybook`                  | Storybook interactive dev server (port 6006)                                              |
 | `npm run build-storybook`            | Static Storybook build (used by CI's `storybook-tests` job before `test:storybook`)       |
